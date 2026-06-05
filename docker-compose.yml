@@ -1,72 +1,24 @@
-# hr-ai-platform/docker-compose.yml
 services:
-  build_base:
-    image: hr-platform/hr-base
-    build: services/hr-domain-models
-
-  analytics:
-    container_name: analytics
-    image: hr-platform/hr-analytics-service
-    build: services/hr-analytics-service
-    env_file: .env
-
-  api:
-    container_name: api
-    image: hr-platform/hr-api-service
-    build: services/hr-api-service
-    env_file: .env
-
-  etl:
-    container_name: etl
-    image: hr-platform/hr-etl-service
-    build: services/hr-etl-service
-    env_file: .env
-
-  job:
-    container_name: job
-    image: hr-platform/hr-job-service
-    build: services/hr-job-service
-    env_file: .env
-
-  matching:
-    container_name: matching
-    image: hr-platform/hr-matching-service
-    build: services/hr-matching-service
-    env_file: .env
-
-  nginx:
-    container_name: nginx
-    image: hr-platform/hr-nginx-service
-    build: services/hr-nginx-service
-    ports:
-      - "80:80"
-      - "443:443"
+  backend:
+    image: python:3.12-slim
+    container_name: hr-ai-backend
+    working_dir: /workspace
     volumes:
-      - ./conf:/etc/nginx/templates/
-
-  nlp:
-    container_name: nlp
-    image: hr-platform/hr-nlp-service
-    build: services/hr-nlp-service
-    env_file: .env
-
-  ontology:
-    container_name: ontology
-    image: hr-platform/hr-ontology-service
-    build: services/hr-ontology-service
-    env_file: .env
-
-  web:
-    container_name: web
-    image: hr-platform/hr-web-service
-    build: services/hr-web-service
-
-  psql:
-    container_name: psql
-    image: hr-platform/hr-psql-service
-    build: services/hr-psql-service
-    env_file: .env
+      - .:/workspace
+    command: sh -c "pip install -r requirements.txt && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     ports:
-      - "5432:5432"
+      - "8000:8000"
+
+  frontend:
+    image: node:22-alpine
+    container_name: hr-ai-frontend
+    working_dir: /workspace/frontend
     volumes:
-      - ./data/psql:/var/lib/postgresql/data
+      - .:/workspace
+    command: sh -c "npm install && npm run dev"
+    environment:
+      VITE_API_URL: http://localhost:8000
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
