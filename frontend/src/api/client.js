@@ -29,7 +29,20 @@ export const hrApi = {
   candidates: () => apiRequest('/api/candidates'),
   applications: () => apiRequest('/api/applications'),
   seedDemo: () => apiRequest('/api/demo-seed', { method: 'POST' }),
+  createVacancy: (payload) => apiRequest('/api/vacancies', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }),
+  createCandidate: (payload) => apiRequest('/api/candidates', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }),
+  createApplication: (payload) => apiRequest('/api/applications', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }),
   analyzeApplication: (id) => apiRequest(`/api/applications/${id}/analyze`, { method: 'POST' }),
+  interviewQuestions: (id) => apiRequest(`/api/applications/${id}/interview-questions`),
   updateApplicationStage: (id, stage) => apiRequest(`/api/applications/${id}/stage`, {
     method: 'PATCH',
     body: JSON.stringify({ stage }),
