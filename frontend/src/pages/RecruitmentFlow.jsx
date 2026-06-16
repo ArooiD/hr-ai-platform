@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Award, Brain, BriefcaseBusiness, CheckCircle2, FileQuestion, Plus, Target, UsersRound } from 'lucide-react';
+import { AlertTriangle, Award, Brain, BriefcaseBusiness, Calendar, CheckCircle2, FileQuestion, Plus, Sparkles, Target, UserPlus, UsersRound } from 'lucide-react';
 import { hrApi } from '../api/client';
 import { stages, stageLabels } from '../data/constants';
 
@@ -17,6 +17,36 @@ const vacancyStatuses = {
   closed: { label: 'закрыта', color: '#64748b', bg: '#f1f5f9' },
 };
 
+const normalize = (value) => String(value || '').trim().toLowerCase();
+
+function calculateCandidateMatch(candidate, vacancy) {
+  if (!candidate || !vacancy) return { score: 0, matchedSkills: [], missedSkills: [], reason: 'Выберите вакансию' };
+
+  const requiredSkills = vacancy.required_skills || [];
+  const candidateSkills = candidate.skills || [];
+  const candidateSkillSet = new Set(candidateSkills.map(normalize));
+  const matchedSkills = requiredSkills.filter(skill => candidateSkillSet.has(normalize(skill)));
+  const missedSkills = requiredSkills.filter(skill => !candidateSkillSet.has(normalize(skill)));
+  const skillScore = requiredSkills.length ? Math.round((matchedSkills.length / requiredSkills.length) * 70) : 45;
+  const experienceScore = Math.min(25, Number(candidate.experience_years || 0) * 5);
+  const resumeText = normalize(candidate.resume_text);
+  const titleTokens = normalize(vacancy.title).split(/\s+/).filter(token => token.length > 3);
+  const contextScore = titleTokens.some(token => resumeText.includes(token)) ? 5 : 0;
+  const score = Math.min(100, skillScore + experienceScore + contextScore);
+
+  let reason = 'Слабое соответствие: лучше оставить в резерве.';
+  if (score >= 80) reason = 'Высокое соответствие: стоит сразу создать отклик и перевести на скрининг.';
+  else if (score >= 55) reason = 'Среднее соответствие: можно создать отклик и проверить на первичном интервью.';
+
+  return { score, matchedSkills, missedSkills, reason };
+}
+
+function getScoreView(score) {
+  if (score >= 80) return { color: '#15803d', bg: '#dcfce7', border: '#bbf7d0', label: 'сильный кандидат' };
+  if (score >= 55) return { color: '#d97706', bg: '#fef3c7', border: '#fde68a', label: 'проверить' };
+  return { color: '#b91c1c', bg: '#fee2e2', border: '#fecaca', label: 'резерв' };
+}
+
 export default function RecruitmentPage() {
   const [vacancies, setVacancies] = useState([]);
   const [candidates, setCandidates] = useState([]);
@@ -28,7 +58,7 @@ export default function RecruitmentPage() {
   const [message, setMessage] = useState('');
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [filterStage, setFilterStage] = useState('all');
-  const [activeTab, setActiveTab] = useState('pipeline');
+  const [activeTab, setActiveTab] = useState('matching');
 
   const load = async () => {
     try {
@@ -40,6 +70,10 @@ export default function RecruitmentPage() {
       setVacancies(vacancyData);
       setCandidates(candidateData);
       setApplications(applicationData);
+      if (!selectedVacancyFilter || selectedVacancyFilter === 'all') {
+        const firstOpenVacancy = vacancyData.find(v => v.status !== 'closed');
+        if (firstOpenVacancy) setSelectedVacancyFilter(String(firstOpenVacancy.id));
+      }
     } catch (error) {
       setMessage('Backend недоступен');
     }
@@ -51,6 +85,17 @@ export default function RecruitmentPage() {
     await hrApi.createApplication({ candidate_id: Number(selectedCandidate), vacancy_id: Number(selectedVacancy) });
     setShowLinkModal(false);
     setMessage('Отклик создан');
+    await load();
+  };
+
+  const createApplicationForCandidate = async (candidateId) => {
+    if (selectedVacancyFilter === 'all') {
+      setMessage('Сначала выберите конкретную вакансию');
+      return;
+    }
+    await hrApi.createApplication({ candidate_id: Number(candidateId), vacancy_id: Number(selectedVacancyFilter) });
+    setMessage('Отклик создан из подбора кандидатов');
+    setActiveTab('pipeline');
     await load();
   };
 
@@ -72,6 +117,11 @@ export default function RecruitmentPage() {
     setActiveTab('questions');
   };
 
+  const selectedVacancyObject = useMemo(() => {
+    if (selectedVacancyFilter === 'all') return null;
+    return vacancies.find(v => v.id === Number(selectedVacancyFilter));
+  }, [vacancies, selectedVacancyFilter]);
+
   const vacancyStats = useMemo(() => vacancies.map((vacancy) => {
     const vacancyApplications = applications.filter(app => app.vacancy_id === vacancy.id);
     const active = vacancyApplications.filter(app => !['hired', 'rejected'].includes(app.stage));
@@ -88,6 +138,18 @@ export default function RecruitmentPage() {
     });
   }, [applications, filterStage, selectedVacancyFilter]);
 
+  const matchedCandidates = useMemo(() => {
+    if (!selectedVacancyObject) return [];
+    return candidates.map(candidate => {
+      const existingApplication = applications.find(app => app.candidate_id === candidate.id && app.vacancy_id === selectedVacancyObject.id);
+      return {
+        candidate,
+        existingApplication,
+        match: calculateCandidateMatch(candidate, selectedVacancyObject),
+      };
+    }).sort((a, b) => b.match.score - a.match.score);
+  }, [candidates, applications, selectedVacancyObject]);
+
   const stats = useMemo(() => {
     const byStage = { new: 0, screening: 0, interview: 0, offer: 0, hired: 0, rejected: 0 };
     visibleApplications.forEach(app => { byStage[app.stage] = (byStage[app.stage] || 0) + 1; });
@@ -103,7 +165,7 @@ export default function RecruitmentPage() {
       <div className="page-header">
         <div>
           <h1>Подбор</h1>
-          <p>Рабочее место рекрутера: открытые вакансии, незакрытые позиции и движение кандидатов</p>
+          <p>Рабочее место рекрутера: выберите вакансию, подберите кандидатов и сформируйте отклики</p>
         </div>
         <button className="primary-button" onClick={() => setShowLinkModal(true)}>
           <Plus size={18} /> Создать отклик
@@ -137,10 +199,10 @@ export default function RecruitmentPage() {
       <div className="card" style={{ marginBottom: '22px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: '20px' }}>Управление вакансиями</h2>
-            <p style={{ margin: '4px 0 0', color: '#64748b' }}>Выберите вакансию, чтобы увидеть только её pipeline и понять, закрыта ли позиция.</p>
+            <h2 style={{ margin: 0, fontSize: '20px' }}>Вакансия как центр подбора</h2>
+            <p style={{ margin: '4px 0 0', color: '#64748b' }}>Выберите вакансию — ниже появятся кандидаты из базы, отсортированные по релевантности.</p>
           </div>
-          <button className="secondary-button" onClick={() => setSelectedVacancyFilter('all')}>Все вакансии</button>
+          <button className="secondary-button" onClick={() => { setSelectedVacancyFilter('all'); setActiveTab('pipeline'); }}>Все вакансии</button>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))', gap: '12px' }}>
           {vacancyStats.map(({ vacancy, total, active, hired }) => {
@@ -150,7 +212,7 @@ export default function RecruitmentPage() {
               <button
                 key={vacancy.id}
                 type="button"
-                onClick={() => setSelectedVacancyFilter(String(vacancy.id))}
+                onClick={() => { setSelectedVacancyFilter(String(vacancy.id)); setActiveTab('matching'); }}
                 style={{
                   textAlign: 'left', border: selected ? '2px solid #0b73ff' : '1px solid var(--line)', borderRadius: '16px', background: selected ? '#eff6ff' : '#fff', padding: '14px', cursor: 'pointer'
                 }}
@@ -172,6 +234,9 @@ export default function RecruitmentPage() {
       </div>
 
       <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '1px solid var(--line)', paddingBottom: '12px' }}>
+        <button className={activeTab === 'matching' ? 'primary-button' : 'secondary-button'} onClick={() => setActiveTab('matching')} style={{ padding: '8px 16px' }}>
+          Подобрать кандидатов
+        </button>
         <button className={activeTab === 'pipeline' ? 'primary-button' : 'secondary-button'} onClick={() => setActiveTab('pipeline')} style={{ padding: '8px 16px' }}>
           Pipeline откликов
         </button>
@@ -179,6 +244,84 @@ export default function RecruitmentPage() {
           Вопросы интервью
         </button>
       </div>
+
+      {activeTab === 'matching' && (
+        <div className="card" style={{ marginBottom: '22px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '20px', alignItems: 'flex-start', marginBottom: '18px' }}>
+            <div>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: 0 }}><Sparkles size={22} /> Подбор кандидатов под вакансию</h2>
+              <p style={{ margin: '6px 0 0', color: '#64748b' }}>
+                {selectedVacancyObject ? `${selectedVacancyObject.title} · ${selectedVacancyObject.department}` : 'Выберите конкретную вакансию выше'}
+              </p>
+            </div>
+            {selectedVacancyObject && (
+              <div style={{ minWidth: '260px', border: '1px solid var(--line)', borderRadius: '14px', padding: '12px', background: '#f8fafc' }}>
+                <strong>Требуемые навыки</strong>
+                <div className="skills" style={{ marginTop: '8px' }}>
+                  {(selectedVacancyObject.required_skills || []).map(skill => <span key={skill} className="skill-tag">{skill}</span>)}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {!selectedVacancyObject ? (
+            <div className="empty-state"><BriefcaseBusiness size={42} /><p>Выберите вакансию, чтобы увидеть релевантных кандидатов</p></div>
+          ) : (
+            <div style={{ display: 'grid', gap: '14px' }}>
+              {matchedCandidates.map(({ candidate, existingApplication, match }) => {
+                const view = getScoreView(match.score);
+                return (
+                  <div key={candidate.id} style={{ display: 'grid', gridTemplateColumns: '1fr 150px 190px', gap: '16px', alignItems: 'center', border: `1px solid ${view.border}`, borderRadius: '16px', padding: '16px', background: '#fff' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div className="candidate-avatar" style={{ width: '42px', height: '42px', margin: 0, fontSize: '14px' }}>
+                          {candidate.full_name.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <strong>{candidate.full_name}</strong>
+                          <div style={{ display: 'flex', gap: '12px', color: '#64748b', fontSize: '13px', marginTop: '3px' }}>
+                            <span><Calendar size={13} /> {candidate.experience_years || 0} лет опыта</span>
+                            <span>{candidate.email}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="skills" style={{ marginTop: '12px' }}>
+                        {(candidate.skills || []).slice(0, 7).map(skill => {
+                          const matched = match.matchedSkills.map(normalize).includes(normalize(skill));
+                          return <span key={skill} className="skill-tag" style={{ background: matched ? '#dcfce7' : '#f1f5f9', color: matched ? '#166534' : '#64748b' }}>{skill}</span>;
+                        })}
+                      </div>
+                      <p style={{ margin: '10px 0 0', color: '#475569', fontSize: '13px' }}>{match.reason}</p>
+                      {!!match.missedSkills.length && <p style={{ margin: '6px 0 0', color: '#b91c1c', fontSize: '12px' }}>Не хватает: {match.missedSkills.join(', ')}</p>}
+                    </div>
+                    <div style={{ textAlign: 'center', borderRadius: '14px', background: view.bg, color: view.color, padding: '12px' }}>
+                      <div style={{ fontSize: '28px', fontWeight: 900 }}>{match.score}%</div>
+                      <div style={{ fontSize: '12px', fontWeight: 900 }}>{view.label}</div>
+                    </div>
+                    <div style={{ display: 'grid', gap: '8px' }}>
+                      {existingApplication ? (
+                        <>
+                          <span className="status-badge" style={{ justifySelf: 'start', background: stageView[existingApplication.stage]?.bg, color: stageView[existingApplication.stage]?.color }}>
+                            уже в pipeline: {stageLabels[existingApplication.stage]}
+                          </span>
+                          <button className="secondary-button" onClick={() => { setActiveTab('pipeline'); setFilterStage(existingApplication.stage); }}>Открыть отклик</button>
+                        </>
+                      ) : (
+                        <button className="primary-button" onClick={() => createApplicationForCandidate(candidate.id)} disabled={selectedVacancyObject.status === 'closed'} style={{ opacity: selectedVacancyObject.status === 'closed' ? 0.55 : 1 }}>
+                          <UserPlus size={16} /> Создать отклик
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              {!matchedCandidates.length && (
+                <div className="empty-state"><UserPlus size={42} /><p>В базе пока нет кандидатов для подбора</p></div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {activeTab === 'pipeline' && (
         <>
@@ -258,8 +401,8 @@ export default function RecruitmentPage() {
                 <div style={{ textAlign: 'center', padding: '40px', color: '#9ca3af' }}>
                   <Target size={48} style={{ marginBottom: '12px', opacity: 0.5 }} />
                   <p>Нет откликов под выбранные фильтры</p>
-                  <button className="primary-button" onClick={() => setShowLinkModal(true)} style={{ marginTop: '12px' }}>
-                    <Plus size={18} /> Создать отклик
+                  <button className="primary-button" onClick={() => setActiveTab('matching')} style={{ marginTop: '12px' }}>
+                    <Sparkles size={18} /> Подобрать кандидатов
                   </button>
                 </div>
               )}
