@@ -4,7 +4,7 @@ export default function Sidebar({ user, currentPage, setCurrentPage }) {
   const navItems = [
     { label: 'Вакансии', icon: BriefcaseBusiness, id: 'vacancies' },
     { label: 'Кандидаты', icon: Users, id: 'candidates' },
-    { label: 'Сценарий подбора', icon: CalendarDays, id: 'recruitment' },
+    { label: 'Подбор', icon: CalendarDays, id: 'recruitment' },
     { label: 'Аналитика', icon: BarChart3, id: 'analytics' },
   ];
 
