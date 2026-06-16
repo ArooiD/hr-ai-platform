@@ -54,7 +54,7 @@ services:
       - minio
 
   db:
-    image: postgres:latest
+    image: postgres:16
     container_name: hr-ai-db
     environment:
       POSTGRES_DB: hr_platform
