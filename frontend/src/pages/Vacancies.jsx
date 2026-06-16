@@ -282,49 +282,122 @@ export default function VacanciesPage() {
               </button>
             </div>
 
-            {/* AI Upload Zone */}
+            {/* Quick Text Input */}
             {!editingId && !vacancy.title && (
-              <div 
-                className={`drag-drop-zone ${dragActive ? 'active' : ''}`}
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                style={{ 
-                  padding: '40px', 
-                  textAlign: 'center', 
-                  border: `2px dashed ${dragActive ? '#0b73ff' : '#d1d5db'}`,
-                  borderRadius: '12px',
-                  marginBottom: '20px',
-                  cursor: 'pointer',
-                  background: dragActive ? '#eff6ff' : '#f9fafb',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".txt,.doc,.docx,.pdf"
-                  onChange={handleFileSelect}
-                  style={{ display: 'none' }}
-                />
-                <Upload size={48} style={{ color: '#0b73ff', marginBottom: '16px' }} />
-                <h3 style={{ margin: '0 0 8px 0', color: '#111318' }}>Перетащите файл сюда</h3>
-                <p style={{ margin: '0 0 16px 0', color: '#6b7280', fontSize: '14px' }}>
-                  или кликните для выбора файла
-                </p>
-                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                  <span className="skill-tag">.txt</span>
-                  <span className="skill-tag">.doc</span>
-                  <span className="skill-tag">.docx</span>
-                  <span className="skill-tag">.pdf</span>
+              <>
+                <div 
+                  style={{ 
+                    padding: '24px', 
+                    borderRadius: '12px',
+                    marginBottom: '20px',
+                    background: '#f0f9ff',
+                    border: '1px solid #bae6fd'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <Sparkles size={20} style={{ color: '#0284c7' }} />
+                    <h3 style={{ margin: 0, color: '#0c4a6e', fontSize: '16px' }}>Быстрое создание из текста</h3>
+                  </div>
+                  <p style={{ margin: '0 0 12px 0', color: '#0369a1', fontSize: '14px' }}>
+                    Просто впишите или вставьте описание вакансии здесь. AI автоматически распознает структуру!
+                  </p>
+                  <textarea
+                    id="quick-vacancy-text"
+                    placeholder="Например:&#10;&#10;Требуется Middle Python Developer в отдел разработки.&#10;Зарплата: 180000 - 260000 руб.&#10;Навыки: Python, FastAPI, Docker, PostgreSQL, Git&#10;&#10;Обязанности:&#10;- Разработка backend сервисов&#10;- Участие в code review&#10;- Написание тестов"
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      borderRadius: '8px',
+                      border: '1px solid #7dd3fc',
+                      fontSize: '14px',
+                      fontFamily: 'inherit',
+                      resize: 'vertical',
+                      minHeight: '100px',
+                      background: '#fff',
+                      boxSizing: 'border-box'
+                    }}
+                    onChange={(e) => {
+                      const text = e.target.value;
+                      if (text.length > 30 && !e.target.dataset.processed) {
+                        e.target.dataset.processed = 'true';
+                        setTimeout(async () => {
+                          if (confirm('Похоже, вы ввели описание вакансии. Распознать структуру автоматически?')) {
+                            await processWithAI(text);
+                          }
+                        }, 500);
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const textarea = document.getElementById('quick-vacancy-text');
+                      if (textarea.value.length > 20) {
+                        processWithAI(textarea.value);
+                      }
+                    }}
+                    style={{
+                      marginTop: '12px',
+                      padding: '8px 16px',
+                      background: '#0284c7',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                  >
+                    <Sparkles size={16} /> Распознать из текста
+                  </button>
                 </div>
-                <p style={{ marginTop: '16px', fontSize: '12px', color: '#9ca3af' }}>
-                  <Sparkles size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
-                  AI автоматически распознает структуру вакансии
-                </p>
-              </div>
+
+                {/* Drag & Drop Zone */}
+                <div 
+                  className={`drag-drop-zone ${dragActive ? 'active' : ''}`}
+                  onDragEnter={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDragOver={handleDrag}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{ 
+                    padding: '40px', 
+                    textAlign: 'center', 
+                    border: `2px dashed ${dragActive ? '#0b73ff' : '#d1d5db'}`,
+                    borderRadius: '12px',
+                    marginBottom: '20px',
+                    cursor: 'pointer',
+                    background: dragActive ? '#eff6ff' : '#f9fafb',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".txt,.doc,.docx,.pdf"
+                    onChange={handleFileSelect}
+                    style={{ display: 'none' }}
+                  />
+                  <Upload size={48} style={{ color: '#0b73ff', marginBottom: '16px' }} />
+                  <h3 style={{ margin: '0 0 8px 0', color: '#111318' }}>Перетащите файл сюда</h3>
+                  <p style={{ margin: '0 0 16px 0', color: '#6b7280', fontSize: '14px' }}>
+                    или кликните для выбора файла
+                  </p>
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <span className="skill-tag">.txt</span>
+                    <span className="skill-tag">.doc</span>
+                    <span className="skill-tag">.docx</span>
+                    <span className="skill-tag">.pdf</span>
+                  </div>
+                  <p style={{ marginTop: '16px', fontSize: '12px', color: '#9ca3af' }}>
+                    <Sparkles size={14} style={{ verticalAlign: 'middle', marginRight: '4px' }} />
+                    AI автоматически распознает структуру вакансии
+                  </p>
+                </div>
+              </>
             )}
 
             {/* AI Success Message */}
