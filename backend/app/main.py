@@ -50,14 +50,14 @@ def health():
 
 @app.post("/api/auth/login")
 def login(payload: LoginRequest):
-    if payload.login.strip().lower() != "dapopova":
+    if payload.login.strip().lower() != "depopova":
         raise HTTPException(status_code=401, detail="Invalid login")
 
     return {
-        "access_token": "mock-token-dapopova",
+        "access_token": "mock-token-depopova",
         "token_type": "bearer",
         "user": {
-            "login": "dapopova",
+            "login": "depopova",
             "full_name": "Дарья Попова",
             "role": "HR business partner",
             "department": "HR",
