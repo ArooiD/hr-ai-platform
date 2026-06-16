@@ -7,7 +7,7 @@ import VacancyWizard from '../components/VacancyWizard';
 const emptyVacancy = { title: '', department: '', description: '', required_skills: '', salary_from: '', salary_to: '' };
 
 const VacanciesPage = () => {
-  const navigate = useNavigate(); {
+  const navigate = useNavigate();
   const [vacancies, setVacancies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showWizard, setShowWizard] = useState(false);
