@@ -1,25 +1,11 @@
-import { BarChart3, BriefcaseBusiness, CalendarDays, FileText, GraduationCap, LayoutGrid, Menu, MessageCircle, ShieldCheck, Star, Target, Users, Wallet } from 'lucide-react';
+import { BarChart3, BriefcaseBusiness, CalendarDays, Menu, MessageCircle, Users } from 'lucide-react';
 
 export default function Sidebar({ user, currentPage, setCurrentPage }) {
-  const favorite = [
-    ['Аналитика', BarChart3],
-    ['Моя команда', Users],
-    ['Замещения', CalendarDays]
-  ];
-  const common = [
-    ['Оценка 5+', Star],
-    ['Моё здоровье', ShieldCheck],
-    ['Документы', FileText],
-    ['Моя карьера', Target],
-    ['Подбор талантов', BriefcaseBusiness],
-    ['Мой доход', Wallet],
-    ['SberU', GraduationCap]
-  ];
-
   const navItems = [
     { label: 'Вакансии', icon: BriefcaseBusiness, id: 'vacancies' },
     { label: 'Кандидаты', icon: Users, id: 'candidates' },
     { label: 'Сценарий подбора', icon: CalendarDays, id: 'recruitment' },
+    { label: 'Аналитика', icon: BarChart3, id: 'analytics' },
   ];
 
   return (
@@ -35,22 +21,6 @@ export default function Sidebar({ user, currentPage, setCurrentPage }) {
         <p>основное</p>
         {navItems.map(({label, icon: Icon, id}) => (
           <a key={id} className={currentPage === id ? 'active' : ''} onClick={() => setCurrentPage(id)}>
-            <Icon size={17} /> {label}
-          </a>
-        ))}
-      </nav>
-      <nav className="nav-section">
-        <p>избранные</p>
-        {favorite.map(([label, Icon]) => (
-          <a key={label} onClick={() => {}}>
-            <Icon size={17} /> {label}
-          </a>
-        ))}
-      </nav>
-      <nav className="nav-section">
-        <p>часто используемые</p>
-        {common.map(([label, Icon]) => (
-          <a key={label} onClick={() => {}}>
             <Icon size={17} /> {label}
           </a>
         ))}

@@ -69,3 +69,7 @@ export const hrApi = {
     body: JSON.stringify({ stage }),
   }),
 };
+
+export const dashboardApi = {
+  getDashboard: () => apiRequest('/api/dashboard'),
+};

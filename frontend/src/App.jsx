@@ -5,6 +5,7 @@ import Topbar from './components/layout/Topbar';
 import RecruitmentFlow from './pages/RecruitmentFlow';
 import VacanciesPage from './pages/Vacancies';
 import CandidatesPage from './pages/Candidates';
+import AnalyticsPage from './pages/Analytics';
 import { authApi } from './api/client';
 import './styles.css';
 
@@ -102,6 +103,8 @@ export default function App() {
         return <CandidatesPage />;
       case 'recruitment':
         return <RecruitmentFlow />;
+      case 'analytics':
+        return <AnalyticsPage />;
       default:
         return <VacanciesPage />;
     }
