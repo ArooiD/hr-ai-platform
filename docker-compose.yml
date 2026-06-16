@@ -1,6 +1,6 @@
 services:
   backend:
-    image: python:latest
+    image: python:3.12-slim
     container_name: hr-ai-backend
     working_dir: /workspace/backend
     volumes:
@@ -19,6 +19,17 @@ services:
       MINIO_BUCKET: hr-content
       WEAVIATE_URL: http://weaviate:8080
       OLLAMA_BASE_URL: http://ollama:11434
+      MINERU_URL: http://mineru:30000
+      AUTH_MODE: mock
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: hr-ai
+      KEYCLOAK_CLIENT_ID: hr-ai-frontend
+      JWT_ISSUER: hr-ai-platform
+      JWT_SECRET: hr-ai-dev-local-key
+      DEMO_USER_LOGIN: depopova
+      DEMO_USER_FULL_NAME: Дарья Попова
+      DEMO_USER_ROLE: HR business partner
+      DEMO_USER_DEPARTMENT: HR
     expose:
       - "8000"
     depends_on:
@@ -26,9 +37,11 @@ services:
       - minio
       - weaviate
       - ollama
+      - keycloak
+      - mineru
 
   frontend:
-    image: node:latest
+    image: node:22
     container_name: hr-ai-frontend
     working_dir: /workspace/frontend
     volumes:
@@ -36,6 +49,9 @@ services:
     command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
     environment:
       VITE_API_URL: ""
+      VITE_KEYCLOAK_URL: http://localhost:8081
+      VITE_KEYCLOAK_REALM: hr-ai
+      VITE_KEYCLOAK_CLIENT_ID: hr-ai-frontend
     expose:
       - "5173"
     depends_on:
@@ -64,6 +80,34 @@ services:
       - ./data/postgres:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: hr-ai-keycloak
+    command: start-dev --http-port=8080
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloak-db:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KC_HTTP_ENABLED: "true"
+      KC_HOSTNAME_STRICT: "false"
+    ports:
+      - "8081:8080"
+    depends_on:
+      - keycloak-db
+
+  keycloak-db:
+    image: postgres:16
+    container_name: hr-ai-keycloak-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - ./data/keycloak-postgres:/var/lib/postgresql/data
 
   minio:
     image: minio/minio:latest
@@ -103,3 +147,14 @@ services:
       - ./data/ollama:/root/.ollama
     ports:
       - "11434:11434"
+
+  mineru:
+    image: ghcr.io/opendatalab/mineru:latest
+    container_name: hr-ai-mineru
+    restart: unless-stopped
+    environment:
+      MINERU_DEVICE_MODE: cpu
+    volumes:
+      - ./data/mineru:/data
+    ports:
+      - "30000:30000"
