@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BriefcaseBusiness, Sparkles, UserRoundCheck } from 'lucide-react';
+import { ArrowRight, BriefcaseBusiness, CheckCircle2, Sparkles, UserRoundCheck } from 'lucide-react';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
 import RecruitmentFlow from './pages/RecruitmentFlow';
@@ -29,16 +29,24 @@ function LoginPage({ onLogin }) {
   return (
     <main className="login-page">
       <section className="login-hero">
-        <div className="login-logo"><BriefcaseBusiness size={26} /></div>
-        <p className="login-kicker">HR AI Platform</p>
+        <div className="login-brand">
+          <div className="login-logo"><BriefcaseBusiness size={26} /></div>
+          <span>HR AI Platform</span>
+        </div>
+        <p className="login-kicker">AI assisted recruitment workspace</p>
         <h1>Единый контур подбора персонала</h1>
         <p>Вакансии, кандидаты, AI-анализ, интервью и pipeline найма в одном рабочем пространстве HR-команды.</p>
         <div className="login-feature"><Sparkles size={18} /> AI-модуль работает в demo-режиме</div>
+        <div className="login-benefits">
+          <span><CheckCircle2 size={18} /> Единая база кандидатов</span>
+          <span><CheckCircle2 size={18} /> Воронка найма</span>
+          <span><CheckCircle2 size={18} /> AI-рекомендации</span>
+        </div>
       </section>
 
       <section className="login-card">
         <div className="login-card-header">
-          <UserRoundCheck size={24} />
+          <div className="login-user-icon"><UserRoundCheck size={24} /></div>
           <div>
             <h2>Вход в систему</h2>
             <p>Демо-пользователь: Дарья Попова</p>
@@ -47,13 +55,13 @@ function LoginPage({ onLogin }) {
 
         <form onSubmit={submit} className="login-form">
           <label>
-            Логин
+            <span>Логин</span>
             <input value={login} onChange={(event) => setLogin(event.target.value)} placeholder="depopova" autoFocus />
           </label>
 
           {error && <div className="login-error">{error}</div>}
 
-          <button type="submit" disabled={loading}>{loading ? 'вход...' : 'войти как Дарья Попова'}</button>
+          <button type="submit" disabled={loading}>{loading ? 'вход...' : <>войти как Дарья Попова <ArrowRight size={18} /></>}</button>
         </form>
       </section>
     </main>
