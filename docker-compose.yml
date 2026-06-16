@@ -17,11 +17,15 @@ services:
       MINIO_ACCESS_KEY: hradmin
       MINIO_SECRET_KEY: hradmin123
       MINIO_BUCKET: hr-content
+      WEAVIATE_URL: http://weaviate:8080
+      OLLAMA_BASE_URL: http://ollama:11434
     expose:
       - "8000"
     depends_on:
       - db
       - minio
+      - weaviate
+      - ollama
 
   frontend:
     image: node:latest
@@ -74,3 +78,28 @@ services:
       - "9001:9001"
       - "9000:9000"
 
+  weaviate:
+    image: cr.weaviate.io/semitechnologies/weaviate:1.26.6
+    container_name: hr-ai-weaviate
+    restart: unless-stopped
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: /var/lib/weaviate
+      DEFAULT_VECTORIZER_MODULE: none
+      ENABLE_MODULES: ""
+      CLUSTER_HOSTNAME: hr-ai-weaviate
+    volumes:
+      - ./data/weaviate:/var/lib/weaviate
+    ports:
+      - "8080:8080"
+      - "50051:50051"
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: hr-ai-ollama
+    restart: unless-stopped
+    volumes:
+      - ./data/ollama:/root/.ollama
+    ports:
+      - "11434:11434"
