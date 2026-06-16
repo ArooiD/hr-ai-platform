@@ -65,9 +65,8 @@ services:
       MINIO_ROOT_USER: hradmin
       MINIO_ROOT_PASSWORD: hradmin123
     volumes:
-      - minio_data:/data
+      - ./data/minio:/data
     ports:
       - "9001:9001"
+      - "9000:9000"
 
-volumes:
-  minio_data:
