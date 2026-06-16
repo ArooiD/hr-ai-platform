@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -215,3 +215,117 @@ def demo_seed():
     applications[application.id] = application
 
     return {"vacancy": vacancy, "candidate": candidate, "application": application}
+
+
+@app.get("/api/v1/candidates/all")
+def legacy_candidates_all():
+    return [
+        {
+            "id": item.id,
+            "fullName": item.full_name,
+            "email": item.email,
+            "experienceYears": item.experience_years,
+            "citizenship": "РФ",
+            "city": "Москва",
+            "rawText": item.resume_text,
+            "dynamicSkillsJson": {"skills": item.skills, "experience_phrases": []},
+        }
+        for item in candidates.values()
+    ]
+
+
+@app.get("/api/v1/candidates/vacancies")
+def legacy_vacancies_all():
+    return [
+        {
+            "id": item.id,
+            "title": item.title,
+            "department": item.department,
+            "minExperience": 1,
+            "citizenshipReq": "РФ",
+            "requirements": item.description,
+            "attributesJson": {"skills": item.required_skills},
+        }
+        for item in vacancies.values()
+        if item.status == VacancyStatus.open
+    ]
+
+
+@app.post("/api/v1/candidates/vacancies/create")
+def legacy_create_vacancy(
+    title: str = Form(...),
+    department: str = Form(...),
+    requirements: str = Form(""),
+    skills: str = Form(""),
+    minExperience: int = Form(0),
+    citizenship: str = Form("РФ"),
+):
+    vacancy = Vacancy(
+        id=next_vacancy_id(),
+        title=title,
+        department=department,
+        description=requirements,
+        required_skills=[skill.strip() for skill in skills.split(",") if skill.strip()],
+    )
+    vacancies[vacancy.id] = vacancy
+    return {"status": "ok", "vacancy": vacancy}
+
+
+@app.post("/api/v1/candidates/vacancies/archive/{vacancy_id}")
+def legacy_archive_vacancy(vacancy_id: int):
+    close_vacancy(vacancy_id)
+    return {"status": "archived", "vacancy_id": vacancy_id}
+
+
+@app.get("/api/v1/candidates/search")
+def legacy_search_candidates(query: str = "", minExperience: int = 0, citizenship: str = "РФ", limit: int = 1):
+    result = []
+    for item in candidates.values():
+        if item.experience_years >= minExperience:
+            result.append(
+                {
+                    "id": item.id,
+                    "fullName": item.full_name,
+                    "email": item.email,
+                    "experienceYears": item.experience_years,
+                    "citizenship": citizenship,
+                    "city": "Москва",
+                    "rawText": item.resume_text,
+                    "dynamicSkillsJson": {"skills": item.skills, "experience_phrases": []},
+                }
+            )
+    return result[:limit]
+
+
+@app.get("/api/v1/candidates/explain")
+def legacy_explain_candidate(candidateName: str, skillsJson: str = "", vacancyTitle: str = ""):
+    return f"Кандидат {candidateName} сопоставлен с вакансией {vacancyTitle}. Рекомендуется к рассмотрению по результатам анализа навыков."
+
+
+@app.post("/api/v1/candidates/upload")
+def legacy_upload_candidate(file: UploadFile = File(...)):
+    candidate = Candidate(
+        id=next_candidate_id(),
+        full_name="Новый кандидат",
+        email="candidate@example.com",
+        phone=None,
+        skills=["Python", "SQL"],
+        experience_years=2,
+        resume_text=f"Импортировано резюме: {file.filename}",
+    )
+    candidates[candidate.id] = candidate
+    return {
+        "id": candidate.id,
+        "fullName": candidate.full_name,
+        "email": candidate.email,
+        "experienceYears": candidate.experience_years,
+        "citizenship": "РФ",
+        "city": "Москва",
+        "rawText": candidate.resume_text,
+        "dynamicSkillsJson": {"skills": candidate.skills, "experience_phrases": []},
+    }
+
+
+@app.post("/api/v1/candidates/vacancies/upload-excel")
+def legacy_upload_excel(file: UploadFile = File(...)):
+    return f"Файл {file.filename} принят. Импорт вакансий выполнен в demo-режиме."
