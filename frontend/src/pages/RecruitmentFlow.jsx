@@ -19,9 +19,12 @@ const vacancyStatuses = {
 
 const normalize = (value) => String(value || '').trim().toLowerCase();
 const initials = (name = '') => name.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase();
+const compactListStyle = { display: 'grid', gap: 8, maxHeight: 420, overflowY: 'auto', paddingRight: 6 };
+const selectorLayoutStyle = { display: 'grid', gridTemplateColumns: '330px minmax(0, 1fr)', gap: 18, alignItems: 'start' };
 
 function calculateCandidateMatch(candidate, vacancy) {
   if (!candidate || !vacancy) return { score: 0, matchedSkills: [], missedSkills: [], reason: 'Выберите объект подбора' };
+
   const requiredSkills = vacancy.required_skills || [];
   const candidateSkills = candidate.skills || [];
   const candidateSkillSet = new Set(candidateSkills.map(normalize));
@@ -33,9 +36,11 @@ function calculateCandidateMatch(candidate, vacancy) {
   const titleTokens = normalize(vacancy.title).split(/\s+/).filter(token => token.length > 3);
   const contextScore = titleTokens.some(token => resumeText.includes(token)) ? 5 : 0;
   const score = Math.min(100, skillScore + experienceScore + contextScore);
+
   let reason = 'Слабое соответствие: лучше оставить в резерве.';
   if (score >= 80) reason = 'Высокое соответствие: стоит сразу создать отклик и перевести на скрининг.';
   else if (score >= 55) reason = 'Среднее соответствие: можно создать отклик и проверить на первичном интервью.';
+
   return { score, matchedSkills, missedSkills, reason };
 }
 
@@ -44,9 +49,6 @@ function getScoreView(score) {
   if (score >= 55) return { color: '#d97706', bg: '#fef3c7', border: '#fde68a', label: 'нужно проверить' };
   return { color: '#b91c1c', bg: '#fee2e2', border: '#fecaca', label: 'резерв' };
 }
-
-const panelStyle = { display: 'grid', gridTemplateColumns: '360px minmax(0, 1fr)', gap: 18, alignItems: 'start' };
-const scrollListStyle = { display: 'grid', gap: 8, maxHeight: 420, overflowY: 'auto', paddingRight: 6 };
 
 export default function RecruitmentPage() {
   const [vacancies, setVacancies] = useState([]);
@@ -68,7 +70,9 @@ export default function RecruitmentPage() {
   const load = async () => {
     try {
       const [vacancyData, candidateData, applicationData] = await Promise.all([
-        hrApi.vacancies(), hrApi.candidates(), hrApi.applications(),
+        hrApi.vacancies(),
+        hrApi.candidates(),
+        hrApi.applications(),
       ]);
       setVacancies(vacancyData);
       setCandidates(candidateData);
@@ -77,7 +81,9 @@ export default function RecruitmentPage() {
         const firstOpenVacancy = vacancyData.find(v => v.status !== 'closed') || vacancyData[0];
         setSelectedVacancyFilter(String(firstOpenVacancy.id));
       }
-      if (!selectedCandidateCenter && candidateData.length) setSelectedCandidateCenter(String(candidateData[0].id));
+      if (!selectedCandidateCenter && candidateData.length) {
+        setSelectedCandidateCenter(String(candidateData[0].id));
+      }
     } catch (error) {
       setMessage('Backend недоступен');
     }
@@ -109,9 +115,23 @@ export default function RecruitmentPage() {
     await load();
   };
 
-  const analyze = async (id) => { await hrApi.analyzeApplication(id); setMessage('AI-анализ выполнен'); await load(); };
-  const updateStage = async (id, stage) => { await hrApi.updateApplicationStage(id, stage); setMessage(`Кандидат переведён на этап: ${stageLabels[stage]}`); await load(); };
-  const loadQuestions = async (id) => { const data = await hrApi.interviewQuestions(id); setQuestions(data.questions || []); setActiveTab('questions'); };
+  const analyze = async (id) => {
+    await hrApi.analyzeApplication(id);
+    setMessage('AI-анализ выполнен');
+    await load();
+  };
+
+  const updateStage = async (id, stage) => {
+    await hrApi.updateApplicationStage(id, stage);
+    setMessage(`Кандидат переведён на этап: ${stageLabels[stage]}`);
+    await load();
+  };
+
+  const loadQuestions = async (id) => {
+    const data = await hrApi.interviewQuestions(id);
+    setQuestions(data.questions || []);
+    setActiveTab('questions');
+  };
 
   const selectedVacancyObject = useMemo(() => selectedVacancyFilter === 'all' ? null : vacancies.find(v => v.id === Number(selectedVacancyFilter)), [vacancies, selectedVacancyFilter]);
   const selectedCandidateObject = useMemo(() => candidates.find(c => c.id === Number(selectedCandidateCenter)), [candidates, selectedCandidateCenter]);
@@ -123,17 +143,28 @@ export default function RecruitmentPage() {
     return { vacancy, total: vacancyApplications.length, active: active.length, hired: hired.length };
   }), [vacancies, applications]);
 
+  const candidateStats = useMemo(() => candidates.map((candidate) => {
+    const candidateApplications = applications.filter(app => app.candidate_id === candidate.id);
+    const active = candidateApplications.filter(app => !['hired', 'rejected'].includes(app.stage));
+    const interviews = candidateApplications.filter(app => app.stage === 'interview');
+    const offers = candidateApplications.filter(app => app.stage === 'offer');
+    return { candidate, total: candidateApplications.length, active: active.length, interviews: interviews.length, offers: offers.length };
+  }), [candidates, applications]);
+
+  const selectedVacancyStats = useMemo(() => vacancyStats.find(item => item.vacancy.id === selectedVacancyObject?.id), [vacancyStats, selectedVacancyObject]);
+  const selectedCandidateStats = useMemo(() => candidateStats.find(item => item.candidate.id === selectedCandidateObject?.id), [candidateStats, selectedCandidateObject]);
+
   const filteredVacancyStats = useMemo(() => {
     const q = normalize(vacancySearch);
     if (!q) return vacancyStats;
     return vacancyStats.filter(({ vacancy }) => normalize(`${vacancy.title} ${vacancy.department} ${(vacancy.required_skills || []).join(' ')}`).includes(q));
   }, [vacancyStats, vacancySearch]);
 
-  const filteredCandidates = useMemo(() => {
+  const filteredCandidateStats = useMemo(() => {
     const q = normalize(candidateSearch);
-    if (!q) return candidates;
-    return candidates.filter(candidate => normalize(`${candidate.full_name} ${candidate.email} ${(candidate.skills || []).join(' ')}`).includes(q));
-  }, [candidates, candidateSearch]);
+    if (!q) return candidateStats;
+    return candidateStats.filter(({ candidate }) => normalize(`${candidate.full_name} ${candidate.email} ${(candidate.skills || []).join(' ')}`).includes(q));
+  }, [candidateStats, candidateSearch]);
 
   const visibleApplications = useMemo(() => applications.filter((app) => {
     const stageOk = filterStage === 'all' || app.stage === filterStage;
@@ -193,31 +224,18 @@ export default function RecruitmentPage() {
           <button className={matchingMode === 'candidate' ? 'primary-button' : 'secondary-button'} onClick={() => { setMatchingMode('candidate'); setActiveTab('matching'); }}>Кандидат как центр</button>
         </div>
 
-        <div style={panelStyle}>
+        <div style={selectorLayoutStyle}>
           {matchingMode === 'vacancy' ? (
-            <VacancySelector
-              vacancyStats={filteredVacancyStats}
-              selectedVacancyFilter={selectedVacancyFilter}
-              search={vacancySearch}
-              setSearch={setVacancySearch}
-              onSelect={(id) => { setSelectedVacancyFilter(String(id)); setActiveTab('matching'); }}
-            />
+            <VacancySelector vacancyStats={filteredVacancyStats} selectedVacancyFilter={selectedVacancyFilter} search={vacancySearch} setSearch={setVacancySearch} onSelect={(id) => { setSelectedVacancyFilter(String(id)); setActiveTab('matching'); }} />
           ) : (
-            <CandidateSelector
-              candidates={filteredCandidates}
-              applications={applications}
-              selectedCandidateCenter={selectedCandidateCenter}
-              search={candidateSearch}
-              setSearch={setCandidateSearch}
-              onSelect={(id) => { setSelectedCandidateCenter(String(id)); setActiveTab('matching'); }}
-            />
+            <CandidateSelector candidateStats={filteredCandidateStats} selectedCandidateCenter={selectedCandidateCenter} search={candidateSearch} setSearch={setCandidateSearch} onSelect={(id) => { setSelectedCandidateCenter(String(id)); setActiveTab('matching'); }} />
           )}
 
-          <div style={{ border: '1px solid var(--line)', borderRadius: 18, background: '#fff', padding: 18, minHeight: 220 }}>
+          <div style={{ border: '1px solid var(--line)', borderRadius: 18, background: '#fff', padding: 18, minHeight: 150 }}>
             {matchingMode === 'vacancy' ? (
-              <SelectedVacancyPanel vacancy={selectedVacancyObject} />
+              <SelectedVacancyPanel vacancy={selectedVacancyObject} stats={selectedVacancyStats} />
             ) : (
-              <SelectedCandidatePanel candidate={selectedCandidateObject} />
+              <SelectedCandidatePanel candidate={selectedCandidateObject} stats={selectedCandidateStats} />
             )}
           </div>
         </div>
@@ -267,22 +285,26 @@ function SearchBox({ value, onChange, placeholder }) {
 }
 
 function VacancySelector({ vacancyStats, selectedVacancyFilter, search, setSearch, onSelect }) {
-  return <div><h2 style={{ margin: '0 0 6px', fontSize: 20 }}>Вакансии</h2><p style={{ margin: '0 0 12px', color: '#64748b', fontSize: 13 }}>Список с поиском и прокруткой для больших баз.</p><SearchBox value={search} onChange={setSearch} placeholder="Поиск вакансии, отдела или навыка..." /><div style={scrollListStyle}>{vacancyStats.map(({ vacancy, total, active, hired }) => { const status = vacancyStatuses[vacancy.status] || vacancyStatuses.open; const selected = selectedVacancyFilter === String(vacancy.id); return <button key={vacancy.id} type="button" onClick={() => onSelect(vacancy.id)} style={{ textAlign: 'left', border: selected ? '2px solid #0b73ff' : '1px solid var(--line)', borderRadius: 14, background: selected ? '#eff6ff' : '#fff', padding: 12, cursor: 'pointer' }}><div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}><strong>{vacancy.title}</strong><span style={{ borderRadius: 999, padding: '3px 8px', background: status.bg, color: status.color, fontSize: 11, fontWeight: 900 }}>{status.label}</span></div><div style={{ marginTop: 4, color: '#64748b', fontSize: 12 }}>{vacancy.department}</div><div style={{ display: 'flex', gap: 14, marginTop: 8, color: '#64748b', fontSize: 12 }}><span><b>{total}</b> всего</span><span><b>{active}</b> в работе</span><span><b>{hired}</b> нанято</span></div></button>; })}{!vacancyStats.length && <SmallEmpty text="Ничего не найдено" />}</div></div>;
+  return <div><h2 style={{ margin: '0 0 6px', fontSize: 20 }}>Вакансии</h2><p style={{ margin: '0 0 12px', color: '#64748b', fontSize: 13 }}>Список с поиском и прокруткой для больших баз.</p><SearchBox value={search} onChange={setSearch} placeholder="Поиск вакансии, отдела или навыка..." /><div style={compactListStyle}>{vacancyStats.map(({ vacancy, total, active, hired }) => { const status = vacancyStatuses[vacancy.status] || vacancyStatuses.open; const selected = selectedVacancyFilter === String(vacancy.id); return <button key={vacancy.id} type="button" onClick={() => onSelect(vacancy.id)} style={{ textAlign: 'left', border: selected ? '2px solid #0b73ff' : '1px solid var(--line)', borderRadius: 14, background: selected ? '#eff6ff' : '#fff', padding: 12, cursor: 'pointer' }}><div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}><strong>{vacancy.title}</strong><span style={{ borderRadius: 999, padding: '3px 8px', background: status.bg, color: status.color, fontSize: 11, fontWeight: 900 }}>{status.label}</span></div><div style={{ marginTop: 4, color: '#64748b', fontSize: 12 }}>{vacancy.department}</div><div style={{ display: 'flex', gap: 14, marginTop: 8, color: '#64748b', fontSize: 12 }}><span><b>{total}</b> всего</span><span><b>{active}</b> в работе</span><span><b>{hired}</b> нанято</span></div></button>; })}{!vacancyStats.length && <SmallEmpty text="Ничего не найдено" />}</div></div>;
 }
 
-function CandidateSelector({ candidates, applications, selectedCandidateCenter, search, setSearch, onSelect }) {
-  return <div><h2 style={{ margin: '0 0 6px', fontSize: 20 }}>Кандидаты</h2><p style={{ margin: '0 0 12px', color: '#64748b', fontSize: 13 }}>Список кандидатов не раздувает страницу.</p><SearchBox value={search} onChange={setSearch} placeholder="Поиск кандидата, email или навыка..." /><div style={scrollListStyle}>{candidates.map(candidate => { const selected = selectedCandidateCenter === String(candidate.id); const activeApps = applications.filter(app => app.candidate_id === candidate.id && !['hired', 'rejected'].includes(app.stage)); return <button key={candidate.id} type="button" onClick={() => onSelect(candidate.id)} style={{ textAlign: 'left', border: selected ? '2px solid #0b73ff' : '1px solid var(--line)', borderRadius: 14, background: selected ? '#eff6ff' : '#fff', padding: 12, cursor: 'pointer' }}><div style={{ display: 'flex', gap: 10, alignItems: 'center' }}><div className="candidate-avatar" style={{ width: 38, height: 38, margin: 0, fontSize: 13 }}>{initials(candidate.full_name)}</div><div><strong>{candidate.full_name}</strong><div style={{ color: '#64748b', fontSize: 12 }}>{candidate.experience_years || 0} лет опыта · {activeApps.length} в работе</div></div></div><div className="skills" style={{ marginTop: 8 }}>{(candidate.skills || []).slice(0, 3).map(skill => <span key={skill} className="skill-tag">{skill}</span>)}</div></button>; })}{!candidates.length && <SmallEmpty text="Ничего не найдено" />}</div></div>;
+function CandidateSelector({ candidateStats, selectedCandidateCenter, search, setSearch, onSelect }) {
+  return <div><h2 style={{ margin: '0 0 6px', fontSize: 20 }}>Кандидаты</h2><p style={{ margin: '0 0 12px', color: '#64748b', fontSize: 13 }}>Список кандидатов не раздувает страницу.</p><SearchBox value={search} onChange={setSearch} placeholder="Поиск кандидата, email или навыка..." /><div style={compactListStyle}>{candidateStats.map(({ candidate, active }) => { const selected = selectedCandidateCenter === String(candidate.id); return <button key={candidate.id} type="button" onClick={() => onSelect(candidate.id)} style={{ textAlign: 'left', border: selected ? '2px solid #0b73ff' : '1px solid var(--line)', borderRadius: 14, background: selected ? '#eff6ff' : '#fff', padding: 12, cursor: 'pointer' }}><div style={{ display: 'flex', gap: 10, alignItems: 'center' }}><div className="candidate-avatar" style={{ width: 38, height: 38, margin: 0, fontSize: 13 }}>{initials(candidate.full_name)}</div><div><strong>{candidate.full_name}</strong><div style={{ color: '#64748b', fontSize: 12 }}>{candidate.experience_years || 0} лет опыта · {active} в работе</div></div></div><div className="skills" style={{ marginTop: 8 }}>{(candidate.skills || []).slice(0, 3).map(skill => <span key={skill} className="skill-tag">{skill}</span>)}</div></button>; })}{!candidateStats.length && <SmallEmpty text="Ничего не найдено" />}</div></div>;
 }
 
-function SelectedVacancyPanel({ vacancy }) {
+function SelectedVacancyPanel({ vacancy, stats }) {
   if (!vacancy) return <Empty icon={<BriefcaseBusiness size={38} />} text="Выберите вакансию слева" />;
   const status = vacancyStatuses[vacancy.status] || vacancyStatuses.open;
-  return <div><div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}><div><h2 style={{ margin: 0 }}>{vacancy.title}</h2><p style={{ margin: '6px 0 0', color: '#64748b' }}>{vacancy.department}</p></div><span style={{ alignSelf: 'flex-start', borderRadius: 999, padding: '5px 12px', background: status.bg, color: status.color, fontSize: 12, fontWeight: 900 }}>{status.label}</span></div><h3 style={{ margin: '18px 0 8px' }}>Требуемые навыки</h3><div className="skills">{(vacancy.required_skills || []).map(skill => <span key={skill} className="skill-tag">{skill}</span>)}</div><p style={{ color: '#64748b', lineHeight: 1.5 }}>{vacancy.description}</p></div>;
+  return <div><div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}><div><h2 style={{ margin: 0 }}>{vacancy.title}</h2><p style={{ margin: '4px 0 0', color: '#64748b' }}>{vacancy.department}</p></div><span style={{ borderRadius: 999, padding: '5px 12px', background: status.bg, color: status.color, fontSize: 12, fontWeight: 900 }}>{status.label}</span></div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 14, marginBottom: 12 }}><MiniStat label="откликов" value={stats?.total || 0} /><MiniStat label="в работе" value={stats?.active || 0} /><MiniStat label="нанято" value={stats?.hired || 0} /></div><div className="skills">{(vacancy.required_skills || []).slice(0, 8).map(skill => <span key={skill} className="skill-tag">{skill}</span>)}</div><button className="secondary-button" style={{ marginTop: 14 }}>Открыть карточку вакансии</button></div>;
 }
 
-function SelectedCandidatePanel({ candidate }) {
+function SelectedCandidatePanel({ candidate, stats }) {
   if (!candidate) return <Empty icon={<UserPlus size={38} />} text="Выберите кандидата слева" />;
-  return <div><div style={{ display: 'flex', gap: 14, alignItems: 'center' }}><div className="candidate-avatar" style={{ width: 54, height: 54, margin: 0 }}>{initials(candidate.full_name)}</div><div><h2 style={{ margin: 0 }}>{candidate.full_name}</h2><p style={{ margin: '6px 0 0', color: '#64748b' }}>{candidate.email} · {candidate.experience_years || 0} лет опыта</p></div></div><h3 style={{ margin: '18px 0 8px' }}>Навыки кандидата</h3><div className="skills">{(candidate.skills || []).map(skill => <span key={skill} className="skill-tag">{skill}</span>)}</div><p style={{ color: '#64748b', lineHeight: 1.5 }}>{candidate.resume_text}</p></div>;
+  return <div><div style={{ display: 'flex', gap: 14, alignItems: 'center' }}><div className="candidate-avatar" style={{ width: 54, height: 54, margin: 0 }}>{initials(candidate.full_name)}</div><div><h2 style={{ margin: 0 }}>{candidate.full_name}</h2><p style={{ margin: '4px 0 0', color: '#64748b' }}>{candidate.email} · {candidate.experience_years || 0} лет опыта</p></div></div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 14, marginBottom: 12 }}><MiniStat label="откликов" value={stats?.total || 0} /><MiniStat label="интервью" value={stats?.interviews || 0} /><MiniStat label="офферов" value={stats?.offers || 0} /></div><div className="skills">{(candidate.skills || []).slice(0, 8).map(skill => <span key={skill} className="skill-tag">{skill}</span>)}</div><button className="secondary-button" style={{ marginTop: 14 }}>Открыть резюме</button></div>;
+}
+
+function MiniStat({ label, value }) {
+  return <div style={{ border: '1px solid var(--line)', borderRadius: 12, padding: '10px 12px', background: '#f8fafc' }}><div style={{ fontSize: 18, fontWeight: 900 }}>{value}</div><div style={{ color: '#64748b', fontSize: 12 }}>{label}</div></div>;
 }
 
 function SectionHeader({ icon, title, subtitle }) {
@@ -290,7 +312,7 @@ function SectionHeader({ icon, title, subtitle }) {
 }
 
 function Empty({ icon, text }) {
-  return <div className="empty-state" style={{ minHeight: 160 }}>{icon}<p>{text}</p></div>;
+  return <div className="empty-state" style={{ minHeight: 120 }}>{icon}<p>{text}</p></div>;
 }
 
 function SmallEmpty({ text }) {
