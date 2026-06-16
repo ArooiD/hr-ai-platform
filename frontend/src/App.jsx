@@ -7,7 +7,7 @@ import { authApi } from './api/client';
 import './styles.css';
 
 function LoginPage({ onLogin }) {
-  const [login, setLogin] = useState('dapopova');
+  const [login, setLogin] = useState('depopova');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -20,7 +20,7 @@ function LoginPage({ onLogin }) {
       const session = await authApi.login({ login });
       onLogin(session);
     } catch (err) {
-      setError('Для demo-входа используйте логин dapopova.');
+      setError('Для demo-входа используйте логин depopova.');
     } finally {
       setLoading(false);
     }
@@ -48,7 +48,7 @@ function LoginPage({ onLogin }) {
         <form onSubmit={submit} className="login-form">
           <label>
             Логин
-            <input value={login} onChange={(event) => setLogin(event.target.value)} placeholder="dapopova" autoFocus />
+            <input value={login} onChange={(event) => setLogin(event.target.value)} placeholder="depopova" autoFocus />
           </label>
 
           {error && <div className="login-error">{error}</div>}
