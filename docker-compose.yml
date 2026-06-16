@@ -7,6 +7,7 @@ services:
       - .:/workspace
     command: sh -c "pip install -r requirements.txt && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     environment:
+      DATABASE_URL: postgresql://hradmin:hradmin123@db:5432/hr_platform
       MINIO_ENDPOINT: minio:9000
       MINIO_ACCESS_KEY: hradmin
       MINIO_SECRET_KEY: hradmin123
@@ -14,6 +15,7 @@ services:
     expose:
       - "8000"
     depends_on:
+      - db
       - minio
 
   frontend:
@@ -42,6 +44,19 @@ services:
       - backend
       - minio
 
+  db:
+    image: postgres:16-alpine
+    container_name: hr-ai-db
+    environment:
+      POSTGRES_DB: hr_platform
+      POSTGRES_USER: hradmin
+      POSTGRES_PASSWORD: hradmin123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./samples/seed.sql:/docker-entrypoint-initdb.d/seed.sql
+    ports:
+      - "5432:5432"
+
   minio:
     image: minio/minio:latest
     container_name: hr-ai-minio
@@ -55,4 +70,5 @@ services:
       - "9001:9001"
 
 volumes:
+  postgres_data:
   minio_data:
