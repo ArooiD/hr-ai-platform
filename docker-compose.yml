@@ -1,6 +1,6 @@
 services:
   backend:
-    image: python:3.12-slim
+    image: python:latest
     container_name: hr-ai-backend
     working_dir: /workspace
     volumes:
@@ -17,7 +17,7 @@ services:
       - minio
 
   frontend:
-    image: node:22-alpine
+    image: node:latest
     container_name: hr-ai-frontend
     working_dir: /workspace/frontend
     volumes:
@@ -31,7 +31,7 @@ services:
       - backend
 
   nginx:
-    image: nginx:1.27-alpine
+    image: nginx:latest
     container_name: hr-ai-nginx
     ports:
       - "80:80"
@@ -43,7 +43,7 @@ services:
       - minio
 
   minio:
-    image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    image: minio/minio:latest
     container_name: hr-ai-minio
     command: server /data --console-address ":9001"
     environment:
