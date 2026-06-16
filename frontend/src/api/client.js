@@ -23,6 +23,13 @@ export async function apiRequest(path, options = {}) {
   return response.json();
 }
 
+export const authApi = {
+  login: (payload) => apiRequest('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  }),
+};
+
 export const hrApi = {
   dashboard: () => apiRequest('/api/dashboard'),
   vacancies: () => apiRequest('/api/vacancies'),
