@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowRight, BriefcaseBusiness, UserRoundCheck } from 'lucide-react';
+import { ArrowRight, BriefcaseBusiness, CalendarCheck2, ChartNoAxesColumnIncreasing, FileText, UserRoundCheck, UsersRound } from 'lucide-react';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
 import RecruitmentFlow from './pages/RecruitmentFlow';
@@ -28,10 +28,21 @@ function LoginPage({ onLogin }) {
 
   return (
     <main className="login-page">
-      <section className="login-hero compact">
+      <section className="login-hero visual">
         <div className="login-brand">
           <div className="login-logo"><BriefcaseBusiness size={26} /></div>
           <span>HR Platform</span>
+        </div>
+        <div className="login-dashboard-art" aria-hidden="true">
+          <div className="art-card art-main">
+            <div className="art-header"><UsersRound size={22} /><span>Подбор</span></div>
+            <div className="art-row"><span>Новые кандидаты</span><b>24</b></div>
+            <div className="art-row"><span>Интервью</span><b>8</b></div>
+            <div className="art-progress"><i style={{ width: '68%' }} /></div>
+          </div>
+          <div className="art-card art-small art-top"><CalendarCheck2 size={20} /><b>5</b><span>встреч</span></div>
+          <div className="art-card art-small art-bottom"><ChartNoAxesColumnIncreasing size={20} /><b>82%</b><span>match</span></div>
+          <div className="art-document"><FileText size={26} /><span>CV</span></div>
         </div>
       </section>
 
