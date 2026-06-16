@@ -1,8 +1,14 @@
 import { BarChart3, BriefcaseBusiness, CalendarDays, FileText, GraduationCap, LayoutGrid, Menu, MessageCircle, ShieldCheck, Star, Target, Users, Wallet } from 'lucide-react';
 
-export default function Sidebar({ user }) {
-  const favorite = [['Аналитика', BarChart3], ['Моя команда', Users], ['Замещения', CalendarDays]];
-  const common = [['Оценка 5+', Star], ['Моё здоровье', ShieldCheck], ['Документы', FileText], ['Моя карьера', Target], ['Подбор талантов', BriefcaseBusiness], ['Мой доход', Wallet], ['SberU', GraduationCap]];
+export default function Sidebar({ user, currentPage, setCurrentPage }) {
+  const favorite = [['Аналитика', BarChart3, 'analytics'], ['Моя команда', Users, 'team'], ['Замещения', CalendarDays, 'replacements']];
+  const common = [['Оценка 5+', Star, 'rating'], ['Моё здоровье', ShieldCheck, 'health'], ['Документы', FileText, 'documents'], ['Моя карьера', Target, 'career'], ['Подбор талантов', BriefcaseBusiness, 'recruitment'], ['Мой доход', Wallet, 'income'], ['SberU', GraduationCap, 'sberu']];
+
+  const navItems = [
+    { label: 'Вакансии', icon: BriefcaseBusiness, id: 'vacancies' },
+    { label: 'Кандидаты', icon: Users, id: 'candidates' },
+    { label: 'Сценарий подбора', icon: CalendarDays, id: 'recruitment' },
+  ];
 
   return (
     <aside className="sidebar">
@@ -13,7 +19,11 @@ export default function Sidebar({ user }) {
         <span>{user?.role || 'HR business partner'}</span>
         <small>{user?.login || 'dapopova'}</small>
       </div>
-      <nav className="nav-section"><a><LayoutGrid size={17}/> все приложения</a></nav>
+      <nav className="nav-section"><p>основное</p>{navItems.map(({label, Icon, id}) => (
+        <a key={id} className={currentPage === id ? 'active' : ''} onClick={() => setCurrentPage(id)}>
+          <Icon size={17} /> {label}
+        </a>
+      ))}</nav>
       <nav className="nav-section"><p>избранные</p>{favorite.map(([label,Icon]) => <a key={label}><Icon size={17}/> {label}</a>)}</nav>
       <nav className="nav-section"><p>часто используемые</p>{common.map(([label,Icon]) => <a key={label}><Icon size={17}/> {label}</a>)}</nav>
       <div className="support"><MessageCircle size={16}/> поддержка</div>

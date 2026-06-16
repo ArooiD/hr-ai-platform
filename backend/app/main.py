@@ -88,6 +88,25 @@ def close_vacancy(vacancy_id: int):
     return updated
 
 
+@app.put("/api/vacancies/{vacancy_id}", response_model=Vacancy)
+def update_vacancy(vacancy_id: int, payload: VacancyCreate):
+    vacancy = vacancies.get(vacancy_id)
+    if vacancy is None:
+        raise HTTPException(status_code=404, detail="Vacancy not found")
+
+    updated = vacancy.model_copy(update=payload.model_dump())
+    vacancies[vacancy_id] = updated
+    return updated
+
+
+@app.delete("/api/vacancies/{vacancy_id}")
+def delete_vacancy(vacancy_id: int):
+    if vacancy_id not in vacancies:
+        raise HTTPException(status_code=404, detail="Vacancy not found")
+    del vacancies[vacancy_id]
+    return {"status": "deleted", "vacancy_id": vacancy_id}
+
+
 @app.post("/api/candidates", response_model=Candidate)
 def create_candidate(payload: CandidateCreate):
     candidate = Candidate(id=next_candidate_id(), **payload.model_dump())
@@ -98,6 +117,25 @@ def create_candidate(payload: CandidateCreate):
 @app.get("/api/candidates", response_model=list[Candidate])
 def list_candidates():
     return list(candidates.values())
+
+
+@app.put("/api/candidates/{candidate_id}", response_model=Candidate)
+def update_candidate(candidate_id: int, payload: CandidateCreate):
+    candidate = candidates.get(candidate_id)
+    if candidate is None:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+
+    updated = candidate.model_copy(update=payload.model_dump())
+    candidates[candidate_id] = updated
+    return updated
+
+
+@app.delete("/api/candidates/{candidate_id}")
+def delete_candidate(candidate_id: int):
+    if candidate_id not in candidates:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    del candidates[candidate_id]
+    return {"status": "deleted", "candidate_id": candidate_id}
 
 
 @app.post("/api/applications", response_model=Application)

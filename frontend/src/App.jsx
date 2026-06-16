@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { ArrowRight, BriefcaseBusiness, CalendarCheck2, ChartNoAxesColumnIncreasing, FileText, UserRoundCheck, UsersRound } from 'lucide-react';
+import { ArrowRight, BriefcaseBusiness, CalendarCheck2, ChartNoAxesColumnIncreasing, FileText, UserRoundCheck, UsersRound, Users } from 'lucide-react';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
 import RecruitmentFlow from './pages/RecruitmentFlow';
+import VacanciesPage from './pages/Vacancies';
+import CandidatesPage from './pages/Candidates';
 import { authApi } from './api/client';
 import './styles.css';
 
@@ -76,6 +78,8 @@ export default function App() {
     return saved ? JSON.parse(saved) : null;
   });
 
+  const [currentPage, setCurrentPage] = useState('vacancies');
+
   const login = (nextSession) => {
     localStorage.setItem('hr-session', JSON.stringify(nextSession));
     setSession(nextSession);
@@ -90,13 +94,26 @@ export default function App() {
     return <LoginPage onLogin={login} />;
   }
 
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'vacancies':
+        return <VacanciesPage />;
+      case 'candidates':
+        return <CandidatesPage />;
+      case 'recruitment':
+        return <RecruitmentFlow />;
+      default:
+        return <VacanciesPage />;
+    }
+  };
+
   return (
     <div className="app-shell">
-      <Sidebar user={session.user} />
+      <Sidebar user={session.user} currentPage={currentPage} setCurrentPage={setCurrentPage} />
       <main className="workspace">
         <Topbar user={session.user} onLogout={logout} />
         <div className="single-page-workspace">
-          <RecruitmentFlow />
+          {renderPage()}
         </div>
       </main>
     </div>

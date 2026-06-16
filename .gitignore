@@ -8,3 +8,15 @@ build
 /.idea/
 package-lock.json
 node_modules
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+.venv/
+
+# Frontend build
+frontend/dist/

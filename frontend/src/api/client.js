@@ -40,9 +40,23 @@ export const hrApi = {
     method: 'POST',
     body: JSON.stringify(payload),
   }),
+  updateVacancy: (id, payload) => apiRequest(`/api/vacancies/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  }),
+  deleteVacancy: (id) => apiRequest(`/api/vacancies/${id}`, {
+    method: 'DELETE',
+  }),
   createCandidate: (payload) => apiRequest('/api/candidates', {
     method: 'POST',
     body: JSON.stringify(payload),
+  }),
+  updateCandidate: (id, payload) => apiRequest(`/api/candidates/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  }),
+  deleteCandidate: (id) => apiRequest(`/api/candidates/${id}`, {
+    method: 'DELETE',
   }),
   createApplication: (payload) => apiRequest('/api/applications', {
     method: 'POST',
