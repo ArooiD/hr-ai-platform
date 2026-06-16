@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { BriefcaseBusiness, Plus, Trash2, Edit2, X, Check, Search } from 'lucide-react';
 import { hrApi } from '../api/client';
@@ -5,7 +6,8 @@ import VacancyWizard from '../components/VacancyWizard';
 
 const emptyVacancy = { title: '', department: '', description: '', required_skills: '', salary_from: '', salary_to: '' };
 
-export default function VacanciesPage() {
+const VacanciesPage = () => {
+  const navigate = useNavigate(); {
   const [vacancies, setVacancies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showWizard, setShowWizard] = useState(false);
@@ -126,7 +128,7 @@ export default function VacanciesPage() {
               key={v.id} 
               className="card vacancy-card"
               style={{ cursor: 'pointer' }}
-              onClick={() => (window.location.hash = `#/vacancies/${v.id}`)}
+              onClick={() => (navigate(`/vacancies/${v.id}`))}
             >
               <div className="card-header">
                 <h3 style={{ marginBottom: '8px' }}>{v.title}</h3>
@@ -192,3 +194,4 @@ export default function VacanciesPage() {
     </div>
   );
 }
+export default VacanciesPage;

@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ArrowRight, BriefcaseBusiness, CalendarCheck2, ChartNoAxesColumnIncreasing, FileText, UserRoundCheck, UsersRound, Users } from 'lucide-react';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
 import RecruitmentFlow from './pages/RecruitmentFlow';
 import VacanciesPage from './pages/Vacancies';
+import VacancyDetailPage from './pages/VacancyDetail';
 import CandidatesPage from './pages/Candidates';
 import AnalyticsPage from './pages/Analytics';
-import VacancyDetailPage from './pages/VacancyDetail';
 import { authApi } from './api/client';
 import './styles.css';
 
@@ -74,79 +75,71 @@ function LoginPage({ onLogin }) {
   );
 }
 
+function ProtectedRoute({ children }) {
+  const [session] = useState(() => {
+    const saved = localStorage.getItem('hr-session');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  if (!session) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+
+function AppLayout({ children }) {
+  const [session] = useState(() => {
+    const saved = localStorage.getItem('hr-session');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const logout = () => {
+    localStorage.removeItem('hr-session');
+    window.location.href = '/';
+  };
+
+  return (
+    <div className="app-shell">
+      <Sidebar user={session.user} currentPage="vacancies" setCurrentPage={() => {}} />
+      <main className="workspace">
+        <Topbar user={session.user} onLogout={logout} />
+        <div className="single-page-workspace">
+          {children}
+        </div>
+      </main>
+    </div>
+  );
+}
+
 export default function App() {
   const [session, setSession] = useState(() => {
     const saved = localStorage.getItem('hr-session');
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [currentPage, setCurrentPage] = useState('vacancies');
-  const [selectedVacancyId, setSelectedVacancyId] = useState(null);
-
   const login = (nextSession) => {
     localStorage.setItem('hr-session', JSON.stringify(nextSession));
     setSession(nextSession);
   };
 
-  const logout = () => {
-    localStorage.removeItem('hr-session');
-    setSession(null);
-  };
-
-  // Handle direct navigation to vacancy detail
-  useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash;
-      if (hash.startsWith('#/vacancies/')) {
-        const id = hash.split('/')[2];
-        if (id) {
-          setCurrentPage('vacancy-detail');
-          setSelectedVacancyId(parseInt(id));
-        }
-      } else {
-        setCurrentPage('vacancies');
-        setSelectedVacancyId(null);
-      }
-    };
-
-    window.addEventListener('hashchange', handleHashChange);
-    handleHashChange(); // Check on mount
-
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
-
   if (!session) {
     return <LoginPage onLogin={login} />;
   }
 
-  const renderPage = () => {
-    if (currentPage === 'vacancy-detail' && selectedVacancyId) {
-      return <VacancyDetailPage id={selectedVacancyId} />;
-    }
-    
-    switch (currentPage) {
-      case 'vacancies':
-        return <VacanciesPage />;
-      case 'candidates':
-        return <CandidatesPage />;
-      case 'recruitment':
-        return <RecruitmentFlow />;
-      case 'analytics':
-        return <AnalyticsPage />;
-      default:
-        return <VacanciesPage />;
-    }
-  };
-
   return (
-    <div className="app-shell">
-      <Sidebar user={session.user} currentPage={currentPage} setCurrentPage={setCurrentPage} />
-      <main className="workspace">
-        <Topbar user={session.user} onLogout={logout} />
-        <div className="single-page-workspace">
-          {renderPage()}
-        </div>
-      </main>
-    </div>
+    <BrowserRouter>
+      <AppLayout>
+        <Routes>
+          <Route path="/" element={<VacanciesPage />} />
+          <Route path="/vacancies" element={<VacanciesPage />} />
+          <Route path="/vacancies/:id" element={<VacancyDetailPage />} />
+          <Route path="/candidates" element={<CandidatesPage />} />
+          <Route path="/recruitment" element={<RecruitmentFlow />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="*" element={<Navigate to="/vacancies" replace />} />
+        </Routes>
+      </AppLayout>
+    </BrowserRouter>
   );
 }

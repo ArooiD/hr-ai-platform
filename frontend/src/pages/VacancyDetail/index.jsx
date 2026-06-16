@@ -1,28 +1,20 @@
 import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, BriefcaseBusiness, MapPin, DollarSign, Calendar, Users, Edit2, Trash2 } from 'lucide-react';
 import { hrApi } from '../../api/client';
 
 export default function VacancyDetailPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [vacancy, setVacancy] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [vacancyId, setVacancyId] = useState(null);
 
   useEffect(() => {
-    // Extract ID from hash: #/vacancies/123
-    const hash = window.location.hash;
-    const match = hash.match(/^#\/vacancies\/(\d+)/);
-    if (match) {
-      const id = parseInt(match[1]);
-      setVacancyId(id);
-    }
-
     const loadVacancy = async () => {
-      if (!vacancyId) return;
-      
       try {
         const allVacancies = await hrApi.vacancies();
-        const found = allVacancies.find(v => v.id === vacancyId);
+        const found = allVacancies.find(v => v.id === parseInt(id));
         if (found) {
           setVacancy(found);
         } else {
@@ -34,22 +26,21 @@ export default function VacancyDetailPage() {
         setLoading(false);
       }
     };
-    
     loadVacancy();
-  }, [vacancyId]);
+  }, [id]);
 
   const handleDelete = async () => {
     if (!confirm('Вы уверены, что хотите удалить эту вакансию?')) return;
     try {
-      await hrApi.deleteVacancy(vacancyId);
-      window.location.hash = '';
+      await hrApi.deleteVacancy(parseInt(id));
+      navigate('/vacancies');
     } catch (err) {
       alert('Ошибка при удалении вакансии');
     }
   };
 
   const handleEdit = () => {
-    window.location.hash = '';
+    navigate('/vacancies');
   };
 
   if (loading) {
@@ -65,7 +56,7 @@ export default function VacancyDetailPage() {
       <div className="page-container">
         <div className="empty-state">
           <p>{error || 'Вакансия не найдена'}</p>
-          <button onClick={() => (window.location.hash = '')}>← Вернуться к списку</button>
+          <button onClick={() => navigate('/vacancies')}>← Вернуться к списку</button>
         </div>
       </div>
     );
@@ -78,7 +69,7 @@ export default function VacancyDetailPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <button 
             className="icon-button" 
-            onClick={() => (window.location.hash = '')}
+            onClick={() => navigate('/vacancies')}
             style={{ width: '40px', height: '40px' }}
           >
             <ArrowLeft size={20} />
@@ -181,15 +172,15 @@ export default function VacancyDetailPage() {
             <div style={{ display: 'grid', gap: '8px' }}>
               <button 
                 className="primary-button"
-                onClick={() => (window.location.hash = `#/vacancies/${vacancyId}/candidates`)}
+                onClick={() => navigate(`/candidates`)}
                 style={{ justifyContent: 'flex-start' }}
               >
                 <Users size={16} style={{ marginRight: '8px' }} />
-                Кандидаты на вакансию
+                Кандидаты
               </button>
               <button 
                 className="secondary-button"
-                onClick={() => (window.location.hash = `#/vacancies/${vacancyId}/analytics`)}
+                onClick={() => navigate(`/analytics`)}
                 style={{ justifyContent: 'flex-start' }}
               >
                 <BriefcaseBusiness size={16} style={{ marginRight: '8px' }} />
