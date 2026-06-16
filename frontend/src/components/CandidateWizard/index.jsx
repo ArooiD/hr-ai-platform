@@ -154,7 +154,7 @@ export default function CandidateWizard({ onClose, onSave }) {
               <input 
                 ref={fileInputRef} 
                 type="file" 
-                accept=".txt" 
+                accept=".pdf,.doc,.docx,.txt,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
                 onChange={async e => {
                   if (e.target.files?.[0]) {
                     const file = e.target.files[0];
