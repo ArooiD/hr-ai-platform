@@ -122,35 +122,68 @@ export default function VacanciesPage() {
       ) : (
         <div className="cards-grid">
           {filteredVacancies.map((v) => (
-            <div key={v.id} className="card vacancy-card">
+            <div 
+              key={v.id} 
+              className="card vacancy-card"
+              style={{ cursor: 'pointer' }}
+              onClick={() => (window.location.hash = `#/vacancies/${v.id}`)}
+            >
               <div className="card-header">
-                <h3>{v.title}</h3>
+                <h3 style={{ marginBottom: '8px' }}>{v.title}</h3>
                 <span className={`status-badge ${v.status}`}>{v.status === 'open' ? 'Открыта' : 'Закрыта'}</span>
               </div>
               <div className="card-body">
-                <p className="department"><strong>Отдел:</strong> {v.department}</p>
-                <p className="description">{v.description}</p>
+                <p className="department" style={{ marginBottom: '8px' }}>
+                  <strong>Отдел:</strong> {v.department}
+                </p>
                 {(v.salary_from || v.salary_to) && (
-                  <p className="salary">
-                    {v.salary_from && `${v.salary_from.toLocaleString()} ₽`}
-                    {v.salary_to && ` - ${v.salary_to.toLocaleString()} ₽`}
+                  <p className="salary" style={{ marginBottom: '8px', color: '#166534', fontWeight: '500' }}>
+                    {v.salary_from && `${Number(v.salary_from).toLocaleString()} ₽`}
+                    {v.salary_to && ` - ${Number(v.salary_to).toLocaleString()} ₽`}
                   </p>
                 )}
                 {v.required_skills?.length > 0 && (
-                  <div className="skills">
-                    {v.required_skills.map((skill) => (
+                  <div className="skills" style={{ marginTop: '8px' }}>
+                    {v.required_skills.slice(0, 3).map((skill) => (
                       <span key={skill} className="skill-tag">{skill}</span>
                     ))}
+                    {v.required_skills.length > 3 && (
+                      <span className="skill-tag" style={{ background: '#f1f5f9', color: '#64748b' }}>
+                        +{v.required_skills.length - 3}
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
-              <div className="card-actions">
-                <button className="icon-button" onClick={() => handleEdit(v)} title="Редактировать">
-                  <Edit2 size={16} />
-                </button>
-                <button className="icon-button danger" onClick={() => handleDelete(v.id)} title="Удалить">
-                  <Trash2 size={16} />
-                </button>
+              <div className="card-footer" style={{ 
+                marginTop: '12px', 
+                paddingTop: '12px', 
+                borderTop: '1px solid #e2e8f0',
+                display: 'flex', 
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <span style={{ fontSize: '12px', color: '#64748b' }}>
+                  Подробнее →
+                </span>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button 
+                    className="icon-button" 
+                    onClick={(e) => { e.stopPropagation(); handleEdit(v); }} 
+                    title="Редактировать"
+                    style={{ padding: '4px' }}
+                  >
+                    <Edit2 size={14} />
+                  </button>
+                  <button 
+                    className="icon-button danger" 
+                    onClick={(e) => { e.stopPropagation(); handleDelete(v.id); }} 
+                    title="Удалить"
+                    style={{ padding: '4px' }}
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </div>
             </div>
           ))}

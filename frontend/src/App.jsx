@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowRight, BriefcaseBusiness, CalendarCheck2, ChartNoAxesColumnIncreasing, FileText, UserRoundCheck, UsersRound, Users } from 'lucide-react';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
@@ -6,6 +6,7 @@ import RecruitmentFlow from './pages/RecruitmentFlow';
 import VacanciesPage from './pages/Vacancies';
 import CandidatesPage from './pages/Candidates';
 import AnalyticsPage from './pages/Analytics';
+import VacancyDetailPage from './pages/VacancyDetail';
 import { authApi } from './api/client';
 import './styles.css';
 
@@ -80,6 +81,7 @@ export default function App() {
   });
 
   const [currentPage, setCurrentPage] = useState('vacancies');
+  const [selectedVacancyId, setSelectedVacancyId] = useState(null);
 
   const login = (nextSession) => {
     localStorage.setItem('hr-session', JSON.stringify(nextSession));
@@ -91,11 +93,37 @@ export default function App() {
     setSession(null);
   };
 
+  // Handle direct navigation to vacancy detail
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith('#/vacancies/')) {
+        const id = hash.split('/')[2];
+        if (id) {
+          setCurrentPage('vacancy-detail');
+          setSelectedVacancyId(parseInt(id));
+        }
+      } else {
+        setCurrentPage('vacancies');
+        setSelectedVacancyId(null);
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    handleHashChange(); // Check on mount
+
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   if (!session) {
     return <LoginPage onLogin={login} />;
   }
 
   const renderPage = () => {
+    if (currentPage === 'vacancy-detail' && selectedVacancyId) {
+      return <VacancyDetailPage id={selectedVacancyId} />;
+    }
+    
     switch (currentPage) {
       case 'vacancies':
         return <VacanciesPage />;
