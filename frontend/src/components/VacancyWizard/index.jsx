@@ -8,6 +8,7 @@ export default function VacancyWizard({ onClose, onSave }) {
   const [vacancy, setVacancy] = useState(emptyVacancy);
   const [dragActive, setDragActive] = useState(false);
   const [aiProcessing, setAiProcessing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [chatMessages, setChatMessages] = useState([
     { type: 'bot', text: 'Привет! Я помогу создать вакансию. Напишите описание или загрузите файл.' }
   ]);
@@ -32,17 +33,17 @@ export default function VacancyWizard({ onClose, onSave }) {
 
       for (const line of lines) {
         const lower = line.toLowerCase();
-        if (!parsed.title && (lower.includes('вакансия') || lower.includes('требуется'))) {
-          parsed.title = line.replace(/вакансия|требуется/gi, '').trim();
+        if (!parsed.title && (lower.includes('вакансия') || lower.includes('требуется') || lower.includes('нужен'))) {
+          parsed.title = line.replace(/вакансия|требуется|нужен/gi, '').trim();
         } else if (!parsed.department && (lower.includes('отдел') || lower.includes('департамент'))) {
           parsed.department = line.split(':')[1]?.trim() || 'IT';
-        } else if (lower.includes('зарплата') || lower.includes('руб')) {
+        } else if (lower.includes('зарплата') || lower.includes('оклад') || lower.includes('руб')) {
           const match = line.match(/(\d+)\s*[-–]\s*(\d+)/);
           if (match) { parsed.salary_from = match[1]; parsed.salary_to = match[2]; }
-        } else if (lower.includes('навыки') || lower.includes('skills')) {
-          const skillsText = line.split(':')[1] || line;
+        } else if (lower.includes('навыки') || lower.includes('skills') || lower.includes('требования')) {
+          const skillsText = line.split(':')[1] || line.split('-')[1] || line;
           parsed.required_skills = skillsText.split(/[,,;]/).map(s => s.trim()).filter(Boolean);
-        } else if (!parsed.description) {
+        } else if (!parsed.description && line.trim()) {
           parsed.description += line + '\n';
         }
       }
@@ -50,21 +51,22 @@ export default function VacancyWizard({ onClose, onSave }) {
       if (!parsed.title && lines[0]) parsed.title = lines[0].trim();
       if (!parsed.department) parsed.department = 'IT';
 
-      setVacancy({
-        title: parsed.title,
-        department: parsed.department,
-        description: parsed.description.trim(),
-        required_skills: parsed.required_skills.join(', '),
-        salary_from: parsed.salary_from,
-        salary_to: parsed.salary_to
-      });
+      setVacancy(prev => ({
+        ...prev,
+        title: parsed.title || prev.title,
+        department: parsed.department || prev.department,
+        description: parsed.description || prev.description,
+        required_skills: parsed.required_skills.join(', ') || prev.required_skills,
+        salary_from: parsed.salary_from || prev.salary_from,
+        salary_to: parsed.salary_to || prev.salary_to
+      }));
 
       setChatMessages(prev => [...prev, {
         type: 'bot',
         text: '✨ Отлично! Я распознал вакансию. Перейдите к следующему шагу, чтобы проверить данные.'
       }]);
 
-      setTimeout(() => setStep(2), 1500);
+      setTimeout(() => setStep(2), 1000);
     } catch (err) {
       setChatMessages(prev => [...prev, { type: 'bot', text: 'Ошибка при обработке текста.' }]);
     } finally {
@@ -79,7 +81,7 @@ export default function VacancyWizard({ onClose, onSave }) {
     setChatMessages(prev => [...prev, { type: 'user', text: userMsg }]);
     setChatInput('');
 
-    if (userMsg.length > 30) {
+    if (userMsg.length > 20) {
       parseVacancyFromText(userMsg);
     }
   };
@@ -110,15 +112,30 @@ export default function VacancyWizard({ onClose, onSave }) {
     }
   };
 
-  const nextStep = () => setStep(prev => Math.min(prev + 1, 3));
+  const nextStep = () => {
+    if (step === 1 && vacancy.title && vacancy.department) {
+      setStep(2);
+    } else if (step === 1) {
+      alert('Пожалуйста, заполните хотя бы название и отдел');
+    }
+  };
+
   const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
   const handleSave = async () => {
+    if (!vacancy.title || !vacancy.department) {
+      alert('Пожалуйста, заполните название и отдел');
+      return;
+    }
+
+    setSaving(true);
     try {
       await onSave(vacancy);
-      onClose();
+      setStep(3);
     } catch (err) {
-      alert('Ошибка при сохранении');
+      alert('Ошибка при сохранении: ' + err.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -217,7 +234,7 @@ export default function VacancyWizard({ onClose, onSave }) {
             <h3 style={{ marginBottom: '16px' }}>Проверьте данные вакансии</h3>
             <div style={{ display: 'grid', gap: '16px' }}>
               <div>
-                <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500' }}>Название</label>
+                <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500' }}>Название *</label>
                 <input
                   value={vacancy.title} onChange={e => setVacancy({ ...vacancy, title: e.target.value })}
                   style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
@@ -225,16 +242,16 @@ export default function VacancyWizard({ onClose, onSave }) {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500' }}>Отдел</label>
+                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500' }}>Отдел *</label>
                   <input
                     value={vacancy.department} onChange={e => setVacancy({ ...vacancy, department: e.target.value })}
                     style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500' }}>Зарплата</label>
+                  <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500' }}>Зарплата от - до (руб.)</label>
                   <input
-                    value={`${vacancy.salary_from} - ${vacancy.salary_to}`}
+                    value={`${vacancy.salary_from || ''} - ${vacancy.salary_to || ''}`}
                     onChange={e => {
                       const [from, to] = e.target.value.split(' - ');
                       setVacancy({ ...vacancy, salary_from: from, salary_to: to });
@@ -251,7 +268,7 @@ export default function VacancyWizard({ onClose, onSave }) {
                 />
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500' }}>Навыки</label>
+                <label style={{ display: 'block', marginBottom: '6px', fontWeight: '500' }}>Навыки (через запятую)</label>
                 <input
                   value={vacancy.required_skills} onChange={e => setVacancy({ ...vacancy, required_skills: e.target.value })}
                   style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
@@ -267,8 +284,8 @@ export default function VacancyWizard({ onClose, onSave }) {
             <div style={{ width: '80px', height: '80px', background: '#d1fae5', borderRadius: '50%', display: 'grid', placeItems: 'center', margin: '0 auto 24px' }}>
               <Check size={40} color="#166534" />
             </div>
-            <h2 style={{ marginBottom: '12px' }}>Вакансия готова!</h2>
-            <p style={{ color: '#64748b', marginBottom: '24px' }}>Данные сохранены и отображаются в списке</p>
+            <h2 style={{ marginBottom: '12px' }}>Вакансия создана!</h2>
+            <p style={{ color: '#64748b', marginBottom: '24px' }}>Данные успешно сохранены в системе</p>
           </div>
         )}
 
@@ -278,9 +295,19 @@ export default function VacancyWizard({ onClose, onSave }) {
             <button onClick={prevStep} className="secondary-button"><ArrowLeft size={18} /> Назад</button>
           ) : <div />}
           
-          {step < 3 ? (
-            <button onClick={nextStep} className="primary-button">Далее <ArrowRight size={18} /></button>
-          ) : (
+          {step === 1 && (
+            <button onClick={nextStep} className="primary-button" disabled={!vacancy.title || !vacancy.department}>
+              Далее <ArrowRight size={18} />
+            </button>
+          )}
+          
+          {step === 2 && (
+            <button onClick={handleSave} className="primary-button" disabled={saving} style={{ background: saving ? '#94a3b8' : '#166534' }}>
+              {saving ? 'Сохранение...' : <><Check size={18} /> Сохранить вакансию</>}
+            </button>
+          )}
+          
+          {step === 3 && (
             <button onClick={onClose} className="primary-button" style={{ background: '#166534' }}>
               <Check size={18} /> Готово
             </button>
