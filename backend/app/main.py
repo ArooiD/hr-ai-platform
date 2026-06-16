@@ -105,13 +105,25 @@ def login(payload: LoginRequest):
     }
 
 
+def clean_string(text: Optional[str]) -> str:
+    """Remove NUL characters that PostgreSQL doesn't support"""
+    if text is None:
+        return ""
+    return str(text).replace('\x00', '').replace('\0', '')
+
+
+def clean_list(items: List[str]) -> List[str]:
+    """Clean strings in a list"""
+    return [clean_string(item) for item in items if item]
+
+
 @app.post("/api/vacancies", response_model=Vacancy)
 def create_vacancy(payload: VacancyCreate, db: Session = Depends(get_db)):
     vacancy = VacancyModel(
-        title=payload.title,
-        department=payload.department,
-        description=payload.description,
-        required_skills=",".join(payload.required_skills),
+        title=clean_string(payload.title),
+        department=clean_string(payload.department),
+        description=clean_string(payload.description),
+        required_skills=",".join(clean_list(payload.required_skills)),
         salary_from=payload.salary_from,
         salary_to=payload.salary_to,
         status=ModelVacancyStatus.open,
@@ -134,10 +146,10 @@ def update_vacancy(vacancy_id: int, payload: VacancyCreate, db: Session = Depend
     if vacancy is None:
         raise HTTPException(status_code=404, detail="Vacancy not found")
 
-    vacancy.title = payload.title
-    vacancy.department = payload.department
-    vacancy.description = payload.description
-    vacancy.required_skills = ",".join(payload.required_skills)
+    vacancy.title = clean_string(payload.title)
+    vacancy.department = clean_string(payload.department)
+    vacancy.description = clean_string(payload.description)
+    vacancy.required_skills = ",".join(clean_list(payload.required_skills))
     vacancy.salary_from = payload.salary_from
     vacancy.salary_to = payload.salary_to
     db.commit()
