@@ -54,7 +54,7 @@ services:
       - minio
 
   db:
-    image: postgres:16-alpine
+    image: postgres:latest
     container_name: hr-ai-db
     environment:
       POSTGRES_DB: hr_platform
@@ -79,7 +79,7 @@ services:
       - "9000:9000"
 
   weaviate:
-    image: cr.weaviate.io/semitechnologies/weaviate:1.26.6
+    image: semitechnologies/weaviate:1.27.0
     container_name: hr-ai-weaviate
     restart: unless-stopped
     environment:
