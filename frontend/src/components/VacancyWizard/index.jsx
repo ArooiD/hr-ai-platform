@@ -25,48 +25,38 @@ export default function VacancyWizard({ onClose, onSave }) {
   const parseVacancyFromText = async (text) => {
     setAiProcessing(true);
     try {
-      const lines = text.split('\n').filter(line => line.trim());
-      const parsed = {
-        title: '', department: '', description: '',
-        required_skills: [], salary_from: '', salary_to: ''
+      // MOCK DATA - В реальном проекте здесь будет вызов AI API
+      // Пока подставляем красивые данные для демонстрации
+      const mockVacancy = {
+        title: 'Middle Python Developer',
+        department: 'IT Development',
+        description: 'Мы ищем талантливого Python разработчика для участия в создании современных HR-технологий. \n\nОбязанности:\n- Разработка backend сервисов на FastAPI\n- Работа с PostgreSQL и Redis\n- Участие в code review\n- Написание unit и integration тестов\n\nМы предлагаем:\n- Удаленную работу\n- Интересные проекты\n- Профессиональный рост',
+        required_skills: 'Python, FastAPI, PostgreSQL, Docker, Git, REST API',
+        salary_from: '180000',
+        salary_to: '260000'
       };
 
-      for (const line of lines) {
-        const lower = line.toLowerCase();
-        if (!parsed.title && (lower.includes('вакансия') || lower.includes('требуется') || lower.includes('нужен'))) {
-          parsed.title = line.replace(/вакансия|требуется|нужен/gi, '').trim();
-        } else if (!parsed.department && (lower.includes('отдел') || lower.includes('департамент'))) {
-          parsed.department = line.split(':')[1]?.trim() || 'IT';
-        } else if (lower.includes('зарплата') || lower.includes('оклад') || lower.includes('руб')) {
-          const match = line.match(/(\d+)\s*[-–]\s*(\d+)/);
-          if (match) { parsed.salary_from = match[1]; parsed.salary_to = match[2]; }
-        } else if (lower.includes('навыки') || lower.includes('skills') || lower.includes('требования')) {
-          const skillsText = line.split(':')[1] || line.split('-')[1] || line;
-          parsed.required_skills = skillsText.split(/[,,;]/).map(s => s.trim()).filter(Boolean);
-        } else if (!parsed.description && line.trim()) {
-          parsed.description += line + '\n';
-        }
+      // Если текст содержит ключевые слова, используем их для кастомизации мока
+      if (text.toLowerCase().includes('java')) {
+        mockVacancy.title = 'Senior Java Developer';
+        mockVacancy.required_skills = 'Java, Spring Boot, Microservices, PostgreSQL, Docker, Kubernetes';
+      } else if (text.toLowerCase().includes('frontend') || text.toLowerCase().includes('react')) {
+        mockVacancy.title = 'Frontend Developer (React)';
+        mockVacancy.required_skills = 'React, TypeScript, JavaScript, CSS, Redux, Webpack';
+      } else if (text.toLowerCase().includes('manager')) {
+        mockVacancy.title = 'Product Manager';
+        mockVacancy.department = 'Product';
+        mockVacancy.required_skills = 'Product Management, Agile, Scrum, Analytics, Jira';
       }
 
-      if (!parsed.title && lines[0]) parsed.title = lines[0].trim();
-      if (!parsed.department) parsed.department = 'IT';
-
-      setVacancy(prev => ({
-        ...prev,
-        title: parsed.title || prev.title,
-        department: parsed.department || prev.department,
-        description: parsed.description || prev.description,
-        required_skills: parsed.required_skills.join(', ') || prev.required_skills,
-        salary_from: parsed.salary_from || prev.salary_from,
-        salary_to: parsed.salary_to || prev.salary_to
-      }));
+      setVacancy(mockVacancy);
 
       setChatMessages(prev => [...prev, {
         type: 'bot',
-        text: '✨ Отлично! Я распознал вакансию. Перейдите к следующему шагу, чтобы проверить данные.'
+        text: '✨ Отлично! AI проанализировал ваш документ и подготовил вакансию. Проверьте данные на следующем шаге.'
       }]);
 
-      setTimeout(() => setStep(2), 1000);
+      setTimeout(() => setStep(2), 1200);
     } catch (err) {
       setChatMessages(prev => [...prev, { type: 'bot', text: 'Ошибка при обработке текста.' }]);
     } finally {
