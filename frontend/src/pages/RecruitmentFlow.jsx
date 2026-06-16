@@ -1,7 +1,21 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Brain, CheckCircle2, FileQuestion, Plus, Award } from 'lucide-react';
+import { AlertTriangle, Award, Brain, BriefcaseBusiness, CheckCircle2, FileQuestion, Plus, Target, UsersRound } from 'lucide-react';
 import { hrApi } from '../api/client';
 import { stages, stageLabels } from '../data/constants';
+
+const stageView = {
+  new: { color: '#2563eb', bg: '#dbeafe', border: '#bfdbfe', label: 'новый поток' },
+  screening: { color: '#7c3aed', bg: '#ede9fe', border: '#ddd6fe', label: 'первичный отбор' },
+  interview: { color: '#d97706', bg: '#fef3c7', border: '#fde68a', label: 'требует встречи' },
+  offer: { color: '#c2410c', bg: '#ffedd5', border: '#fed7aa', label: 'согласование' },
+  hired: { color: '#15803d', bg: '#dcfce7', border: '#bbf7d0', label: 'закрытие' },
+  rejected: { color: '#b91c1c', bg: '#fee2e2', border: '#fecaca', label: 'выбыл' },
+};
+
+const vacancyStatuses = {
+  open: { label: 'открыта', color: '#15803d', bg: '#dcfce7' },
+  closed: { label: 'закрыта', color: '#64748b', bg: '#f1f5f9' },
+};
 
 export default function RecruitmentPage() {
   const [vacancies, setVacancies] = useState([]);
@@ -9,6 +23,7 @@ export default function RecruitmentPage() {
   const [applications, setApplications] = useState([]);
   const [selectedVacancy, setSelectedVacancy] = useState('');
   const [selectedCandidate, setSelectedCandidate] = useState('');
+  const [selectedVacancyFilter, setSelectedVacancyFilter] = useState('all');
   const [questions, setQuestions] = useState([]);
   const [message, setMessage] = useState('');
   const [showLinkModal, setShowLinkModal] = useState(false);
@@ -57,38 +72,106 @@ export default function RecruitmentPage() {
     setActiveTab('questions');
   };
 
-  const filteredApplications = useMemo(() => {
-    if (filterStage === 'all') return applications;
-    return applications.filter(app => app.stage === filterStage);
-  }, [applications, filterStage]);
+  const vacancyStats = useMemo(() => vacancies.map((vacancy) => {
+    const vacancyApplications = applications.filter(app => app.vacancy_id === vacancy.id);
+    const active = vacancyApplications.filter(app => !['hired', 'rejected'].includes(app.stage));
+    const hired = vacancyApplications.filter(app => app.stage === 'hired');
+    const rejected = vacancyApplications.filter(app => app.stage === 'rejected');
+    return { vacancy, total: vacancyApplications.length, active: active.length, hired: hired.length, rejected: rejected.length };
+  }), [vacancies, applications]);
+
+  const visibleApplications = useMemo(() => {
+    return applications.filter((app) => {
+      const stageOk = filterStage === 'all' || app.stage === filterStage;
+      const vacancyOk = selectedVacancyFilter === 'all' || app.vacancy_id === Number(selectedVacancyFilter);
+      return stageOk && vacancyOk;
+    });
+  }, [applications, filterStage, selectedVacancyFilter]);
 
   const stats = useMemo(() => {
     const byStage = { new: 0, screening: 0, interview: 0, offer: 0, hired: 0, rejected: 0 };
-    applications.forEach(app => { byStage[app.stage] = (byStage[app.stage] || 0) + 1; });
+    visibleApplications.forEach(app => { byStage[app.stage] = (byStage[app.stage] || 0) + 1; });
     return byStage;
-  }, [applications]);
+  }, [visibleApplications]);
+
+  const openVacancies = vacancyStats.filter(item => item.vacancy.status !== 'closed');
+  const vacanciesWithoutCandidates = openVacancies.filter(item => item.active === 0 && item.hired === 0);
+  const candidatesInWork = applications.filter(app => !['hired', 'rejected'].includes(app.stage)).length;
 
   return (
     <div className="page-container">
       <div className="page-header">
         <div>
           <h1>Подбор</h1>
-          <p>Управление активными откликами и движением кандидатов по этапам</p>
+          <p>Рабочее место рекрутера: открытые вакансии, незакрытые позиции и движение кандидатов</p>
         </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button className="primary-button" onClick={() => setShowLinkModal(true)}>
-            <Plus size={18} /> Создать отклик
-          </button>
-        </div>
+        <button className="primary-button" onClick={() => setShowLinkModal(true)}>
+          <Plus size={18} /> Создать отклик
+        </button>
       </div>
 
       {message && (
-        <div style={{ marginBottom: '24px', padding: '12px 16px', borderRadius: '12px', background: '#d1fae5', color: '#065f46' }}>
+        <div style={{ marginBottom: '20px', padding: '12px 16px', borderRadius: '12px', background: '#d1fae5', color: '#065f46' }}>
           {message}
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', borderBottom: '1px solid var(--line)', paddingBottom: '12px' }}>
+      <div className="cards-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: '18px' }}>
+        <div className="card" style={{ borderLeft: '5px solid #2563eb' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#2563eb', fontWeight: 900 }}><BriefcaseBusiness size={20} /> Открытые вакансии</div>
+          <div style={{ marginTop: '10px', fontSize: '30px', fontWeight: 900 }}>{openVacancies.length}</div>
+          <div style={{ color: '#64748b', fontSize: '13px' }}>позиции требуют управления подбором</div>
+        </div>
+        <div className="card" style={{ borderLeft: '5px solid #d97706' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#d97706', fontWeight: 900 }}><AlertTriangle size={20} /> Без активных кандидатов</div>
+          <div style={{ marginTop: '10px', fontSize: '30px', fontWeight: 900 }}>{vacanciesWithoutCandidates.length}</div>
+          <div style={{ color: '#64748b', fontSize: '13px' }}>нужно добавить кандидатов или закрыть вакансию</div>
+        </div>
+        <div className="card" style={{ borderLeft: '5px solid #15803d' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#15803d', fontWeight: 900 }}><UsersRound size={20} /> Кандидаты в работе</div>
+          <div style={{ marginTop: '10px', fontSize: '30px', fontWeight: 900 }}>{candidatesInWork}</div>
+          <div style={{ color: '#64748b', fontSize: '13px' }}>не наняты и не отклонены</div>
+        </div>
+      </div>
+
+      <div className="card" style={{ marginBottom: '22px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+          <div>
+            <h2 style={{ margin: 0, fontSize: '20px' }}>Управление вакансиями</h2>
+            <p style={{ margin: '4px 0 0', color: '#64748b' }}>Выберите вакансию, чтобы увидеть только её pipeline и понять, закрыта ли позиция.</p>
+          </div>
+          <button className="secondary-button" onClick={() => setSelectedVacancyFilter('all')}>Все вакансии</button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))', gap: '12px' }}>
+          {vacancyStats.map(({ vacancy, total, active, hired }) => {
+            const status = vacancyStatuses[vacancy.status] || vacancyStatuses.open;
+            const selected = selectedVacancyFilter === String(vacancy.id);
+            return (
+              <button
+                key={vacancy.id}
+                type="button"
+                onClick={() => setSelectedVacancyFilter(String(vacancy.id))}
+                style={{
+                  textAlign: 'left', border: selected ? '2px solid #0b73ff' : '1px solid var(--line)', borderRadius: '16px', background: selected ? '#eff6ff' : '#fff', padding: '14px', cursor: 'pointer'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'flex-start' }}>
+                  <strong>{vacancy.title}</strong>
+                  <span style={{ borderRadius: '999px', padding: '4px 10px', background: status.bg, color: status.color, fontSize: '12px', fontWeight: 900 }}>{status.label}</span>
+                </div>
+                <div style={{ marginTop: '5px', color: '#64748b', fontSize: '13px' }}>{vacancy.department}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '12px' }}>
+                  <span><b>{total}</b><small style={{ display: 'block', color: '#64748b' }}>всего</small></span>
+                  <span><b>{active}</b><small style={{ display: 'block', color: '#64748b' }}>в работе</small></span>
+                  <span><b>{hired}</b><small style={{ display: 'block', color: '#64748b' }}>нанято</small></span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '1px solid var(--line)', paddingBottom: '12px' }}>
         <button className={activeTab === 'pipeline' ? 'primary-button' : 'secondary-button'} onClick={() => setActiveTab('pipeline')} style={{ padding: '8px 16px' }}>
           Pipeline откликов
         </button>
@@ -99,38 +182,49 @@ export default function RecruitmentPage() {
 
       {activeTab === 'pipeline' && (
         <>
-          <div className="cards-grid" style={{ gridTemplateColumns: 'repeat(6, 1fr)', marginBottom: '24px' }}>
-            {stages.map((stage) => (
-              <div key={stage} className="card" style={{ padding: '16px', textAlign: 'center' }}>
-                <div style={{ fontSize: '24px', fontWeight: '900', color: stage === 'hired' ? '#166534' : '#0b73ff' }}>
-                  {stats[stage] || 0}
-                </div>
-                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>{stageLabels[stage]}</div>
-              </div>
-            ))}
+          <div className="cards-grid" style={{ gridTemplateColumns: 'repeat(6, 1fr)', marginBottom: '20px' }}>
+            {stages.map((stage) => {
+              const view = stageView[stage];
+              return (
+                <button key={stage} type="button" onClick={() => setFilterStage(stage)} className="card" style={{ padding: '16px', textAlign: 'center', borderColor: filterStage === stage ? view.color : view.border, background: filterStage === stage ? view.bg : '#fff' }}>
+                  <div style={{ fontSize: '24px', fontWeight: '900', color: view.color }}>{stats[stage] || 0}</div>
+                  <div style={{ fontSize: '12px', color: view.color, marginTop: '4px', fontWeight: 900 }}>{stageLabels[stage]}</div>
+                  <div style={{ fontSize: '11px', color: '#64748b', marginTop: '4px' }}>{view.label}</div>
+                </button>
+              );
+            })}
           </div>
 
           <div className="filters-bar">
-            <label>Фильтр по этапу:</label>
-            <select value={filterStage} onChange={(e) => setFilterStage(e.target.value)}>
-              <option value="all">Все отклики</option>
-              {stages.map((stage) => <option key={stage} value={stage}>{stageLabels[stage]}</option>)}
-            </select>
+            <div className="filter-group">
+              <label>Этап</label>
+              <select value={filterStage} onChange={(e) => setFilterStage(e.target.value)}>
+                <option value="all">Все этапы</option>
+                {stages.map((stage) => <option key={stage} value={stage}>{stageLabels[stage]}</option>)}
+              </select>
+            </div>
+            <div className="filter-group">
+              <label>Вакансия</label>
+              <select value={selectedVacancyFilter} onChange={(e) => setSelectedVacancyFilter(e.target.value)}>
+                <option value="all">Все вакансии</option>
+                {vacancies.map((v) => <option key={v.id} value={v.id}>{v.title}</option>)}
+              </select>
+            </div>
           </div>
 
           <div className="card">
             <div style={{ display: 'grid', gap: '16px' }}>
-              {filteredApplications.map((application) => {
+              {visibleApplications.map((application) => {
                 const vacancy = vacancies.find(v => v.id === application.vacancy_id);
                 const candidate = candidates.find(c => c.id === application.candidate_id);
-                
+                const view = stageView[application.stage] || stageView.new;
                 return (
-                  <div key={application.id} style={{ padding: '16px', borderRadius: '12px', border: '1px solid var(--line)', background: '#fff' }}>
+                  <div key={application.id} style={{ padding: '16px', borderRadius: '14px', border: `1px solid ${view.border}`, background: '#fff', boxShadow: '0 8px 24px rgba(15,23,42,.04)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <b>Отклик #{application.id}</b>
-                          <span className="status-badge" style={{ background: application.stage === 'hired' ? '#d1fae5' : '#dbeafe', color: application.stage === 'hired' ? '#065f46' : '#1e40af' }}>
+                          <span className="status-badge" style={{ background: view.bg, color: view.color }}>
                             {stageLabels[application.stage]}
                           </span>
                         </div>
@@ -139,37 +233,31 @@ export default function RecruitmentPage() {
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        <button className="icon-button" onClick={() => analyze(application.id)} title="AI-анализ">
-                          <Brain size={16} />
-                        </button>
-                        <button className="icon-button" onClick={() => loadQuestions(application.id)} title="Вопросы интервью">
-                          <FileQuestion size={16} />
-                        </button>
-                        <select value={application.stage} onChange={(e) => updateStage(application.id, e.target.value)} style={{ padding: '8px', borderRadius: '8px', border: '1px solid var(--line)', fontSize: '13px' }}>
+                        <button className="icon-button" onClick={() => analyze(application.id)} title="AI-анализ"><Brain size={16} /></button>
+                        <button className="icon-button" onClick={() => loadQuestions(application.id)} title="Вопросы интервью"><FileQuestion size={16} /></button>
+                        <select value={application.stage} onChange={(e) => updateStage(application.id, e.target.value)} style={{ padding: '8px', borderRadius: '8px', border: `1px solid ${view.border}`, fontSize: '13px', background: view.bg, color: view.color, fontWeight: 800 }}>
                           {stages.map((stage) => <option key={stage} value={stage}>{stageLabels[stage]}</option>)}
                         </select>
                       </div>
                     </div>
 
                     {application.ai_analysis && (
-                      <div style={{ padding: '12px', borderRadius: '8px', background: '#f0fdf4', marginTop: '12px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#166534' }}>
+                      <div style={{ padding: '12px', borderRadius: '10px', background: application.ai_analysis.score >= 70 ? '#dcfce7' : application.ai_analysis.score >= 45 ? '#fef3c7' : '#fee2e2', marginTop: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: application.ai_analysis.score >= 70 ? '#166534' : application.ai_analysis.score >= 45 ? '#92400e' : '#991b1b' }}>
                           <Award size={16} />
                           <strong>AI Score: {application.ai_analysis.score}%</strong>
                         </div>
-                        <div style={{ fontSize: '13px', color: '#166534', marginTop: '4px' }}>
-                          {application.ai_analysis.recommendation}
-                        </div>
+                        <div style={{ fontSize: '13px', color: '#334155', marginTop: '4px' }}>{application.ai_analysis.recommendation}</div>
                       </div>
                     )}
                   </div>
                 );
               })}
 
-              {!filteredApplications.length && (
+              {!visibleApplications.length && (
                 <div style={{ textAlign: 'center', padding: '40px', color: '#9ca3af' }}>
-                  <CheckCircle2 size={48} style={{ marginBottom: '12px', opacity: 0.5 }} />
-                  <p>Нет откликов на выбранном этапе</p>
+                  <Target size={48} style={{ marginBottom: '12px', opacity: 0.5 }} />
+                  <p>Нет откликов под выбранные фильтры</p>
                   <button className="primary-button" onClick={() => setShowLinkModal(true)} style={{ marginTop: '12px' }}>
                     <Plus size={18} /> Создать отклик
                   </button>
@@ -185,9 +273,7 @@ export default function RecruitmentPage() {
           <h2 style={{ marginBottom: '16px' }}><FileQuestion size={20} style={{ marginRight: '8px' }} /> Вопросы для интервью</h2>
           <div className="question-list">
             {questions.map((question, idx) => (
-              <div key={idx} style={{ padding: '12px', borderRadius: '8px', background: '#f9fafb', marginBottom: '8px' }}>
-                {idx + 1}. {question}
-              </div>
+              <div key={idx}>{idx + 1}. {question}</div>
             ))}
             {!questions.length && (
               <p style={{ color: '#9ca3af', textAlign: 'center', padding: '40px' }}>
@@ -210,7 +296,7 @@ export default function RecruitmentPage() {
                 <label>Вакансия</label>
                 <select value={selectedVacancy} onChange={(e) => setSelectedVacancy(e.target.value)}>
                   <option value="">Выберите вакансию</option>
-                  {vacancies.map((v) => <option key={v.id} value={v.id}>{v.title}</option>)}
+                  {vacancies.filter(v => v.status !== 'closed').map((v) => <option key={v.id} value={v.id}>{v.title}</option>)}
                 </select>
               </div>
               <div className="form-group">
