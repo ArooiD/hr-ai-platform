@@ -2,6 +2,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 from typing import List, Optional
 
 from app.ai_service import analyze_candidate, generate_interview_questions
@@ -109,12 +110,41 @@ def clean_string(text: Optional[str]) -> str:
     """Remove NUL characters that PostgreSQL doesn't support"""
     if text is None:
         return ""
-    return str(text).replace('\x00', '').replace('\0', '')
+    return str(text).replace('\x00', '').replace('\0', '').strip()
 
 
 def clean_list(items: List[str]) -> List[str]:
     """Clean strings in a list"""
-    return [clean_string(item) for item in items if item]
+    return [clean_string(item) for item in items if clean_string(item)]
+
+
+def normalize_email(email: Optional[str]) -> str:
+    return clean_string(email).lower()
+
+
+def validate_candidate_payload(payload: CandidateCreate):
+    text = clean_string(payload.resume_text).lower()
+    practice_markers = [
+        "отзыв о работе студента",
+        "студент-практикант",
+        "руководитель практики",
+        "вид практики",
+        "сроки прохождения практики",
+        "программа практики",
+        "практическое задание",
+        "наименование принимающей организации",
+    ]
+    marker_count = sum(1 for marker in practice_markers if marker in text)
+    has_resume_signal = any(marker in text for marker in ["резюме", "опыт работы", "skills", "experience", "github", "linkedin"])
+
+    if marker_count >= 2 and not has_resume_signal:
+        raise HTTPException(
+            status_code=422,
+            detail="Документ похож на отзыв о практике, а не на резюме кандидата. Проверьте файл перед сохранением.",
+        )
+
+    if payload.experience_years < 0 or payload.experience_years > 60:
+        raise HTTPException(status_code=422, detail="Опыт кандидата должен быть в диапазоне от 0 до 60 лет")
 
 
 @app.post("/api/vacancies", response_model=Vacancy)
@@ -182,16 +212,26 @@ def close_vacancy(vacancy_id: int, db: Session = Depends(get_db)):
 
 @app.post("/api/candidates", response_model=Candidate)
 def create_candidate(payload: CandidateCreate, db: Session = Depends(get_db)):
+    validate_candidate_payload(payload)
+    email = normalize_email(payload.email)
+    existing = db.query(CandidateModel).filter(CandidateModel.email == email).first()
+    if existing is not None:
+        raise HTTPException(status_code=409, detail=f"Кандидат с email {email} уже существует")
+
     candidate = CandidateModel(
-        full_name=payload.full_name,
-        email=payload.email,
-        phone=payload.phone,
-        skills=",".join(payload.skills),
+        full_name=clean_string(payload.full_name),
+        email=email,
+        phone=clean_string(payload.phone),
+        skills=",".join(clean_list(payload.skills)),
         experience_years=payload.experience_years,
-        resume_text=payload.resume_text,
+        resume_text=clean_string(payload.resume_text),
     )
     db.add(candidate)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail=f"Кандидат с email {email} уже существует")
     db.refresh(candidate)
     return candidate_to_schema(candidate)
 
@@ -204,17 +244,27 @@ def list_candidates(db: Session = Depends(get_db)):
 
 @app.put("/api/candidates/{candidate_id}", response_model=Candidate)
 def update_candidate(candidate_id: int, payload: CandidateCreate, db: Session = Depends(get_db)):
+    validate_candidate_payload(payload)
+    email = normalize_email(payload.email)
     candidate = db.query(CandidateModel).filter(CandidateModel.id == candidate_id).first()
     if candidate is None:
         raise HTTPException(status_code=404, detail="Candidate not found")
 
-    candidate.full_name = payload.full_name
-    candidate.email = payload.email
-    candidate.phone = payload.phone
-    candidate.skills = ",".join(payload.skills)
+    duplicate = db.query(CandidateModel).filter(CandidateModel.email == email, CandidateModel.id != candidate_id).first()
+    if duplicate is not None:
+        raise HTTPException(status_code=409, detail=f"Кандидат с email {email} уже существует")
+
+    candidate.full_name = clean_string(payload.full_name)
+    candidate.email = email
+    candidate.phone = clean_string(payload.phone)
+    candidate.skills = ",".join(clean_list(payload.skills))
     candidate.experience_years = payload.experience_years
-    candidate.resume_text = payload.resume_text
-    db.commit()
+    candidate.resume_text = clean_string(payload.resume_text)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=409, detail=f"Кандидат с email {email} уже существует")
     db.refresh(candidate)
     return candidate_to_schema(candidate)
 
@@ -259,20 +309,41 @@ def list_applications(db: Session = Depends(get_db)):
 
 @app.post("/api/applications/{application_id}/analyze", response_model=Application)
 def analyze_application(application_id: int, db: Session = Depends(get_db)):
-    import json
     application = db.query(ApplicationModel).filter(ApplicationModel.id == application_id).first()
     if application is None:
         raise HTTPException(status_code=404, detail="Application not found")
 
     candidate = db.query(CandidateModel).filter(CandidateModel.id == application.candidate_id).first()
     vacancy = db.query(VacancyModel).filter(VacancyModel.id == application.vacancy_id).first()
-    
-    analysis = analyze_candidate(candidate_to_schema(candidate), vacancy_to_schema(vacancy))
-    application.ai_analysis = json.dumps(analysis.model_dump())
-    
+    if candidate is None or vacancy is None:
+        raise HTTPException(status_code=404, detail="Candidate or vacancy not found")
+
+    import json
+    analysis = analyze_candidate(
+        candidate_to_schema(candidate).model_dump(),
+        vacancy_to_schema(vacancy).model_dump(),
+    )
+    application.ai_analysis = json.dumps(analysis, ensure_ascii=False)
     db.commit()
     db.refresh(application)
     return application_to_schema(application)
+
+
+@app.get("/api/applications/{application_id}/interview-questions")
+def interview_questions(application_id: int, db: Session = Depends(get_db)):
+    application = db.query(ApplicationModel).filter(ApplicationModel.id == application_id).first()
+    if application is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    candidate = db.query(CandidateModel).filter(CandidateModel.id == application.candidate_id).first()
+    vacancy = db.query(VacancyModel).filter(VacancyModel.id == application.vacancy_id).first()
+    if candidate is None or vacancy is None:
+        raise HTTPException(status_code=404, detail="Candidate or vacancy not found")
+
+    return generate_interview_questions(
+        candidate_to_schema(candidate).model_dump(),
+        vacancy_to_schema(vacancy).model_dump(),
+    )
 
 
 @app.patch("/api/applications/{application_id}/stage", response_model=Application)
@@ -287,87 +358,40 @@ def update_application_stage(application_id: int, payload: StageUpdate, db: Sess
     return application_to_schema(application)
 
 
-@app.get("/api/applications/{application_id}/interview-questions")
-def get_interview_questions(application_id: int, db: Session = Depends(get_db)):
-    application = db.query(ApplicationModel).filter(ApplicationModel.id == application_id).first()
-    if application is None:
-        raise HTTPException(status_code=404, detail="Application not found")
+@app.post("/api/demo-seed")
+def seed_demo(db: Session = Depends(get_db)):
+    if db.query(VacancyModel).count() == 0:
+        vacancy = VacancyModel(
+            title="Middle Python Developer",
+            department="IT Development",
+            description="Разработка backend-сервисов на FastAPI, интеграции с PostgreSQL и Redis.",
+            required_skills="Python,FastAPI,PostgreSQL,Docker,Git,REST API",
+            salary_from=180000,
+            salary_to=250000,
+            status=ModelVacancyStatus.open,
+        )
+        db.add(vacancy)
 
-    candidate = db.query(CandidateModel).filter(CandidateModel.id == application.candidate_id).first()
-    vacancy = db.query(VacancyModel).filter(VacancyModel.id == application.vacancy_id).first()
-    
-    return {
-        "application_id": application_id,
-        "questions": generate_interview_questions(candidate_to_schema(candidate), vacancy_to_schema(vacancy)),
-    }
+    if db.query(CandidateModel).count() == 0:
+        candidate = CandidateModel(
+            full_name="Иван Иванов",
+            email="ivan.ivanov@example.com",
+            phone="+7 900 000-00-00",
+            skills="Python,PostgreSQL,Docker",
+            experience_years=2,
+            resume_text="Backend developer with Python, PostgreSQL and Docker experience.",
+        )
+        db.add(candidate)
+
+    db.commit()
+    return {"status": "seeded"}
 
 
 @app.get("/api/dashboard")
 def dashboard(db: Session = Depends(get_db)):
-    applications = db.query(ApplicationModel).all()
-    vacancies_list = db.query(VacancyModel).all()
-    candidates_list = db.query(CandidateModel).all()
-    
-    scores = []
-    for app in applications:
-        if app.ai_analysis:
-            try:
-                import json
-                analysis = json.loads(app.ai_analysis)
-                scores.append(analysis.get("score", 0))
-            except:
-                pass
-
-    by_stage = {stage.value: 0 for stage in ApplicationStage}
-    for application in applications:
-        by_stage[application.stage.value] += 1
-
     return {
-        "open_vacancies": sum(1 for v in vacancies_list if v.status == ModelVacancyStatus.open),
-        "closed_vacancies": sum(1 for v in vacancies_list if v.status == ModelVacancyStatus.closed),
-        "candidates": len(candidates_list),
-        "applications": len(applications),
-        "applications_by_stage": by_stage,
-        "avg_ai_score": round(sum(scores) / len(scores), 1) if scores else 0,
+        "vacancies": db.query(VacancyModel).count(),
+        "candidates": db.query(CandidateModel).count(),
+        "applications": db.query(ApplicationModel).count(),
+        "open_vacancies": db.query(VacancyModel).filter(VacancyModel.status == ModelVacancyStatus.open).count(),
     }
-
-
-@app.post("/api/demo-seed")
-def demo_seed(db: Session = Depends(get_db)):
-    vacancy = VacancyModel(
-        title="Middle Python Developer",
-        department="IT",
-        description="Разработка backend-сервисов для HR-платформы.",
-        required_skills="Python,FastAPI,Docker,SQL",
-        salary_from=180000,
-        salary_to=260000,
-        status=ModelVacancyStatus.open,
-    )
-    db.add(vacancy)
-    
-    candidate = CandidateModel(
-        full_name="Иван Петров",
-        email="ivan.petrov@example.com",
-        phone="+7 900 000-00-00",
-        skills="Python,FastAPI,PostgreSQL",
-        experience_years=3,
-        resume_text="Backend-разработчик с опытом создания REST API.",
-    )
-    db.add(candidate)
-    db.commit()
-    
-    application = ApplicationModel(
-        candidate_id=candidate.id,
-        vacancy_id=vacancy.id,
-        stage=ModelApplicationStage.new,
-    )
-    db.add(application)
-    db.commit()
-    db.refresh(application)
-    
-    return {
-        "vacancy": vacancy_to_schema(vacancy),
-        "candidate": candidate_to_schema(candidate),
-        "application": application_to_schema(application),
-    }
-
