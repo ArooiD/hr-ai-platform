@@ -52,7 +52,7 @@ services:
       POSTGRES_USER: hradmin
       POSTGRES_PASSWORD: hradmin123
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./data/postgres:/var/lib/postgresql/data
       - ./samples/seed.sql:/docker-entrypoint-initdb.d/seed.sql
     ports:
       - "5432:5432"
@@ -70,5 +70,4 @@ services:
       - "9001:9001"
 
 volumes:
-  postgres_data:
   minio_data:

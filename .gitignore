@@ -1,4 +1,5 @@
 /data/
+/data/postgres/
 
 # Ignore Gradle project-specific cache directory
 .gradle
