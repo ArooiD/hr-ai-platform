@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { X, Upload, ArrowLeft, ArrowRight, Check, FileText } from 'lucide-react';
-import pdfParse from 'pdf-parse';
+import * as pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
 
 const emptyCandidate = { full_name: '', email: '', phone: '', skills: '', experience_years: '', resume_text: '' };
@@ -25,7 +25,7 @@ export default function CandidateWizard({ onClose, onSave }) {
       if (fileName.endsWith('.pdf')) {
         setProcessingStatus('Парсинг PDF...');
         const arrayBuffer = await file.arrayBuffer();
-        const pdfData = await pdfParse(arrayBuffer);
+        const pdfData = await pdfParse.default(arrayBuffer);
         text = pdfData.text;
       } 
       else if (fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
