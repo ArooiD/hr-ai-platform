@@ -117,7 +117,7 @@ export default function VacanciesPage() {
         <div className="empty-state">
           <BriefcaseBusiness size={48} />
           <p>Вакансий не найдено</p>
-          {!searchQuery && <button onClick={handleCreate}>Создать первую вакансию</button>}
+          <p style={{ color: '#6b7280', marginBottom: '24px' }}>Нажмите кнопку выше, чтобы создать первую вакансию</p>
         </div>
       ) : (
         <div className="cards-grid">
