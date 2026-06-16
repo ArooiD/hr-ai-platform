@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 from app.ai_service import analyze_candidate, generate_interview_questions
 from app.schemas import (
@@ -37,9 +38,31 @@ app.add_middleware(
 )
 
 
+class LoginRequest(BaseModel):
+    login: str
+    password: str | None = None
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.post("/api/auth/login")
+def login(payload: LoginRequest):
+    if payload.login.strip().lower() != "dapopova":
+        raise HTTPException(status_code=401, detail="Invalid login")
+
+    return {
+        "access_token": "mock-token-dapopova",
+        "token_type": "bearer",
+        "user": {
+            "login": "dapopova",
+            "full_name": "Дарья Попова",
+            "role": "HR business partner",
+            "department": "HR",
+        },
+    }
 
 
 @app.post("/api/vacancies", response_model=Vacancy)
