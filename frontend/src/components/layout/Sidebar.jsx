@@ -1,12 +1,28 @@
+import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { BarChart3, BriefcaseBusiness, CalendarDays, Menu, MessageCircle, Users } from 'lucide-react';
 
-export default function Sidebar({ user, currentPage, setCurrentPage }) {
+export default function Sidebar({ user }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const navItems = [
-    { label: 'Вакансии', icon: BriefcaseBusiness, id: 'vacancies' },
-    { label: 'Кандидаты', icon: Users, id: 'candidates' },
-    { label: 'Подбор', icon: CalendarDays, id: 'recruitment' },
-    { label: 'Аналитика', icon: BarChart3, id: 'analytics' },
+    { label: 'Вакансии', icon: BriefcaseBusiness, path: '/vacancies' },
+    { label: 'Кандидаты', icon: Users, path: '/candidates' },
+    { label: 'Подбор', icon: CalendarDays, path: '/recruitment' },
+    { label: 'Аналитика', icon: BarChart3, path: '/analytics' },
   ];
+
+  const isActive = (path) => {
+    if (path === '/vacancies') {
+      return location.pathname === '/vacancies' || location.pathname === '/';
+    }
+    return location.pathname === path;
+  };
+
+  const handleNavigate = (path) => {
+    navigate(path);
+  };
 
   return (
     <aside className="sidebar">
@@ -19,8 +35,13 @@ export default function Sidebar({ user, currentPage, setCurrentPage }) {
       </div>
       <nav className="nav-section">
         <p>основное</p>
-        {navItems.map(({label, icon: Icon, id}) => (
-          <a key={id} className={currentPage === id ? 'active' : ''} onClick={() => setCurrentPage(id)}>
+        {navItems.map(({label, icon: Icon, path}) => (
+          <a 
+            key={path} 
+            className={isActive(path) ? 'active' : ''} 
+            onClick={() => handleNavigate(path)}
+            style={{ cursor: 'pointer' }}
+          >
             <Icon size={17} /> {label}
           </a>
         ))}

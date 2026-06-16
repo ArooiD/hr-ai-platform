@@ -101,7 +101,7 @@ function AppLayout({ children }) {
 
   return (
     <div className="app-shell">
-      <Sidebar user={session.user} currentPage="vacancies" setCurrentPage={() => {}} />
+      <Sidebar user={session.user} />
       <main className="workspace">
         <Topbar user={session.user} onLogout={logout} />
         <div className="single-page-workspace">
