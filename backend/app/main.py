@@ -1,29 +1,34 @@
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile, Depends
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from app.ai_service import analyze_candidate, generate_interview_questions
 from app.schemas import (
     Application,
     ApplicationCreate,
-    ApplicationStage,
     Candidate,
     CandidateCreate,
     StageUpdate,
     Vacancy,
     VacancyCreate,
-    VacancyStatus,
     AiAnalysis,
 )
-from app.database import get_db, engine
-from app.models import VacancyModel, CandidateModel, ApplicationModel, VacancyStatus as ModelVacancyStatus, ApplicationStage as ModelApplicationStage
+from app.database import get_db
+from app.models import (
+    VacancyModel,
+    CandidateModel,
+    ApplicationModel,
+    VacancyStatus as ModelVacancyStatus,
+    ApplicationStage as ModelApplicationStage,
+)
+from app.services.auth_service import auth_service
 
 app = FastAPI(
     title="HR AI Platform",
-    description="MVP HR-платформы со сквозным процессом подбора и мокнутым AI.",
+    description="MVP HR-платформы со сквозным процессом подбора, AI matching и подготовкой к Keycloak SSO.",
     version="0.1.0",
 )
 
@@ -72,9 +77,9 @@ def application_to_schema(application: ApplicationModel) -> Application:
         import json
         try:
             ai_analysis = AiAnalysis(**json.loads(application.ai_analysis))
-        except:
+        except Exception:
             pass
-    
+
     return Application(
         id=application.id,
         candidate_id=application.candidate_id,
@@ -91,30 +96,18 @@ def health():
 
 @app.post("/api/auth/login")
 def login(payload: LoginRequest):
-    if payload.login.strip().lower() != "depopova":
-        raise HTTPException(status_code=401, detail="Invalid login")
-
-    return {
-        "access_token": "mock-token-depopova",
-        "token_type": "bearer",
-        "user": {
-            "login": "depopova",
-            "full_name": "Дарья Попова",
-            "role": "HR business partner",
-            "department": "HR",
-        },
-    }
+    return auth_service.authenticate(payload.login, payload.password)
 
 
 def clean_string(text: Optional[str]) -> str:
-    """Remove NUL characters that PostgreSQL doesn't support"""
+    """Remove NUL characters that PostgreSQL doesn't support."""
     if text is None:
         return ""
-    return str(text).replace('\x00', '').replace('\0', '').strip()
+    return str(text).replace("\x00", "").replace("\0", "").strip()
 
 
 def clean_list(items: List[str]) -> List[str]:
-    """Clean strings in a list"""
+    """Clean strings in a list."""
     return [clean_string(item) for item in items if clean_string(item)]
 
 
@@ -192,7 +185,7 @@ def delete_vacancy(vacancy_id: int, db: Session = Depends(get_db)):
     vacancy = db.query(VacancyModel).filter(VacancyModel.id == vacancy_id).first()
     if vacancy is None:
         raise HTTPException(status_code=404, detail="Vacancy not found")
-    
+
     db.delete(vacancy)
     db.commit()
     return {"status": "deleted", "vacancy_id": vacancy_id}
@@ -274,7 +267,7 @@ def delete_candidate(candidate_id: int, db: Session = Depends(get_db)):
     candidate = db.query(CandidateModel).filter(CandidateModel.id == candidate_id).first()
     if candidate is None:
         raise HTTPException(status_code=404, detail="Candidate not found")
-    
+
     db.delete(candidate)
     db.commit()
     return {"status": "deleted", "candidate_id": candidate_id}
@@ -285,7 +278,7 @@ def create_application(payload: ApplicationCreate, db: Session = Depends(get_db)
     candidate = db.query(CandidateModel).filter(CandidateModel.id == payload.candidate_id).first()
     if candidate is None:
         raise HTTPException(status_code=404, detail="Candidate not found")
-    
+
     vacancy = db.query(VacancyModel).filter(VacancyModel.id == payload.vacancy_id).first()
     if vacancy is None:
         raise HTTPException(status_code=404, detail="Vacancy not found")
