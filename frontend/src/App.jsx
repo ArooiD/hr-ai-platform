@@ -19,8 +19,8 @@ function LoginPage({ onLogin }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  # Обработчик отправки формы входа
-    const submit = async (event) => {
+  // Обработчик отправки формы входа
+  const submit = async (event) => {
     event.preventDefault();
     setError('');
     setLoading(true);
