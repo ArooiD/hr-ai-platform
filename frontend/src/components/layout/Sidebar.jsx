@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { BarChart3, BriefcaseBusiness, CalendarDays, Menu, MessageCircle, Users } from 'lucide-react';
+import { BarChart3, BriefcaseBusiness, CalendarDays, Menu, X, MessageCircle, Users } from 'lucide-react';
 
-export default function Sidebar({ user }) {
+export default function Sidebar({ user, isOpen, onToggle }) {
   const navigate = useNavigate();
   const location = useLocation();
 
   const navItems = [
-    { label: 'Вакансии', icon: BriefcaseBusiness, path: '/vacancies' },
-    { label: 'Кандидаты', icon: Users, path: '/candidates' },
-    { label: 'Подбор', icon: CalendarDays, path: '/recruitment' },
-    { label: 'Аналитика', icon: BarChart3, path: '/analytics' },
+    { label: 'Вакансии', icon: BriefcaseBusiness, path: '/vacancies', id: 'nav-vacancies' },
+    { label: 'Кандидаты', icon: Users, path: '/candidates', id: 'nav-candidates' },
+    { label: 'Подбор', icon: CalendarDays, path: '/recruitment', id: 'nav-recruitment' },
+    { label: 'Аналитика', icon: BarChart3, path: '/analytics', id: 'nav-analytics' },
   ];
 
   const isActive = (path) => {
@@ -25,19 +25,32 @@ export default function Sidebar({ user }) {
   };
 
   return (
-    <aside className="sidebar">
-      <div className="brand-row"><div className="brand-neutral">HR AI</div><Menu size={20} /></div>
-      <div className="profile">
-        <div className="profile-avatar">ДП</div>
-        <strong>{user?.full_name || 'Дарья Попова'}</strong>
-        <span>{user?.role || 'HR business partner'}</span>
-        <small>{user?.login || 'dapopova'}</small>
+    <aside className={`sidebar ${isOpen ? 'open' : 'closed'}`} id="main-sidebar">
+      <div className="sidebar-header" id="sidebar-header">
+        <div className="brand-row">
+          <div className="brand-neutral" id="sidebar-brand">HR AI</div>
+          <button 
+            className="sidebar-toggle-btn" 
+            onClick={onToggle}
+            id="sidebar-toggle-btn"
+            title={isOpen ? 'Скрыть меню' : 'Показать меню'}
+          >
+            {isOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
+        </div>
       </div>
-      <nav className="nav-section">
-        <p>основное</p>
-        {navItems.map(({label, icon: Icon, path}) => (
+      <div className="profile" id="sidebar-profile">
+        <div className="profile-avatar" id="profile-avatar">ДП</div>
+        <strong id="profile-name">{user?.full_name || 'Дарья Попова'}</strong>
+        <span id="profile-role">{user?.role || 'HR business partner'}</span>
+        <small id="profile-login">{user?.login || 'dapopova'}</small>
+      </div>
+      <nav className="nav-section" id="sidebar-nav">
+        <p id="nav-section-label">основное</p>
+        {navItems.map(({label, icon: Icon, path, id}) => (
           <a 
             key={path} 
+            id={id}
             className={isActive(path) ? 'active' : ''} 
             onClick={() => handleNavigate(path)}
             style={{ cursor: 'pointer' }}
@@ -46,7 +59,9 @@ export default function Sidebar({ user }) {
           </a>
         ))}
       </nav>
-      <div className="support"><MessageCircle size={16}/> поддержка</div>
+      <div className="support" id="sidebar-support">
+        <MessageCircle size={16} /> поддержка
+      </div>
     </aside>
   );
 }

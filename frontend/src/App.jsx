@@ -106,17 +106,22 @@ function AppLayout({ children }) {
     const saved = localStorage.getItem('hr-session');
     return saved ? JSON.parse(saved) : null;
   });
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const logout = () => {
     localStorage.removeItem('hr-session');
     window.location.href = '/';
   };
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
     <div className="app-shell">
-      <Sidebar user={session.user} />
+      <Sidebar user={session.user} isOpen={sidebarOpen} onToggle={toggleSidebar} />
       <main className="workspace">
-        <Topbar user={session.user} onLogout={logout} />
+        <Topbar user={session.user} onLogout={logout} onToggleSidebar={toggleSidebar} />
         <div className="single-page-workspace">
           {children}
         </div>
