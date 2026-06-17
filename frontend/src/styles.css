@@ -97,11 +97,20 @@ button { cursor: pointer; }
 .login-error { border-radius: 12px; background: #fee2e2; padding: 12px; color: #991b1b; font-size: 14px; }
 
 .app-shell { display: flex; min-height: 100vh; background: linear-gradient(180deg, #fbfdff 0%, #f5f8fc 100%); }
-.sidebar { position: sticky; top: 0; display: flex; width: 280px; height: 100vh; flex-direction: column; border-right: 1px solid var(--line); background: rgba(255, 255, 255, 0.92); padding: 22px 28px; transition: all 0.3s ease; }
-.sidebar.closed { width: 0; padding: 0; overflow: hidden; border-right: 0; }
+.sidebar { position: sticky; top: 0; display: flex; width: 280px; height: 100vh; flex-direction: column; border-right: 1px solid var(--line); background: rgba(255, 255, 255, 0.92); padding: 22px 28px; transition: all 0.3s ease; overflow-x: hidden; }
+.sidebar.closed { width: 70px; padding: 22px 12px; }
 .sidebar-header { display: flex; align-items: center; }
-.sidebar-toggle-btn { display: block; background: none; border: none; cursor: pointer; color: #a8adb5; padding: 4px; margin-left: auto; }
+.sidebar-toggle-btn { display: block; background: none; border: none; cursor: pointer; color: #a8adb5; padding: 4px; margin-left: auto; flex-shrink: 0; }
 .sidebar-toggle-btn:hover { color: var(--blue); }
+.sidebar.closed .profile,
+.sidebar.closed .nav-section,
+.sidebar.closed .support,
+.sidebar.closed .nav-section p,
+.sidebar.closed strong,
+.sidebar.closed span:not(.skill-tag),
+.sidebar.closed small { display: none; }
+.sidebar.closed .brand-neutral { font-size: 16px; }
+.sidebar.closed .sidebar-toggle-btn { margin-left: 0; }
 .brand-row { display: flex; align-items: center; justify-content: space-between; color: #a8adb5; }
 .brand, .brand-neutral { color: var(--blue); font-size: 23px; font-weight: 900; letter-spacing: -0.05em; text-transform: uppercase; }
 .profile { display: flex; flex-direction: column; align-items: center; margin: 38px 0 34px; text-align: center; }
@@ -172,6 +181,9 @@ button { cursor: pointer; }
   .sidebar-toggle-mobile { display: block; }
   .sidebar { position: fixed; z-index: 1000; left: 0; }
   .sidebar.closed { transform: translateX(-100%); width: 280px; padding: 22px 28px; }
+  .sidebar.closed .profile,
+  .sidebar.closed .nav-section,
+  .sidebar.closed .support { display: flex; }
   .topbar { padding: 0 20px; }
   .single-page-workspace { padding: 22px 20px 54px; }
 }
