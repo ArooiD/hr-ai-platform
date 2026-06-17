@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus, Plus, Trash2, Edit2, X, Check, Search, Mail, Phone, Calendar } from 'lucide-react';
+import { UserPlus, Plus, Trash2, Edit2, X, Check, Search, Mail, Phone, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { hrApi } from '../api/client';
 import CandidateWizard from '../components/CandidateWizard';
 
 const emptyCandidate = { full_name: '', email: '', phone: '', skills: '', experience_years: '', resume_text: '' };
+const ITEMS_PER_PAGE = 12; // Количество элементов на странице
 
 export default function CandidatesPage() {
   const navigate = useNavigate();
@@ -14,6 +15,17 @@ export default function CandidatesPage() {
   const [editingId, setEditingId] = useState(null);
   const [candidate, setCandidate] = useState(emptyCandidate);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  // Debounce для поиска (задержка 300мс)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setCurrentPage(1); // Сброс на первую страницу при поиске
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const loadCandidates = async () => {
     try {
@@ -88,14 +100,42 @@ export default function CandidatesPage() {
     }
   };
 
-  const filteredCandidates = candidates.filter(c => {
-    const matchesSearch =
-      c.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.skills?.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredCandidates = useMemo(() => 
+    candidates.filter(c => {
+      const matchesSearch =
+        c.full_name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        c.email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        c.skills?.some(s => s.toLowerCase().includes(debouncedSearch.toLowerCase()));
 
-    return matchesSearch;
-  });
+      return matchesSearch;
+    }),
+    [candidates, debouncedSearch]
+  );
+
+  // Вычисляем данные для текущей страницы
+  const totalPages = Math.ceil(filteredCandidates.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const currentCandidates = filteredCandidates.slice(startIndex, endIndex);
+
+  // Функции навигации по страницам
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const nextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   const getInitials = (name) => {
     return name
@@ -145,39 +185,43 @@ export default function CandidatesPage() {
           <p>Кандидатов не найдено</p>
         </div>
       ) : (
-        <div className="candidates-grid">
-          {filteredCandidates.map((c) => (
-            <div 
-              key={c.id} 
-              className="card candidate-card"
-              onClick={() => navigate(`/candidates/${c.id}`)}
-              style={{ cursor: 'pointer' }}
-            >
-              <div className="candidate-avatar">
-                {getInitials(c.full_name)}
-              </div>
-              <div className="card-body">
-                <h3>{c.full_name}</h3>
-                <div className="contact-info">
-                  <span><Mail size={14} /> {c.email}</span>
+        <>
+          <div style={{ marginBottom: '16px', fontSize: '14px', color: '#64748b' }}>
+            Показано {startIndex + 1}-{Math.min(endIndex, filteredCandidates.length)} из {filteredCandidates.length} кандидатов
+          </div>
+          <div className="candidates-grid">
+            {currentCandidates.map((c) => (
+              <div 
+                key={c.id} 
+                className="card candidate-card"
+                onClick={() => navigate(`/candidates/${c.id}`)}
+                style={{ cursor: 'pointer' }}
+              >
+                <div className="candidate-avatar">
+                  {getInitials(c.full_name)}
                 </div>
-                <div className="candidate-meta">
-                  <span><Calendar size={14} /> {c.experience_years} лет опыта</span>
-                </div>
-                {c.skills?.length > 0 && (
-                  <div className="skills">
-                    {c.skills.slice(0, 3).map((skill) => (
-                      <span key={skill} className="skill-tag">{skill}</span>
-                    ))}
-                    {c.skills.length > 3 && (
-                      <span className="skill-tag">+{c.skills.length - 3}</span>
-                    )}
+                <div className="card-body">
+                  <h3>{c.full_name}</h3>
+                  <div className="contact-info">
+                    <span><Mail size={14} /> {c.email}</span>
                   </div>
-                )}
-              </div>
-              <div className="card-actions" onClick={(e) => e.stopPropagation()}>
-                <button className="icon-button" onClick={() => handleEdit(c)} title="Редактировать">
-                  <Edit2 size={16} />
+                  <div className="candidate-meta">
+                    <span><Calendar size={14} /> {c.experience_years} лет опыта</span>
+                  </div>
+                  {c.skills?.length > 0 && (
+                    <div className="skills">
+                      {c.skills.slice(0, 3).map((skill) => (
+                        <span key={skill} className="skill-tag">{skill}</span>
+                      ))}
+                      {c.skills.length > 3 && (
+                        <span className="skill-tag">+{c.skills.length - 3}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="card-actions" onClick={(e) => e.stopPropagation()}>
+                  <button className="icon-button" onClick={() => handleEdit(c)} title="Редактировать">
+                    <Edit2 size={16} />
                 </button>
                 <button className="icon-button danger" onClick={() => handleDelete(c.id)} title="Удалить">
                   <Trash2 size={16} />
@@ -186,6 +230,43 @@ export default function CandidatesPage() {
             </div>
           ))}
         </div>
+        
+        {/* Пагинация */}
+        {totalPages > 1 && (
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            gap: '12px', 
+            marginTop: '24px',
+            padding: '16px',
+            background: '#f8fafc',
+            borderRadius: '12px'
+          }}>
+            <button
+              className="icon-button"
+              onClick={prevPage}
+              disabled={currentPage === 1}
+              style={{ opacity: currentPage === 1 ? 0.5 : 1 }}
+            >
+              <ChevronLeft size={20} />
+            </button>
+            
+            <span style={{ fontSize: '14px', fontWeight: '500' }}>
+              Страница {currentPage} из {totalPages}
+            </span>
+            
+            <button
+              className="icon-button"
+              onClick={nextPage}
+              disabled={currentPage === totalPages}
+              style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        )}
+      </>
       )}
     </div>
   );
