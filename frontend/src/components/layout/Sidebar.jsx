@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { BarChart3, BriefcaseBusiness, CalendarDays, Menu, X, MessageCircle, Users } from 'lucide-react';
+import { BarChart3, BriefcaseBusiness, CalendarDays, Menu, MessageCircle, Users } from 'lucide-react';
 
 export default function Sidebar({ user, isOpen, onToggle }) {
   const navigate = useNavigate();
@@ -33,9 +33,10 @@ export default function Sidebar({ user, isOpen, onToggle }) {
             className="sidebar-toggle-btn" 
             onClick={onToggle}
             id="sidebar-toggle-btn"
-            title={isOpen ? 'Скрыть меню' : 'Показать меню'}
+            title={isOpen ? 'Свернуть меню' : 'Развернуть меню'}
+            type="button"
           >
-            {isOpen ? <X size={20} /> : <Menu size={20} />}
+            <Menu size={20} />
           </button>
         </div>
       </div>
