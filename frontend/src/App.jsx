@@ -12,7 +12,7 @@ import CandidateDetailPage from './pages/CandidateDetail';
 import { authApi } from './api/client';
 import './styles.css';
 
-# Страница входа - форма авторизации
+// Страница входа - форма авторизации
 function LoginPage({ onLogin }) {
   const [login, setLogin] = useState('depopova');
   const [password, setPassword] = useState('');
@@ -125,7 +125,7 @@ function AppLayout({ children }) {
   );
 }
 
-# Root компонент приложения с React Router
+// Root компонент приложения с React Router
 export default function App() {
   const [session, setSession] = useState(() => {
     const saved = localStorage.getItem('hr-session');

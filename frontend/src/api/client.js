@@ -23,16 +23,16 @@ export async function apiRequest(path, options = {}) {
   return response.json();
 }
 
-# API для аутентификации
+// API для аутентификации
 export const authApi = {
-  # Вход в систему с логином и паролем
-    login: (payload) => apiRequest('/api/auth/login', {
+  // Вход в систему с логином и паролем
+  login: (payload) => apiRequest('/api/auth/login', {
     method: 'POST',
     body: JSON.stringify(payload),
   }),
 };
 
-# API для работы с вакансиями, кандидатами, откликами
+// API для работы с вакансиями, кандидатами, откликами
 export const hrApi = {
   dashboard: () => apiRequest('/api/dashboard'),
   vacancies: () => apiRequest('/api/vacancies'),
