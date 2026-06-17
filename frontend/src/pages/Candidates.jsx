@@ -145,7 +145,6 @@ export default function CandidatesPage() {
         <div className="empty-state">
           <UserPlus size={48} />
           <p>Кандидатов не найдено</p>
-          {!searchQuery && <button onClick={handleCreate}>Добавить первого кандидата</button>}
         </div>
       ) : (
         <div className="candidates-grid">
