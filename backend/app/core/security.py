@@ -16,7 +16,7 @@ def _get_signing_key() -> bytes:
 
 
 # Генерация JWT токена доступа
-    def create_access_token(subject: str, claims: Dict[str, Any] | None = None, ttl_seconds: int = 3600) -> str:
+def create_access_token(subject: str, claims: Dict[str, Any] | None = None, ttl_seconds: int = 3600) -> str:
     header = {"alg": "HS256", "typ": "JWT"}
     now = int(time.time())
     body = {
@@ -35,7 +35,7 @@ def _get_signing_key() -> bytes:
 
 
 # Проверка пароля по хешу (SHA-256 + HMAC)
-    def verify_password(candidate: str | None, expected_hash: str | None) -> bool:
+def verify_password(candidate: str | None, expected_hash: str | None) -> bool:
     if not expected_hash:
         return True
     digest = hashlib.sha256((candidate or "").encode("utf-8")).hexdigest()
