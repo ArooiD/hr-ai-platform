@@ -118,16 +118,14 @@ export default function CandidatesPage() {
         </button>
       </div>
 
-      <div className="filters-bar">
-        <div className="search-bar">
-          <Search size={18} />
-          <input
-            type="text"
-            placeholder="Поиск по имени, email или навыкам..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
+      <div className="search-bar">
+        <Search size={18} />
+        <input
+          type="text"
+          placeholder="Поиск по имени, email или навыкам..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
 
       {showWizard && (
