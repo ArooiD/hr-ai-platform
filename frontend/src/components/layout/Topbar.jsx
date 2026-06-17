@@ -1,5 +1,5 @@
 import { Bell, LogOut, Search, Menu } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 
 export default function Topbar({ user, onLogout, onToggleSidebar }) {
   const navigate = useNavigate();
@@ -25,12 +25,6 @@ export default function Topbar({ user, onLogout, onToggleSidebar }) {
     { label: currentPath, path: location.pathname, active: true }
   ];
 
-  const handleBreadcrumbClick = (path) => {
-    if (path && path !== location.pathname) {
-      navigate(path);
-    }
-  };
-
   return (
     <header className="topbar" id="topbar">
       <div className="topbar-left" id="topbar-left">
@@ -39,6 +33,7 @@ export default function Topbar({ user, onLogout, onToggleSidebar }) {
           onClick={onToggleSidebar}
           id="topbar-sidebar-toggle"
           title="Переключить меню"
+          type="button"
         >
           <Menu size={20} />
         </button>
@@ -49,12 +44,12 @@ export default function Topbar({ user, onLogout, onToggleSidebar }) {
               {crumb.active ? (
                 <span className="breadcrumb-active">{crumb.label}</span>
               ) : (
-                <button 
+                <Link 
+                  to={crumb.path}
                   className="breadcrumb-link"
-                  onClick={() => handleBreadcrumbClick(crumb.path)}
                 >
                   {crumb.label}
-                </button>
+                </Link>
               )}
             </span>
           ))}
