@@ -120,8 +120,11 @@ export default function CandidateWizard({ onClose, onSave }) {
       if (fileName.endsWith('.pdf')) {
         setProcessingStatus('Парсинг PDF...');
         const arrayBuffer = await file.arrayBuffer();
-        const pdfData = await PDFParse(arrayBuffer);
-        text = pdfData.text;
+        const uint8Array = new Uint8Array(arrayBuffer);
+        const parser = new PDFParse({ data: uint8Array });
+        const textResult = await parser.getText();
+        text = textResult.text;
+        await parser.destroy();
       } else if (fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
         setProcessingStatus('Парсинг Word документа...');
         const arrayBuffer = await file.arrayBuffer();
