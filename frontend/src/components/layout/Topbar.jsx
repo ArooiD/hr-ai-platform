@@ -1,6 +1,36 @@
 import { Bell, LogOut, Search, Menu } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function Topbar({ user, onLogout, onToggleSidebar }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Определяем текущий путь для хлебных крошек
+  const getPathname = () => {
+    const path = location.pathname;
+    if (path === '/' || path === '/vacancies') return 'вакансии';
+    if (path === '/candidates') return 'кандидаты';
+    if (path === '/recruitment') return 'подбор';
+    if (path === '/analytics') return 'аналитика';
+    if (path.startsWith('/vacancies/')) return 'вакансия';
+    if (path.startsWith('/candidates/')) return 'кандидат';
+    return 'подбор';
+  };
+
+  const currentPath = getPathname();
+
+  const breadcrumbs = [
+    { label: 'главная', path: '/vacancies' },
+    { label: 'hr-платформа', path: '/vacancies' },
+    { label: currentPath, path: location.pathname, active: true }
+  ];
+
+  const handleBreadcrumbClick = (path) => {
+    if (path && path !== location.pathname) {
+      navigate(path);
+    }
+  };
+
   return (
     <header className="topbar" id="topbar">
       <div className="topbar-left" id="topbar-left">
@@ -12,7 +42,23 @@ export default function Topbar({ user, onLogout, onToggleSidebar }) {
         >
           <Menu size={20} />
         </button>
-        <div className="breadcrumbs" id="topbar-breadcrumbs">главная / hr-платформа / подбор</div>
+        <div className="breadcrumbs" id="topbar-breadcrumbs">
+          {breadcrumbs.map((crumb, index) => (
+            <span key={index} className="breadcrumb-item">
+              {index > 0 && <span className="breadcrumb-separator"> / </span>}
+              {crumb.active ? (
+                <span className="breadcrumb-active">{crumb.label}</span>
+              ) : (
+                <button 
+                  className="breadcrumb-link"
+                  onClick={() => handleBreadcrumbClick(crumb.path)}
+                >
+                  {crumb.label}
+                </button>
+              )}
+            </span>
+          ))}
+        </div>
       </div>
       <div className="top-actions" id="topbar-actions">
         <span className="search-btn" id="topbar-search">
