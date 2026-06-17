@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { BarChart3, BriefcaseBusiness, CalendarDays, HelpCircle, Menu, MessageCircle, Users } from 'lucide-react';
+import { BarChart3, BriefcaseBusiness, CalendarDays, HelpCircle, Menu, Users } from 'lucide-react';
 
 export default function Sidebar({ user, isOpen, onToggle }) {
   const navigate = useNavigate();
@@ -15,26 +14,25 @@ export default function Sidebar({ user, isOpen, onToggle }) {
   ];
 
   const isActive = (path) => {
-    if (path === '/vacancies') {
-      return location.pathname === '/vacancies' || location.pathname === '/';
-    }
-    if (path === '/support') {
-      return location.pathname === '/support';
-    }
+    if (path === '/vacancies') return location.pathname === '/vacancies' || location.pathname === '/';
     return location.pathname === path;
-  };
-
-  const handleNavigate = (path) => {
-    navigate(path);
   };
 
   return (
     <aside className={`sidebar ${isOpen ? 'open' : 'closed'}`} id="main-sidebar">
       <div className="sidebar-header" id="sidebar-header">
         <div className="brand-row">
-          <div className="brand-neutral" id="sidebar-brand">HR AI</div>
-          <button 
-            className="sidebar-toggle-btn" 
+          <button
+            className="brand-button"
+            type="button"
+            onClick={() => navigate('/vacancies')}
+            title="HR AI Platform"
+          >
+            <span className="brand-mark">HR</span>
+            <span className="brand-text">AI</span>
+          </button>
+          <button
+            className="sidebar-toggle-btn"
             onClick={onToggle}
             id="sidebar-toggle-btn"
             title={isOpen ? 'Свернуть меню' : 'Развернуть меню'}
@@ -44,24 +42,28 @@ export default function Sidebar({ user, isOpen, onToggle }) {
           </button>
         </div>
       </div>
+
       <div className="profile" id="sidebar-profile">
         <div className="profile-avatar" id="profile-avatar">ДП</div>
         <strong id="profile-name">{user?.full_name || 'Дарья Попова'}</strong>
         <span id="profile-role">{user?.role || 'HR business partner'}</span>
-        <small id="profile-login">{user?.login || 'dapopova'}</small>
+        <small id="profile-login">{user?.login || 'depopova'}</small>
       </div>
-      <nav className="nav-section" id="sidebar-nav">
+
+      <nav className="nav-section" id="sidebar-nav" aria-label="Основная навигация">
         <p id="nav-section-label">основное</p>
-        {navItems.map(({label, icon: Icon, path, id}) => (
-          <a 
-            key={path} 
+        {navItems.map(({ label, icon: Icon, path, id }) => (
+          <button
+            key={path}
             id={id}
-            className={isActive(path) ? 'active' : ''} 
-            onClick={() => handleNavigate(path)}
-            style={{ cursor: 'pointer' }}
+            className={`nav-item ${isActive(path) ? 'active' : ''}`}
+            onClick={() => navigate(path)}
+            title={!isOpen ? label : undefined}
+            type="button"
           >
-            <Icon size={17} /> {label}
-          </a>
+            <Icon size={18} />
+            <span className="nav-label">{label}</span>
+          </button>
         ))}
       </nav>
     </aside>
