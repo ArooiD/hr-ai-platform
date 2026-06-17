@@ -45,6 +45,15 @@ class Candidate(CandidateCreate):
     id: int
 
 
+class CandidateUpdate(BaseModel):
+    full_name: str | None = None
+    email: EmailStr | None = None
+    phone: str | None = None
+    skills: List[str] | None = None
+    experience_years: int | None = None
+    resume_text: str | None = None
+
+
 class ApplicationCreate(BaseModel):
     candidate_id: int
     vacancy_id: int

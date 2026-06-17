@@ -6,8 +6,15 @@ from app.models import CandidateModel
 from app.schemas import CandidateCreate
 
 
-def list_candidates(db: Session) -> list[CandidateModel]:
-    return db.query(CandidateModel).all()
+def list_candidates(db: Session, min_experience: int | None = None) -> list[CandidateModel]:
+    query = db.query(CandidateModel)
+    if min_experience is not None:
+        query = query.filter(CandidateModel.experience_years >= min_experience)
+    return query.all()
+
+
+def get_candidate(db: Session, candidate_id: int) -> CandidateModel | None:
+    return db.query(CandidateModel).filter(CandidateModel.id == candidate_id).first()
 
 
 def get_candidate_or_404(db: Session, candidate_id: int) -> CandidateModel:
