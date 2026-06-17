@@ -14,6 +14,7 @@ import './styles.css';
 
 function LoginPage({ onLogin }) {
   const [login, setLogin] = useState('depopova');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -23,10 +24,10 @@ function LoginPage({ onLogin }) {
     setLoading(true);
 
     try {
-      const session = await authApi.login({ login });
+      const session = await authApi.login({ login, password });
       onLogin(session);
     } catch (err) {
-      setError('Для входа используйте логин depopova.');
+      setError('Неверный логин или пароль.');
     } finally {
       setLoading(false);
     }
@@ -65,6 +66,15 @@ function LoginPage({ onLogin }) {
           <label>
             <span>Логин</span>
             <input value={login} onChange={(event) => setLogin(event.target.value)} placeholder="depopova" autoFocus />
+          </label>
+          <label>
+            <span>Пароль</span>
+            <input 
+              type="password" 
+              value={password} 
+              onChange={(event) => setPassword(event.target.value)} 
+              placeholder="••••••••" 
+            />
           </label>
 
           {error && <div className="login-error">{error}</div>}
