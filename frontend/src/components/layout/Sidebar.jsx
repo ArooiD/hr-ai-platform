@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { BarChart3, BriefcaseBusiness, CalendarDays, Menu, MessageCircle, Users } from 'lucide-react';
+import { BarChart3, BriefcaseBusiness, CalendarDays, HelpCircle, Menu, MessageCircle, Users } from 'lucide-react';
 
 export default function Sidebar({ user, isOpen, onToggle }) {
   const navigate = useNavigate();
@@ -11,11 +11,15 @@ export default function Sidebar({ user, isOpen, onToggle }) {
     { label: 'Кандидаты', icon: Users, path: '/candidates', id: 'nav-candidates' },
     { label: 'Подбор', icon: CalendarDays, path: '/recruitment', id: 'nav-recruitment' },
     { label: 'Аналитика', icon: BarChart3, path: '/analytics', id: 'nav-analytics' },
+    { label: 'Поддержка', icon: HelpCircle, path: '/support', id: 'nav-support' },
   ];
 
   const isActive = (path) => {
     if (path === '/vacancies') {
       return location.pathname === '/vacancies' || location.pathname === '/';
+    }
+    if (path === '/support') {
+      return location.pathname === '/support';
     }
     return location.pathname === path;
   };
@@ -60,9 +64,6 @@ export default function Sidebar({ user, isOpen, onToggle }) {
           </a>
         ))}
       </nav>
-      <div className="support" id="sidebar-support">
-        <MessageCircle size={16} /> поддержка
-      </div>
     </aside>
   );
 }

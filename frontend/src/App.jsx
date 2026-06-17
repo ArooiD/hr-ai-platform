@@ -9,6 +9,7 @@ import VacancyDetailPage from './pages/VacancyDetail';
 import CandidatesPage from './pages/Candidates';
 import AnalyticsPage from './pages/Analytics';
 import CandidateDetailPage from './pages/CandidateDetail';
+import SupportPage from './pages/Support';
 import { authApi } from './api/client';
 import './styles.css';
 
@@ -156,6 +157,7 @@ export default function App() {
           <Route path="/candidates" element={<CandidatesPage />} />
           <Route path="/recruitment" element={<RecruitmentFlow />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/support" element={<SupportPage />} />
           <Route path="/candidates/:id" element={<CandidateDetailPage />} />
           <Route path="*" element={<Navigate to="/vacancies" replace />} />
         </Routes>

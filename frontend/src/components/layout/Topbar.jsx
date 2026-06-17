@@ -12,6 +12,7 @@ export default function Topbar({ user, onLogout, onToggleSidebar }) {
     if (path === '/candidates') return 'кандидаты';
     if (path === '/recruitment') return 'подбор';
     if (path === '/analytics') return 'аналитика';
+    if (path === '/support') return 'поддержка';
     if (path.startsWith('/vacancies/')) return 'вакансия';
     if (path.startsWith('/candidates/')) return 'кандидат';
     return 'подбор';
