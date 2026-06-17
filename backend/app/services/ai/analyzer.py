@@ -6,7 +6,8 @@ if TYPE_CHECKING:
     from app.schemas import Candidate, Vacancy, AiAnalysis
 
 
-def analyze_candidate(candidate: "Candidate", vacancy: "Vacancy") -> "AiAnalysis":
+# Анализ соответствия кандидата вакансии
+    def analyze_candidate(candidate: "Candidate", vacancy: "Vacancy") -> "AiAnalysis":
     """Analyze candidate's fit for a vacancy using AI logic.
     
     Args:
@@ -48,7 +49,8 @@ def analyze_candidate(candidate: "Candidate", vacancy: "Vacancy") -> "AiAnalysis
     )
 
 
-def generate_interview_questions(candidate: "Candidate", vacancy: "Vacancy") -> list[str]:
+# Генерация вопросов для интервью на основе навыков
+    def generate_interview_questions(candidate: "Candidate", vacancy: "Vacancy") -> list[str]:
     """Generate interview questions based on candidate and vacancy.
     
     Args:

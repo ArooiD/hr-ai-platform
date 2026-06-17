@@ -17,6 +17,7 @@ class VacancyService:
         self.validator = VacancyValidator()
         self.mapper = VacancyMapper()
     
+    # Получить список вакансий (опционально с фильтром по статусу)
     def list_vacancies(self, db: Session, status: str | None = None) -> list[Vacancy]:
         """Get all vacancies, optionally filtered by status.
         
@@ -48,6 +49,7 @@ class VacancyService:
             raise HTTPException(status_code=404, detail="Вакансия не найдена")
         return self.mapper.to_schema(model)
     
+    # Создать новую вакансию с валидацией
     def create_vacancy(self, db: Session, payload: VacancyCreate) -> Vacancy:
         """Create a new vacancy.
         

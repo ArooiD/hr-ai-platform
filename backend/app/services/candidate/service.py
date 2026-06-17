@@ -19,6 +19,7 @@ class CandidateService:
         self.mapper = CandidateMapper()
         self.parser = CandidateParser()
     
+    # Получить список кандидатов (опционально с фильтром по опыту)
     def list_candidates(self, db: Session, min_experience: int | None = None) -> list[Candidate]:
         """Get all candidates, optionally filtered by minimum experience.
         
@@ -50,6 +51,7 @@ class CandidateService:
             raise HTTPException(status_code=404, detail="Кандидат не найден")
         return self.mapper.to_schema(model)
     
+    # Создать кандидата с проверкой дублей и валидацией
     def create_candidate(self, db: Session, payload: CandidateCreate) -> Candidate:
         """Create a new candidate.
         

@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+# Импорт маршрутов по доменам
 from app.api import applications, auth, candidates, dashboard, vacancies
 
 api_router = APIRouter(prefix="/api")

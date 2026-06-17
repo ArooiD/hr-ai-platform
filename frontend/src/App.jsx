@@ -12,13 +12,15 @@ import CandidateDetailPage from './pages/CandidateDetail';
 import { authApi } from './api/client';
 import './styles.css';
 
+# Страница входа - форма авторизации
 function LoginPage({ onLogin }) {
   const [login, setLogin] = useState('depopova');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const submit = async (event) => {
+  # Обработчик отправки формы входа
+    const submit = async (event) => {
     event.preventDefault();
     setError('');
     setLoading(true);
@@ -123,6 +125,7 @@ function AppLayout({ children }) {
   );
 }
 
+# Root компонент приложения с React Router
 export default function App() {
   const [session, setSession] = useState(() => {
     const saved = localStorage.getItem('hr-session');

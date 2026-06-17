@@ -20,6 +20,7 @@ class AuthService:
     def __init__(self):
         self.settings = get_settings()
 
+    # Аутентификация пользователя и создание JWT токена
     def authenticate(self, login: str, password: Optional[str] = None) -> dict:
         normalized_login = (login or "").strip().lower()
         mode = self.settings.auth_mode.lower()
@@ -32,6 +33,7 @@ class AuthService:
 
         return self._authenticate_local_identity(normalized_login, password)
 
+    # Локальная аутентификация (демо-режим)
     def _authenticate_local_identity(self, login: str, password: Optional[str]) -> dict:
         expected_login = self.settings.demo_user_login.lower()
         expected_hash = os.getenv("DEMO_USER_PASSWORD_HASH", "")
