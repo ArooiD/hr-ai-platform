@@ -21,7 +21,6 @@ export default function Topbar({ user, onLogout, onToggleSidebar }) {
 
   const breadcrumbs = [
     { label: 'главная', path: '/vacancies' },
-    { label: 'hr-платформа', path: '/vacancies' },
     { label: currentPath, path: location.pathname, active: true }
   ];
 
