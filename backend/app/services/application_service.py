@@ -3,7 +3,7 @@ import json
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
-from app.ai_service import analyze_candidate, generate_interview_questions
+from app.services.ai import analyze_candidate, generate_interview_questions
 from app.models import CandidateModel, VacancyModel, ApplicationStage as ModelApplicationStage
 from app.repositories import application_repository, candidate_repository, vacancy_repository
 from app.schemas import Application, ApplicationCreate, StageUpdate

@@ -1,11 +1,24 @@
-from app.schemas import AiAnalysis, Candidate, Vacancy
+"""AI-powered candidate analysis and interview question generation."""
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.schemas import Candidate, Vacancy, AiAnalysis
 
 
-def normalize_skill(skill: str) -> str:
-    return skill.strip().lower()
-
-
-def analyze_candidate(candidate: Candidate, vacancy: Vacancy) -> AiAnalysis:
+def analyze_candidate(candidate: "Candidate", vacancy: "Vacancy") -> "AiAnalysis":
+    """Analyze candidate's fit for a vacancy using AI logic.
+    
+    Args:
+        candidate: Candidate object with skills and experience
+        vacancy: Vacancy object with required skills
+        
+    Returns:
+        AiAnalysis object with score, matched/missing skills, and recommendation
+    """
+    from app.schemas import AiAnalysis
+    from app.services.ai.utils import normalize_skill
+    
     candidate_skills = {normalize_skill(skill) for skill in candidate.skills}
     required_skills = {normalize_skill(skill) for skill in vacancy.required_skills}
 
@@ -35,13 +48,24 @@ def analyze_candidate(candidate: Candidate, vacancy: Vacancy) -> AiAnalysis:
     )
 
 
-def generate_interview_questions(candidate: Candidate, vacancy: Vacancy) -> list[str]:
+def generate_interview_questions(candidate: "Candidate", vacancy: "Vacancy") -> list[str]:
+    """Generate interview questions based on candidate and vacancy.
+    
+    Args:
+        candidate: Candidate object
+        vacancy: Vacancy object with required skills
+        
+    Returns:
+        List of up to 8 interview questions
+    """
     questions: list[str] = []
 
+    # 2 questions per required skill
     for skill in vacancy.required_skills:
         questions.append(f"Расскажите о практическом опыте с {skill}.")
         questions.append(f"Какие сложные задачи вы решали с использованием {skill}?")
 
+    # 1 general question about fit
     questions.append(f"Почему ваш опыт подходит для позиции «{vacancy.title}»?")
 
     return questions[:8]
