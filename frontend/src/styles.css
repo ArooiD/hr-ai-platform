@@ -118,6 +118,9 @@ button { cursor: pointer; }
   border-radius: 8px;
   color: #a8adb5;
   min-height: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .sidebar.closed .nav-section a:hover,
 .sidebar.closed .nav-section a.active { 
@@ -126,6 +129,9 @@ button { cursor: pointer; }
 }
 .sidebar.closed .nav-section a svg { 
   margin: 0; 
+}
+.sidebar.closed .nav-section a span {
+  display: none;
 }
 .brand-row { display: flex; align-items: center; justify-content: space-between; color: #a8adb5; }
 .brand, .brand-neutral { color: var(--blue); font-size: 23px; font-weight: 900; letter-spacing: -0.05em; text-transform: uppercase; }
