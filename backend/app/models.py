@@ -34,7 +34,7 @@ class VacancyModel(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    applications = relationship("ApplicationModel", back_populates="vacancy")
+    applications = relationship("ApplicationModel", back_populates="vacancy", cascade="all, delete-orphan")
 
 
 class CandidateModel(Base):
@@ -58,7 +58,7 @@ class ApplicationModel(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     candidate_id = Column(Integer, ForeignKey("candidates.id"), nullable=False)
-    vacancy_id = Column(Integer, ForeignKey("vacancies.id"), nullable=False)
+    vacancy_id = Column(Integer, ForeignKey("vacancies.id", ondelete="CASCADE"), nullable=False)
     stage = Column(Enum(ApplicationStage), default=ApplicationStage.new)
     ai_analysis = Column(Text, nullable=True)  # JSON-like analysis data
     created_at = Column(DateTime(timezone=True), server_default=func.now())
