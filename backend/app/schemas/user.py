@@ -2,7 +2,6 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import datetime
-from app.models import UserRole
 
 
 class UserBase(BaseModel):
@@ -10,7 +9,7 @@ class UserBase(BaseModel):
     login: str
     email: Optional[str] = None
     full_name: Optional[str] = None
-    role: UserRole = UserRole.regular
+    role: str = "regular"  # regular, specialist, admin
     specialties: Optional[str] = None
 
 
@@ -23,7 +22,7 @@ class UserUpdate(BaseModel):
     """Схема для обновления пользователя"""
     email: Optional[str] = None
     full_name: Optional[str] = None
-    role: Optional[UserRole] = None
+    role: Optional[str] = None
     specialties: Optional[str] = None
 
 

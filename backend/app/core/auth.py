@@ -4,7 +4,6 @@ from fastapi import Request, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
-from app.models import UserRole
 from app.database import get_db
 
 # Пока используем простой HTTP Bearer для примера
@@ -31,7 +30,7 @@ def get_current_user(
             return {
                 "id": 1,
                 "login": login,
-                "role": UserRole.admin if login == "admin" else UserRole.regular,
+                "role": "admin" if login == "admin" else "regular",
                 "specialties": []
             }
         return None
@@ -47,7 +46,7 @@ def get_current_user(
         return {
             "id": 1,
             "login": user_login,
-            "role": UserRole.admin if user_login == "admin" else UserRole.regular,
+            "role": "admin" if user_login == "admin" else "regular",
             "specialties": []
         }
     except Exception:
@@ -57,13 +56,13 @@ def get_current_user(
         )
 
 
-def require_role(*allowed_roles: UserRole):
+def require_role(*allowed_roles: str):
     """
     Декоратор для требования определенной роли
     
     Example:
         @router.get("/admin")
-        def admin_endpoint(current_user = Depends(require_role(UserRole.admin))):
+        def admin_endpoint(current_user = Depends(require_role("admin"))):
             ...
     """
     def role_checker(
@@ -79,7 +78,7 @@ def require_role(*allowed_roles: UserRole):
                 detail="Требуется аутентификация"
             )
         
-        if user["role"] not in allowed_roles and user["role"] != UserRole.admin:
+        if user["role"] not in allowed_roles and user["role"] != "admin":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Недостаточно прав для доступа"
@@ -104,14 +103,14 @@ def can_view_vacancy(user: dict, vacancy: dict) -> bool:
     if not user:
         return False
     
-    user_role = user.get("role", UserRole.regular)
+    user_role = user.get("role", "regular")
     user_specialties = user.get("specialties", [])
     
     vacancy_visibility = vacancy.get("visibility", "public")
     required_specialty = vacancy.get("required_specialty")
     
     # Admin видит всё
-    if user_role == UserRole.admin:
+    if user_role == "admin":
         return True
     
     # Public видят все
@@ -120,7 +119,7 @@ def can_view_vacancy(user: dict, vacancy: dict) -> bool:
     
     # Specialist видят только если есть matching specialty
     if vacancy_visibility == "specialist":
-        if user_role == UserRole.specialist:
+        if user_role == "specialist":
             if required_specialty and required_specialty in user_specialties:
                 return True
         return False

@@ -9,7 +9,6 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy import text
 
 
 # revision identifiers, used by Alembic.
@@ -20,21 +19,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Create enum types - check if they exist first
-    # Using raw SQL to check existence
-    result = op.get_bind().execute(
-        text("SELECT EXISTS(SELECT 1 FROM pg_type WHERE typname = 'userrole')")
-    )
-    if not result.scalar():
-        op.execute("CREATE TYPE userrole AS ENUM ('regular', 'specialist', 'admin')")
-    
-    result = op.get_bind().execute(
-        text("SELECT EXISTS(SELECT 1 FROM pg_type WHERE typname = 'vacancyvisibility')")
-    )
-    if not result.scalar():
-        op.execute("CREATE TYPE vacancyvisibility AS ENUM ('public', 'specialist', 'internal')")
-    
-    # Create users table
+    # Create users table (using VARCHAR instead of ENUM for roles)
     op.create_table(
         'users',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
@@ -42,7 +27,7 @@ def upgrade() -> None:
         sa.Column('password_hash', sa.String(length=255), nullable=True),
         sa.Column('email', sa.String(length=255), nullable=True),
         sa.Column('full_name', sa.String(length=255), nullable=True),
-        sa.Column('role', sa.Enum('regular', 'specialist', 'admin', name='userrole'), default='regular'),
+        sa.Column('role', sa.String(50), default='regular'),  # regular, specialist, admin
         sa.Column('specialties', sa.Text(), nullable=True),
         sa.Column('is_active', sa.Boolean(), default=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now()),
@@ -56,8 +41,9 @@ def upgrade() -> None:
     op.create_index('ix_users_login', 'users', ['login'])
     
     # Add visibility and required_specialty columns to vacancies
-    op.add_column('vacancies', sa.Column('visibility', sa.Enum('public', 'specialist', 'internal', name='vacancyvisibility'), default='public'))
-    op.add_column('vacancies', sa.Column('required_specialty', sa.String(length=100), nullable=True))
+    # Using VARCHAR instead of ENUM for visibility
+    op.add_column('vacancies', sa.Column('visibility', sa.String(50), default='public'))  # public, specialist, internal
+    op.add_column('vacancies', sa.Column('required_specialty', sa.String(100), nullable=True))
 
 
 def downgrade() -> None:
@@ -67,7 +53,3 @@ def downgrade() -> None:
     
     # Drop users table
     op.drop_table('users')
-    
-    # Drop enum types
-    op.execute('DROP TYPE IF EXISTS vacancyvisibility')
-    op.execute('DROP TYPE IF EXISTS userrole')

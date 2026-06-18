@@ -6,18 +6,6 @@ import enum
 from app.database import Base
 
 
-class UserRole(str, enum.Enum):
-    regular = "regular"
-    specialist = "specialist"
-    admin = "admin"
-
-
-class VacancyVisibility(str, enum.Enum):
-    public = "public"
-    specialist = "specialist"
-    internal = "internal"
-
-
 class VacancyStatus(str, enum.Enum):
     open = "open"
     closed = "closed"
@@ -46,7 +34,7 @@ class UserModel(Base):
     password_hash = Column(String(255), nullable=True)  # Пока nullable для mock auth
     email = Column(String(255), unique=True, nullable=True)
     full_name = Column(String(255), nullable=True)
-    role = Column(Enum(UserRole), default=UserRole.regular)
+    role = Column(String(50), default="regular")  # regular, specialist, admin
     specialties = Column(Text, default="")  # Комма-разделенный список специализаций
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -64,7 +52,7 @@ class VacancyModel(Base):
     salary_from = Column(Integer, nullable=True)
     salary_to = Column(Integer, nullable=True)
     status = Column(Enum(VacancyStatus), default=VacancyStatus.open)
-    visibility = Column(Enum(VacancyVisibility), default=VacancyVisibility.public)
+    visibility = Column(String(50), default="public")  # public, specialist, internal
     required_specialty = Column(String(100), nullable=True)  # Требуемая специализация
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
