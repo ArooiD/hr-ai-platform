@@ -13,7 +13,9 @@ export default function VacancyDetailPage() {
   useEffect(() => {
     const loadVacancy = async () => {
       try {
-        const allVacancies = await hrApi.vacancies();
+        const response = await hrApi.vacancies();
+        // Извлекаем данные из пагинированного ответа
+        const allVacancies = response.data || response;
         const found = allVacancies.find(v => v.id === parseInt(id));
         if (found) {
           setVacancy(found);
@@ -21,7 +23,7 @@ export default function VacancyDetailPage() {
           setError('Вакансия не найдена');
         }
       } catch (err) {
-        setError('Ошибка при загрузке вакансии');
+        setError('Ошибка при загрузке вакансии: ' + err.message);
       } finally {
         setLoading(false);
       }
@@ -56,7 +58,9 @@ export default function VacancyDetailPage() {
       <div className="page-container">
         <div className="empty-state">
           <p>{error || 'Вакансия не найдена'}</p>
-          <button onClick={() => navigate('/vacancies')}>← Вернуться к списку</button>
+          <button className="primary-button" onClick={() => navigate('/vacancies')}>
+            ← Вернуться к списку
+          </button>
         </div>
       </div>
     );
