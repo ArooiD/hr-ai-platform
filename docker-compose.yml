@@ -38,7 +38,7 @@ services:
       - weaviate
       - ollama
       - keycloak
-      - mineru
+#      - mineru
 
   frontend:
     image: node:22
@@ -148,13 +148,13 @@ services:
     ports:
       - "11434:11434"
 
-  mineru:
-    image: alexsuntop/mineru:3.1.0
-    container_name: hr-ai-mineru
-    restart: unless-stopped
-    environment:
-      MINERU_DEVICE_MODE: cpu
-    volumes:
-      - ./data/mineru:/data
-    ports:
-      - "30000:30000"
+#  mineru:
+#    image: alexsuntop/mineru:3.1.0
+#    container_name: hr-ai-mineru
+#    restart: unless-stopped
+#    environment:
+#      MINERU_DEVICE_MODE: cpu
+#    volumes:
+#      - ./data/mineru:/data
+#    ports:
+#      - "30000:30000"
