@@ -97,10 +97,29 @@ export default function AnalyticsPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{ fontSize: '48px', fontWeight: '900', color: '#34c759' }}>{data.avg_ai_score}%</div>
             <div style={{ color: '#6b7280' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#166534' }}>
-                <ArrowUpRight size={16} /> Высокое качество кандидатов
-              </div>
-              <div style={{ fontSize: '12px', marginTop: '4px' }}>На основе AI-анализа откликов</div>
+              {data.avg_ai_score > 0 ? (
+                <>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '4px',
+                    color: data.avg_ai_score >= 80 ? '#166534' : data.avg_ai_score >= 50 ? '#92400e' : '#991b1b' 
+                  }}>
+                    <ArrowUpRight size={16} />
+                    {data.avg_ai_score >= 80 ? 'Высокое качество кандидатов' : 
+                     data.avg_ai_score >= 50 ? 'Среднее качество кандидатов' : 
+                     'Требуется доработка профиля'}
+                  </div>
+                  <div style={{ fontSize: '12px', marginTop: '4px' }}>На основе AI-анализа откликов</div>
+                </>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: '#6b7280' }}>
+                    <ArrowUpRight size={16} /> Нет данных для анализа
+                  </div>
+                  <div style={{ fontSize: '12px', marginTop: '4px' }}>Проведите AI-анализ откликов</div>
+                </>
+              )}
             </div>
           </div>
         </div>
