@@ -12,6 +12,70 @@ const stageView = {
   rejected: { color: '#b91c1c', bg: '#fee2e2', border: '#fecaca', label: 'выбыл' },
 };
 
+// Правила для каждого этапа: что нужно сделать для перехода дальше
+const stageRules = {
+  new: {
+    title: 'Новый отклик',
+    description: 'Первичная обработка',
+    requiredActions: ['ai_analysis'],
+    nextStage: 'screening',
+    allowedTransitions: ['screening', 'rejected'],
+    blockedActions: ['schedule_interview', 'make_offer'],
+    helpText: 'Проведите AI-анализ и примите решение о прохождении скрининга',
+    icon: Sparkles,
+  },
+  screening: {
+    title: 'Скрининг',
+    description: 'Первичный отбор кандидатов',
+    requiredActions: ['hr_decision'],
+    nextStage: 'interview',
+    allowedTransitions: ['interview', 'rejected'],
+    blockedActions: ['schedule_interview', 'make_offer'],
+    helpText: 'Оцените резюме и решите: приглашать на интервью или отклонить',
+    icon: Target,
+  },
+  interview: {
+    title: 'Интервью',
+    description: 'Проведение встреч',
+    requiredActions: ['interview_scheduled', 'interview_feedback'],
+    nextStage: 'offer',
+    allowedTransitions: ['offer', 'rejected'],
+    blockedActions: ['make_offer'],
+    helpText: 'Назначьте дату интервью, получите обратную связь от интервьюера',
+    icon: Calendar,
+  },
+  offer: {
+    title: 'Оффер',
+    description: 'Согласование условий',
+    requiredActions: ['offer_prepared', 'offer_approved'],
+    nextStage: 'hired',
+    allowedTransitions: ['hired', 'rejected'],
+    blockedActions: [],
+    helpText: 'Подготовьте оффер, согласуйте зарплату и условия',
+    icon: Award,
+  },
+  hired: {
+    title: 'Нанят',
+    description: 'Завершение процесса',
+    requiredActions: [],
+    nextStage: null,
+    allowedTransitions: [],
+    blockedActions: ['all'],
+    helpText: 'Кандидат принят в команду',
+    icon: CheckCircle2,
+  },
+  rejected: {
+    title: 'Отклонён',
+    description: 'Кандидат не прошел отбор',
+    requiredActions: [],
+    nextStage: null,
+    allowedTransitions: [],
+    blockedActions: ['all'],
+    helpText: 'Кандидат не подошел по требованиям',
+    icon: AlertTriangle,
+  },
+};
+
 const vacancyStatuses = {
   open: { label: 'открыта', color: '#15803d', bg: '#dcfce7' },
   closed: { label: 'закрыта', color: '#64748b', bg: '#f1f5f9' },
@@ -135,8 +199,41 @@ export default function RecruitmentPage() {
     setShowStageModal(true);
   };
 
+  // Проверка: разрешён ли переход на этот этап
+  const isTransitionAllowed = (currentStage, targetStage) => {
+    if (currentStage === targetStage) return false;
+    const rules = stageRules[currentStage];
+    if (!rules) return false;
+    
+    // Если blockedActions = ['all'], переходы запрещены
+    if (rules.blockedActions.includes('all')) return false;
+    
+    // Проверяем, разрешён ли переход
+    return rules.allowedTransitions.includes(targetStage);
+  };
+
+  // Получить список доступных этапов для перехода
+  const getAvailableStages = (currentStage) => {
+    const rules = stageRules[currentStage];
+    if (!rules || rules.blockedActions.includes('all')) return [];
+    return rules.allowedTransitions;
+  };
+
+  // Получить информацию о требуемых действиях
+  const getRequiredActions = (currentStage) => {
+    const rules = stageRules[currentStage];
+    return rules?.requiredActions || [];
+  };
+
   const confirmStageChange = async (newStage) => {
     if (!selectedApplication) return;
+    
+    // Проверка разрешения перехода
+    if (!isTransitionAllowed(selectedApplication.stage, newStage)) {
+      setMessage(`Переход с "${stageLabels[selectedApplication.stage]}" на "${stageLabels[newStage]}" не разрешён`);
+      return;
+    }
+    
     try {
       await hrApi.updateApplicationStage(selectedApplication.id, newStage);
       setMessage(`Кандидат ${candidates.find(c => c.id === selectedApplication.candidate_id)?.full_name} переведён на этап: ${stageLabels[newStage]}`);
@@ -372,7 +469,7 @@ export default function RecruitmentPage() {
 
       {showStageModal && selectedApplication && (
         <div className="modal-overlay" onClick={() => setShowStageModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 540 }}>
             <div className="modal-header">
               <h2><Target size={20} style={{ marginRight: 8, color: '#059669' }} /> Изменить этап</h2>
               <button className="icon-button" onClick={() => setShowStageModal(false)}>✕</button>
@@ -382,6 +479,7 @@ export default function RecruitmentPage() {
                 Отклик #<strong>{selectedApplication.id}</strong>
               </p>
               
+              {/* Информация о кандидате */}
               <div style={{ 
                 padding: 16, 
                 background: '#f8fafc', 
@@ -403,78 +501,171 @@ export default function RecruitmentPage() {
                   </div>
                 </div>
                 
-                <div style={{ 
-                  padding: 10, 
-                  background: stageView[selectedApplication.stage]?.bg, 
-                  borderRadius: 8,
-                  border: `1px solid ${stageView[selectedApplication.stage]?.border}`
-                }}>
-                  <span style={{ 
-                    color: stageView[selectedApplication.stage]?.color,
-                    fontWeight: 700,
-                    fontSize: 13
-                  }}>
-                    Текущий этап: {stageLabels[selectedApplication.stage]}
-                  </span>
-                </div>
+                {/* Текущий этап с правилами */}
+                {(() => {
+                  const currentRules = stageRules[selectedApplication.stage];
+                  const CurrentIcon = currentRules?.icon || Target;
+                  return (
+                    <div style={{ 
+                      padding: 14, 
+                      background: stageView[selectedApplication.stage]?.bg, 
+                      borderRadius: 10,
+                      border: `2px solid ${stageView[selectedApplication.stage]?.border}`
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                        <CurrentIcon size={18} style={{ color: stageView[selectedApplication.stage]?.color }} />
+                        <span style={{ 
+                          color: stageView[selectedApplication.stage]?.color,
+                          fontWeight: 800,
+                          fontSize: 14
+                        }}>
+                          {currentRules?.title || stageLabels[selectedApplication.stage]}
+                        </span>
+                      </div>
+                      <p style={{ 
+                        margin: 0, 
+                        color: stageView[selectedApplication.stage]?.color,
+                        fontSize: 13,
+                        opacity: 0.9
+                      }}>
+                        {currentRules?.description}
+                      </p>
+                      
+                      {/* Подсказка что нужно сделать */}
+                      {currentRules?.helpText && (
+                        <div style={{ 
+                          marginTop: 10, 
+                          padding: 10, 
+                          background: 'rgba(255,255,255,0.7)',
+                          borderRadius: 8
+                        }}>
+                          <p style={{ margin: 0, fontSize: 12, color: '#475569' }}>
+                            💡 {currentRules.helpText}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
 
+              {/* Требуемые действия */}
+              {(() => {
+                const requiredActions = getRequiredActions(selectedApplication.stage);
+                if (!requiredActions.length) return null;
+                
+                const actionLabels = {
+                  ai_analysis: '🤖 Провести AI-анализ',
+                  hr_decision: '📝 Принять решение HR',
+                  interview_scheduled: '📅 Назначить дату интервью',
+                  interview_feedback: '💬 Получить обратную связь',
+                  offer_prepared: '📄 Подготовить оффер',
+                  offer_approved: '✅ Согласовать условия'
+                };
+                
+                return (
+                  <div style={{ 
+                    padding: 12, 
+                    background: '#fef3c7', 
+                    borderRadius: 10,
+                    border: '1px solid #fde68a',
+                    marginBottom: 20
+                  }}>
+                    <p style={{ margin: '0 0 8px', fontWeight: 700, fontSize: 13, color: '#92400e' }}>
+                      ⚠️ Перед переходом выполните:
+                    </p>
+                    <ul style={{ margin: 0, paddingLeft: 20, fontSize: 13, color: '#78350f' }}>
+                      {requiredActions.map(action => (
+                        <li key={action}>{actionLabels[action] || action}</li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })()}
+
+              {/* Доступные этапы для перехода */}
               <p style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>
                 Перевести на этап:
               </p>
               
               <div style={{ display: 'grid', gap: 10 }}>
-                {stages.map(stage => {
+                {getAvailableStages(selectedApplication.stage).map(stage => {
                   const view = stageView[stage];
-                  const isCurrent = stage === selectedApplication.stage;
+                  const stageRulesData = stageRules[stage];
+                  const NextIcon = stageRulesData?.icon || Target;
                   
                   return (
                     <button
                       key={stage}
                       type="button"
                       onClick={() => confirmStageChange(stage)}
-                      disabled={isCurrent}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: 12,
                         padding: 14,
-                        border: `2px solid ${isCurrent ? view.color : view.border}`,
+                        border: `2px solid ${view.border}`,
                         borderRadius: 12,
-                        background: isCurrent ? view.bg : '#fff',
-                        cursor: isCurrent ? 'default' : 'pointer',
-                        opacity: isCurrent ? 0.7 : 1,
-                        transition: 'all 0.2s'
+                        background: '#fff',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        textAlign: 'left'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = view.bg;
+                        e.currentTarget.style.borderColor = view.color;
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#fff';
+                        e.currentTarget.style.borderColor = view.border;
                       }}
                     >
                       <div style={{ 
-                        width: 24, 
-                        height: 24, 
+                        width: 32, 
+                        height: 32, 
                         borderRadius: '50%',
                         background: view.color,
                         display: 'grid',
                         placeItems: 'center'
                       }}>
-                        {isCurrent ? (
-                          <CheckCircle2 size={16} style={{ color: '#fff' }} />
-                        ) : (
-                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff' }} />
-                        )}
+                        <NextIcon size={16} style={{ color: '#fff' }} />
                       </div>
-                      <div style={{ flex: 1, textAlign: 'left' }}>
-                        <div style={{ fontWeight: 700, color: view.color }}>
-                          {stageLabels[stage]}
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 700, color: view.color, fontSize: 14 }}>
+                          {stageRulesData?.title || stageLabels[stage]}
                         </div>
-                        {stage === selectedApplication.stage && (
-                          <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
-                            Текущий этап
-                          </div>
-                        )}
+                        <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+                          {stageRulesData?.description}
+                        </div>
+                      </div>
+                      <div style={{ 
+                        color: view.color,
+                        fontWeight: 700,
+                        fontSize: 20
+                      }}>
+                        →
                       </div>
                     </button>
                   );
                 })}
               </div>
+              
+              {getAvailableStages(selectedApplication.stage).length === 0 && (
+                <div style={{ 
+                  padding: 20, 
+                  textAlign: 'center',
+                  background: '#f1f5f9',
+                  borderRadius: 12,
+                  color: '#64748b'
+                }}>
+                  <p style={{ margin: 0, fontSize: 14 }}>
+                    🚫 На этом этапе переходы недоступны
+                  </p>
+                  <p style={{ margin: '6px 0 0', fontSize: 12 }}>
+                    {stageRules[selectedApplication.stage]?.helpText}
+                  </p>
+                </div>
+              )}
             </div>
             
             <div className="form-actions">
