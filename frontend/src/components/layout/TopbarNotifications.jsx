@@ -2,14 +2,117 @@ import { useState, useEffect, useRef } from 'react';
 import { Bell, X, CheckCircle2, Clock, UserPlus, BriefcaseBusiness } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { notificationsApi } from '../../api/client';
+import { useSSENotifications } from '../../api/sseNotifications';
 
 export default function TopbarNotifications() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isConnected, setIsConnected] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  
+  // SSE notifications with real-time updates
+  const { 
+    notifications: sseNotifications, 
+    unreadCount: sseUnreadCount, 
+    isConnected: sseConnected,
+    loadNotifications: loadSSENotifications,
+    markAsRead: sseMarkAsRead,
+    markAllAsRead: sseMarkAllAsRead,
+  } = useSSENotifications();
+  
+  useEffect(() => {
+    setIsConnected(sseConnected);
+  }, [sseConnected]);
+  
+  // Load initial notifications on mount
+  useEffect(() => {
+    if (sseNotifications.length > 0) {
+      // SSE уже загрузила уведомления
+      processNotifications(sseNotifications);
+      setUnreadCount(sseUnreadCount);
+      setLoading(false);
+    } else {
+      // Загружаем через REST API
+      loadInitialNotifications();
+    }
+  }, []);
+  
+  // Обновляем уведомления при получении новых через SSE
+  useEffect(() => {
+    if (sseNotifications.length > 0) {
+      processNotifications(sseNotifications);
+      setUnreadCount(sseUnreadCount);
+    }
+  }, [sseNotifications, sseUnreadCount]);
+  
+  const loadInitialNotifications = async () => {
+    try {
+      const [notifsData, countData] = await Promise.all([
+        notificationsApi.getNotifications(20, false),
+        notificationsApi.getUnreadCount()
+      ]);
+      
+      const notifs = notifsData.map(n => convertNotification(n));
+      setNotifications(notifs.slice(0, 10));
+      setUnreadCount(countData.count);
+    } catch (err) {
+      console.error('Failed to load notifications:', err);
+      setNotifications([]);
+      setUnreadCount(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const processNotifications = (notifsData) => {
+    const notifs = notifsData.map(n => convertNotification(n));
+    setNotifications(notifs.slice(0, 10));
+  };
+  
+  const convertNotification = (n) => {
+    let icon = UserPlus;
+    let color = '#0b73ff';
+    
+    switch (n.type) {
+      case 'application_new':
+        icon = UserPlus;
+        color = '#0b73ff';
+        break;
+      case 'vacancy_closed':
+        icon = CheckCircle2;
+        color = '#16a34a';
+        break;
+      case 'application_stage_changed':
+        icon = BriefcaseBusiness;
+        color = '#f59e0b';
+        break;
+      default:
+        icon = UserPlus;
+        color = '#0b73ff';
+    }
+    
+    return {
+      id: n.id,
+      type: n.type,
+      title: n.title,
+      message: n.message,
+      time: new Date(n.created_at),
+      unread: !n.is_read,
+      icon,
+      color,
+      action: () => {
+        if (n.entity_type === 'vacancy' && n.entity_id) {
+          navigate(`/vacancies/${n.entity_id}`);
+        } else if (n.entity_type === 'application' && n.entity_id) {
+          navigate(`/recruitment`);
+        }
+      },
+      actionLabel: 'Открыть'
+    };
+  };
 
   // Закрытие при клике вне
   useEffect(() => {
@@ -23,94 +126,21 @@ export default function TopbarNotifications() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Загрузка уведомлений с backend
-  const loadNotifications = async () => {
-    try {
-      const [notifsData, countData] = await Promise.all([
-        notificationsApi.getNotifications(20, false),
-        notificationsApi.getUnreadCount()
-      ]);
-
-      // Преобразуем данные с backend в формат компонента
-      const notifs = notifsData.map(n => {
-        let icon = UserPlus;
-        let color = '#0b73ff';
-        
-        switch (n.type) {
-          case 'application_new':
-            icon = UserPlus;
-            color = '#0b73ff';
-            break;
-          case 'vacancy_closed':
-            icon = CheckCircle2;
-            color = '#16a34a';
-            break;
-          case 'application_stage_changed':
-            icon = BriefcaseBusiness;
-            color = '#f59e0b';
-            break;
-          default:
-            icon = UserPlus;
-            color = '#0b73ff';
-        }
-
-        return {
-          id: n.id,
-          type: n.type,
-          title: n.title,
-          message: n.message,
-          time: new Date(n.created_at),
-          unread: !n.is_read,
-          icon,
-          color,
-          action: () => {
-            if (n.entity_type === 'vacancy' && n.entity_id) {
-              navigate(`/vacancies/${n.entity_id}`);
-            } else if (n.entity_type === 'application' && n.entity_id) {
-              navigate(`/recruitment`);
-            }
-          },
-          actionLabel: 'Открыть'
-        };
-      });
-
-      setNotifications(notifs.slice(0, 10));
-      setUnreadCount(countData.count);
-    } catch (err) {
-      console.error('Failed to load notifications:', err);
-      setNotifications([]);
-      setUnreadCount(0);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Загрузка уведомлений при открытии
   useEffect(() => {
-    if (isOpen) {
-      loadNotifications();
+    if (isOpen && notifications.length === 0) {
+      loadInitialNotifications();
     }
   }, [isOpen]);
 
   const markAsRead = async (id) => {
-    try {
-      await notificationsApi.markAsRead(id);
-      setNotifications(prev => 
-        prev.map(n => n.id === id ? { ...n, unread: false } : n)
-      );
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (err) {
-      console.error('Failed to mark notification as read:', err);
-    }
+    await sseMarkAsRead(id);
+    // Состояние автоматически обновится через SSE
   };
-
+  
   const markAllAsRead = async () => {
-    try {
-      await notificationsApi.markAllAsRead();
-      setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
-      setUnreadCount(0);
-    } catch (err) {
-      console.error('Failed to mark all notifications as read:', err);
-    }
+    await sseMarkAllAsRead();
+    // Состояние автоматически обновится через SSE
   };
 
   const formatTime = (date) => {
@@ -176,6 +206,16 @@ export default function TopbarNotifications() {
         <span style={{ fontSize: '13px', fontWeight: '600' }}>
           {unreadCount > 0 ? `${unreadCount} новых` : 'уведомления'}
         </span>
+        {/* Connection status indicator */}
+        {isConnected && (
+          <span style={{
+            width: '6px',
+            height: '6px',
+            borderRadius: '50%',
+            background: '#16a34a',
+            marginLeft: '4px'
+          }} title="Подключено к real-time уведомлениям" />
+        )}
       </button>
     );
   }

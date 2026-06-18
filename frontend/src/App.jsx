@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ArrowRight, BriefcaseBusiness, CalendarCheck2, ChartNoAxesColumnIncreasing, FileText, UserRoundCheck, UsersRound, Users } from 'lucide-react';
 import Sidebar from './components/layout/Sidebar';
@@ -11,6 +11,7 @@ import AnalyticsPage from './pages/Analytics';
 import CandidateDetailPage from './pages/CandidateDetail';
 import SupportPage from './pages/Support';
 import { authApi } from './api/client';
+import { initSSEClient } from './api/sseNotifications';
 import './styles/index.css';
 
 // Страница входа - форма авторизации
@@ -137,6 +138,14 @@ export default function App() {
     const saved = localStorage.getItem('hr-session');
     return saved ? JSON.parse(saved) : null;
   });
+
+  // Инициализация SSE client после входа
+  useEffect(() => {
+    if (session?.token) {
+      console.log('[App] Initializing SSE client...');
+      initSSEClient(session.token);
+    }
+  }, [session]);
 
   const login = (nextSession) => {
     localStorage.setItem('hr-session', JSON.stringify(nextSession));

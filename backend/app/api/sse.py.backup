@@ -1,0 +1,105 @@
+"""Server-Sent Events (SSE) для real-time уведомлений"""
+import asyncio
+import json
+from typing import AsyncGenerator
+from fastapi import APIRouter, Query, Request
+from fastapi.responses import StreamingResponse
+from app.services.auth.service import AuthService
+
+
+# Хранилище активных подписчиков: user_id -> set[queue]
+sse_subscribers: dict[str, set[asyncio.Queue]] = {}
+
+
+router = APIRouter(tags=["sse"])
+
+
+async def generate_sse_events(user_id: str) -> AsyncGenerator[str, None]:
+    """Генератор SSE событий для пользователя"""
+    # Создать очередь для этого подключения
+    queue = asyncio.Queue()
+    
+    # Добавить подписчика
+    if user_id not in sse_subscribers:
+        sse_subscribers[user_id] = set()
+    sse_subscribers[user_id].add(queue)
+    
+    try:
+        while True:
+            # Ждать событие
+            event = await queue.get()
+            
+            if event is None:  # Signal to disconnect
+                break
+            
+            # Формат SSE
+            event_type = event.get("type", "message")
+            data = json.dumps(event.get("data", {}), ensure_ascii=False)
+            
+            # SSE формат
+            yield f"event: {event_type}\n"
+            yield f"data: {data}\n\n"
+    
+    except asyncio.CancelledError:
+        # Клиент отключился
+        pass
+    finally:
+        # Удалить подписчика
+        if user_id in sse_subscribers:
+            sse_subscribers[user_id].discard(queue)
+            if not sse_subscribers[user_id]:
+                del sse_subscribers[user_id]
+
+
+@router.get("/sse/notifications")
+async def sse_notifications(
+    request: Request,
+    token: str = Query(..., description="Auth token")
+):
+    """
+    Server-Sent Events endpoint для real-time уведомлений
+    
+    Подключение:
+    http://localhost:8000/api/sse/notifications?token=<auth_token>
+    
+    Формат событий:
+    event: notification_new
+    data: {"id": "123", "type": "application_new", ...}
+    
+    event: notification_read
+    data: {"id": "123"}
+    """
+    # Аутентификация пользователя
+    user_id = AuthService.authenticate(token)
+    
+    if not user_id:
+        return StreamingResponse(
+            iter(["event: error\ndata: {\"message\": \"Unauthorized\"}\n\n"]),
+            media_type="text/event-stream"
+        )
+    
+    return StreamingResponse(
+        generate_sse_events(user_id),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # Отключить buffering в nginx
+        }
+    )
+
+
+async def send_notification_event(user_id: str, event_type: str, data: dict) -> None:
+    """Отправить SSE событие пользователю"""
+    if user_id not in sse_subscribers:
+        return
+    
+    event = {"type": event_type, "data": data}
+    
+    # Отправить всем подписчикам пользователя
+    for queue in sse_subscribers[user_id]:
+        try:
+            await queue.put(event)
+        except Exception:
+            # Ошибка отправки, очередь, вероятно, удалена
+            pass

@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
+from app.api.websockets import router as websocket_router
+from app.api.sse import router as sse_router
 
 app = FastAPI(
     title="HR AI Platform",
@@ -24,3 +26,5 @@ def health():
 
 
 app.include_router(api_router)
+# app.include_router(websocket_router, prefix="/ws")  # WebSocket пока не используем
+app.include_router(sse_router)  # SSE для real-time уведомлений
