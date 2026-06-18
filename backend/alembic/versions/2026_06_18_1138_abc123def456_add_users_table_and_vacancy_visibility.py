@@ -19,12 +19,18 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Create enum types
-    UserRole = sa.Enum('regular', 'specialist', 'admin', name='userrole')
-    UserRole.create(op.get_bind(), checkfirst=True)
+    # Create enum types (if not exists)
+    try:
+        UserRole = sa.Enum('regular', 'specialist', 'admin', name='userrole')
+        UserRole.create(op.get_bind(), checkfirst=True)
+    except Exception:
+        pass  # Type already exists
     
-    VacancyVisibility = sa.Enum('public', 'specialist', 'internal', name='vacancyvisibility')
-    VacancyVisibility.create(op.get_bind(), checkfirst=True)
+    try:
+        VacancyVisibility = sa.Enum('public', 'specialist', 'internal', name='vacancyvisibility')
+        VacancyVisibility.create(op.get_bind(), checkfirst=True)
+    except Exception:
+        pass  # Type already exists
     
     # Create users table
     op.create_table(
@@ -34,7 +40,7 @@ def upgrade() -> None:
         sa.Column('password_hash', sa.String(length=255), nullable=True),
         sa.Column('email', sa.String(length=255), nullable=True),
         sa.Column('full_name', sa.String(length=255), nullable=True),
-        sa.Column('role', UserRole, default='regular'),
+        sa.Column('role', sa.Enum('regular', 'specialist', 'admin', name='userrole'), default='regular'),
         sa.Column('specialties', sa.Text(), nullable=True),
         sa.Column('is_active', sa.Boolean(), default=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now()),
@@ -48,7 +54,7 @@ def upgrade() -> None:
     op.create_index('ix_users_login', 'users', ['login'])
     
     # Add visibility and required_specialty columns to vacancies
-    op.add_column('vacancies', sa.Column('visibility', VacancyVisibility, default='public'))
+    op.add_column('vacancies', sa.Column('visibility', sa.Enum('public', 'specialist', 'internal', name='vacancyvisibility'), default='public'))
     op.add_column('vacancies', sa.Column('required_specialty', sa.String(length=100), nullable=True))
 
 
