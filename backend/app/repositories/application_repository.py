@@ -39,3 +39,19 @@ def update_stage(db: Session, application: ApplicationModel, stage: ModelApplica
     db.commit()
     db.refresh(application)
     return application
+
+
+# Helper functions для проверки существования
+def get_candidate_from_repository(db: Session, candidate_id: int):
+    """Получить кандидата (возвращает None если не найден)"""
+    from app.repositories.candidate_repository import get_candidate
+    return get_candidate(db, candidate_id)
+
+
+def get_vacancy_from_repository(db: Session, vacancy_id: int):
+    """Получить вакансию (возвращает None если не найден)"""
+    from app.repositories.vacancy_repository import get_vacancy_or_404
+    try:
+        return get_vacancy_or_404(db, vacancy_id)
+    except HTTPException:
+        return None
