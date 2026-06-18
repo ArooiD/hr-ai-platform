@@ -9,6 +9,7 @@ from app.services.vacancy.validation import VacancyValidator
 from app.services.vacancy.mapper import VacancyMapper
 from app.services.notification.service import notification_service
 from app.schemas import NotificationType
+from app.core.cache import cached, cache_invalidate, cache
 
 
 class VacancyService:
@@ -29,20 +30,23 @@ class VacancyService:
         return vacancy
 
     @staticmethod
+    @cached(ttl=300, key_prefix='vacancies')
     def list_vacancies(db: Session) -> list[Vacancy]:
-        """Получить все вакансии"""
+        """Получить все вакансии (с кэшированием)"""
         vacancies = VacancyRepository.list(db)
         return [Vacancy.model_validate(VacancyService._normalize_vacancy(v)) for v in vacancies]
     
     @staticmethod
+    @cached(ttl=300, key_prefix='vacancies')
     def get_vacancy(db: Session, vacancy_id: int) -> Vacancy:
-        """Получить вакансию по ID"""
+        """Получить вакансию по ID (с кэшированием)"""
         vacancy = VacancyRepository.get_or_404(db, vacancy_id)
         return Vacancy.model_validate(VacancyService._normalize_vacancy(vacancy))
     
     @staticmethod
+    @cache_invalidate(pattern='vacancies:*')
     def create_vacancy(db: Session, payload: VacancyCreate) -> Vacancy:
-        """Создать вакансию"""
+        """Создать вакансию (инвалидирует кэш)"""
         # Валидация
         VacancyValidator.validate_create(payload)
         
@@ -53,8 +57,9 @@ class VacancyService:
         return Vacancy.model_validate(VacancyService._normalize_vacancy(vacancy))
     
     @staticmethod
+    @cache_invalidate(pattern='vacancies:*')
     def update_vacancy(db: Session, vacancy_id: int, payload: VacancyCreate) -> Vacancy:
-        """Обновить вакансию"""
+        """Обновить вакансию (инвалидирует кэш)"""
         # Проверка существования
         vacancy = VacancyRepository.get_or_404(db, vacancy_id)
         
@@ -68,8 +73,9 @@ class VacancyService:
         return Vacancy.model_validate(VacancyService._normalize_vacancy(updated))
     
     @staticmethod
+    @cache_invalidate(pattern='vacancies:*')
     def close_vacancy(db: Session, vacancy_id: int) -> Vacancy:
-        """Закрыть вакансию"""
+        """Закрыть вакансию (инвалидирует кэш)"""
         vacancy = VacancyRepository.get_or_404(db, vacancy_id)
         
         if vacancy.status == VacancyStatus.closed:
@@ -93,8 +99,9 @@ class VacancyService:
         return vacancy_schema
     
     @staticmethod
+    @cache_invalidate(pattern='vacancies:*')
     def reopen_vacancy(db: Session, vacancy_id: int) -> Vacancy:
-        """Переоткрыть вакансию"""
+        """Переоткрыть вакансию (инвалидирует кэш)"""
         vacancy = VacancyRepository.get_or_404(db, vacancy_id)
         
         if vacancy.status != VacancyStatus.closed:
@@ -118,6 +125,7 @@ class VacancyService:
         return vacancy_schema
     
     @staticmethod
+    @cache_invalidate(pattern='vacancies:*')
     def auto_close_if_completed(db: Session, vacancy_id: int) -> bool:
         """Автоматически закрыть вакансию, если все отклики обработаны"""
         from app.repositories.application_repository import list_by_vacancy
@@ -158,8 +166,14 @@ class VacancyService:
         return False
     
     @staticmethod
+    @cache_invalidate(pattern='vacancies:*')
     def delete_vacancy(db: Session, vacancy_id: int) -> dict:
-        """Удалить вакансию"""
+        """Удалить вакансию (инвалидирует кэш)"""
         vacancy = VacancyRepository.get_or_404(db, vacancy_id)
         VacancyRepository.delete(db, vacancy)
         return {"status": "deleted", "vacancy_id": vacancy_id}
+    
+    @staticmethod
+    def get_cache_stats() -> dict:
+        """Получить статистику кэша"""
+        return cache.get_stats()
