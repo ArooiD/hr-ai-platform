@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ArrowRight, Briefcase, CalendarCheck2, BarChart3, FileText, UserRoundCheck, UsersRound, Users } from 'lucide-react';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
+import MobileBottomNav from './components/layout/MobileBottomNav';
 import RecruitmentFlow from './pages/RecruitmentFlow';
 import VacanciesPage from './pages/Vacancies';
 import VacancyDetailPage from './pages/VacancyDetail';
@@ -128,6 +129,7 @@ function AppLayout({ children }) {
           {children}
         </div>
       </main>
+      <MobileBottomNav />
     </div>
   );
 }

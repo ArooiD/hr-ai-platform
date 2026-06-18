@@ -1,96 +1,343 @@
 /* ============================================
-   RESPONSIVE STYLES
+   RESPONSIVE STYLES - MOBILE FIRST APPROACH
    ============================================ */
 
+/* Tablet & Desktop adjustments */
 @media (max-width: 1300px) {
-  body { min-width: 1024px; }
-  .sidebar { width: 245px; padding: 22px; }
-  .flow-application { grid-template-columns: 1fr; }
+  .sidebar { width: 260px; padding: 20px 16px; }
   .dashboard-stats { grid-template-columns: repeat(2, 1fr); }
   .dashboard-charts { grid-template-columns: 1fr; }
+  .cards-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
-@media (max-width: 900px) {
-  body { min-width: 0; }
-  
+/* Tablet */
+@media (max-width: 1024px) {
   .sidebar { 
     position: fixed; 
-    z-index: 30; 
+    z-index: 100; 
+    left: 0;
+    top: 0;
+    height: 100vh;
     transform: translateX(0); 
+    box-shadow: 4px 0 24px rgba(0,0,0,0.1);
   }
+  
   .sidebar.closed { 
     transform: translateX(-100%); 
-    width: 280px; 
   }
   
-  .sidebar-toggle-mobile { display: block; }
-  .topbar { padding: 0 22px; }
-  .single-page-workspace, .workspace-grid { padding: 18px 22px 42px; }
+  .sidebar-toggle-mobile { display: block !important; }
+  .topbar { padding: 0 16px; }
+  .single-page-workspace, .workspace-grid { padding: 16px; }
   
-  /* Grids become single column on mobile */
-  .cards-grid, .candidates-grid, .card-grid { 
-    grid-template-columns: 1fr !important; 
+  .cards-grid, .candidates-grid, .card-grid, .vacancies-grid { 
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
   }
   
   .dashboard-stats { 
-    grid-template-columns: 1fr !important; 
+    grid-template-columns: repeat(2, 1fr); 
   }
   
   .dashboard-charts { 
-    grid-template-columns: 1fr !important; 
+    grid-template-columns: 1fr; 
   }
   
   .flow-steps { 
-    grid-template-columns: 1fr !important; 
+    grid-template-columns: 1fr; 
   }
   
   .page-header { 
     flex-direction: column; 
     align-items: flex-start !important; 
+    gap: 12px;
   }
   
   .page-header h1 { 
-    font-size: 28px !important; 
+    font-size: 24px !important; 
+  }
+  
+  .page-header .actions {
+    width: 100%;
+  }
+  
+  .page-header .actions button {
+    width: 100%;
   }
   
   .vacancy-form, .candidate-form {
-    padding: 0 12px;
+    padding: 0 8px;
   }
   
   .form-row {
-    grid-template-columns: 1fr !important;
-  }
-}
-
-@media (max-width: 640px) {
-  .login-page {
-    grid-template-columns: 1fr !important;
-    padding: 22px;
-  }
-  
-  .login-hero {
-    padding: 32px;
-  }
-  
-  .login-card {
-    padding: 22px;
-  }
-  
-  .modal-content {
-    width: 96vw;
-    margin: 0 2vw;
+    grid-template-columns: 1fr;
   }
   
   .filters-bar {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  
+  .filter-group {
+    flex: 1 1 200px;
+  }
+  
+  /* Tables become cards on tablet */
+  table {
+    display: none;
+  }
+  
+  .table-card {
+    display: block;
+  }
+}
+
+/* Mobile - Landscape & Portrait */
+@media (max-width: 768px) {
+  /* Bottom Navigation for mobile */
+  .mobile-bottom-nav {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    background: white;
+    border-top: 1px solid var(--line);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.08);
+    padding: 8px 0;
+  }
+  
+  .mobile-nav-item {
+    flex: 1;
+    display: flex;
     flex-direction: column;
-    align-items: stretch !important;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 4px;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    font-size: 11px;
+    text-decoration: none;
+    min-height: 56px;
+  }
+  
+  .mobile-nav-item.active {
+    color: var(--blue);
+    background: #eff6ff;
+  }
+  
+  .mobile-nav-item svg {
+    width: 22px;
+    height: 22px;
+  }
+  
+  /* Hide sidebar on mobile when closed */
+  .sidebar.closed {
+    transform: translateX(-100%);
+  }
+  
+  .sidebar:not(.closed) {
+    width: 85vw;
+    max-width: 320px;
+  }
+  
+  .topbar {
+    padding: 0 12px;
+    height: 56px;
+  }
+  
+  .topbar-title h1 {
+    font-size: 18px !important;
+  }
+  
+  .single-page-workspace, .workspace-grid {
+    padding: 12px 12px 80px; /* Extra padding for bottom nav */
+  }
+  
+  /* Stack everything in single column */
+  .cards-grid, .candidates-grid, .card-grid, .vacancies-grid,
+  .dashboard-stats, .dashboard-charts, .flow-steps {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .page-header {
+    padding: 0 4px;
+  }
+  
+  .page-header h1 {
+    font-size: 22px !important;
+  }
+  
+  .page-header .subtitle {
+    font-size: 14px;
+  }
+  
+  /* Larger touch targets */
+  button, .button, input, select, textarea {
+    min-height: 44px; /* Apple's recommended touch target size */
+  }
+  
+  .nav-item {
+    min-height: 48px;
+    padding: 0 16px;
+  }
+  
+  /* Modal becomes fullscreen */
+  .modal-content {
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    margin: 0;
+    border-radius: 0;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  
+  .modal-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+  }
+  
+  /* Filters become collapsible */
+  .filters-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 12px;
   }
   
   .filter-group {
     width: 100%;
   }
   
-  .filter-group select {
+  .filter-group select,
+  .filter-group input {
     width: 100%;
+  }
+  
+  /* Form rows stack */
+  .form-row {
+    grid-template-columns: 1fr !important;
+    gap: 16px;
+  }
+  
+  /* Cards become full width */
+  .card {
+    margin-bottom: 12px;
+  }
+  
+  /* Reduce text sizes */
+  h1 { font-size: 24px !important; }
+  h2 { font-size: 20px !important; }
+  h3 { font-size: 18px !important; }
+  
+  /* Empty states */
+  .empty-state {
+    padding: 40px 20px;
+  }
+  
+  .empty-state svg {
+    width: 64px;
+    height: 64px;
+  }
+  
+  /* Hide non-essential elements */
+  .sidebar .profile small,
+  .sidebar .profile span {
+    font-size: 11px;
+  }
+  
+  /* Recruitment flow - stack panels */
+  .flow-application {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .flow-left, .flow-right {
+    max-width: 100%;
+  }
+}
+
+/* Small mobile */
+@media (max-width: 480px) {
+  .login-page {
+    padding: 16px;
+  }
+  
+  .login-hero {
+    padding: 24px;
+  }
+  
+  .login-card {
+    padding: 20px;
+  }
+  
+  .topbar {
+    padding: 0 8px;
+  }
+  
+  .single-page-workspace, .workspace-grid {
+    padding: 8px 8px 80px;
+  }
+  
+  /* Even larger touch targets */
+  button, .button {
+    padding: 12px 16px;
+    font-size: 15px;
+  }
+  
+  /* Compact cards */
+  .card {
+    padding: 14px;
+  }
+  
+  /* Smaller gaps */
+  .nav-section {
+    gap: 4px;
+  }
+  
+  .nav-item {
+    padding: 0 12px;
+    font-size: 14px;
+  }
+}
+
+/* Very small screens (portrait phones) */
+@media (max-width: 375px) {
+  .sidebar {
+    width: 90vw;
+  }
+  
+  .mobile-bottom-nav {
+    padding: 6px 0;
+  }
+  
+  .mobile-nav-item {
+    font-size: 10px;
+    min-height: 52px;
+  }
+  
+  .mobile-nav-item svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Hide bottom nav on desktop */
+@media (min-width: 769px) {
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+}
+
+/* Hide sidebar toggle on mobile when sidebar is open */
+@media (max-width: 768px) {
+  .sidebar:not(.closed) .sidebar-toggle-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
   }
 }
