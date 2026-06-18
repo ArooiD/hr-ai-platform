@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Award, BrainBriefcase, Calendar, CheckCircle2, FileQuestion, Plus, Search, Sparkles, Target, UserPlus, UsersRound } from 'lucide-react';
+import { AlertTriangle, Award, Brain, Calendar, CheckCircle2, FileQuestion, Plus, Search, Sparkles, Target, UserPlus, UsersRound } from 'lucide-react';
 import { hrApi } from '../api/client';
 import { stages, stageLabels } from '../data/constants';
 
