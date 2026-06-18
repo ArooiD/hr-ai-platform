@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ArrowRight, Briefcase, CalendarCheck2, ChartNoAxesColumnIncreasing, FileText, UserRoundCheck, UsersRound, Users } from 'lucide-react';
+import { ArrowRight, Briefcase, CalendarCheck2, BarChart3, FileText, UserRoundCheck, UsersRound, Users } from 'lucide-react';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
 import RecruitmentFlow from './pages/RecruitmentFlow';
@@ -52,7 +52,7 @@ function LoginPage({ onLogin }) {
             <div className="art-progress"><i style={{ width: '68%' }} /></div>
           </div>
           <div className="art-card art-small art-top"><CalendarCheck2 size={20} /><b>5</b><span>встреч</span></div>
-          <div className="art-card art-small art-bottom"><ChartNoAxesColumnIncreasing size={20} /><b>82%</b><span>match</span></div>
+          <div className="art-card art-small art-bottom"><BarChart3 size={20} /><b>82%</b><span>match</span></div>
           <div className="art-document"><FileText size={26} /><span>CV</span></div>
         </div>
       </section>
