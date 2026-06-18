@@ -1,5 +1,7 @@
-import { Bell, LogOut, Search, Menu } from 'lucide-react';
+import { LogOut, Menu } from 'lucide-react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import TopbarSearch from './TopbarSearch';
+import TopbarNotifications from './TopbarNotifications';
 
 export default function Topbar({ user, onLogout, onToggleSidebar }) {
   const navigate = useNavigate();
@@ -56,12 +58,8 @@ export default function Topbar({ user, onLogout, onToggleSidebar }) {
         </div>
       </div>
       <div className="top-actions" id="topbar-actions">
-        <span className="search-btn" id="topbar-search">
-          <Search size={18} /> поиск
-        </span>
-        <span className="notifications-btn" id="topbar-notifications">
-          <Bell size={18} /> уведомления
-        </span>
+        <TopbarSearch />
+        <TopbarNotifications />
         <span className="user-name" id="topbar-user-name">{user?.full_name || 'Дарья Попова'}</span>
         <button className="logout-button" onClick={onLogout} id="topbar-logout">
           <LogOut size={16} /> выйти
