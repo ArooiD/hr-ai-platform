@@ -59,8 +59,12 @@ class VacancyRepository:
         return vacancy
     
     @staticmethod
-    def close(db: Session, vacancy: VacancyModel) -> VacancyModel:
+    def close(db: Session, vacancy_id: int) -> VacancyModel:
         """Закрыть вакансию"""
+        vacancy = VacancyModel.query.get(vacancy_id)
+        if not vacancy:
+            raise HTTPException(status_code=404, detail="Вакансия не найдена")
+        
         vacancy.status = "closed"
         db.commit()
         db.refresh(vacancy)
