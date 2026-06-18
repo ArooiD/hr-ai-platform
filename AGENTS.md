@@ -393,8 +393,71 @@ npm run test
 5. Создать API контроллер в `api/`
 6. Подключить в `api/router.py`
 7. Написать юнит тесты в `tests/unit/`
-8. Написать интеграционные тесты в `tests/integration/`
+8. Написать интеграционные тесты в `tests/unit/test_services_integration.py`
 9. Обновить документацию
+
+### Работа с репозиториями
+
+**Важно:** Репозитории используют **разные API стили**:
+
+#### Класс-based репозитории (Vacancy)
+```python
+from app.repositories.vacancy_repo import VacancyRepository
+
+# Все методы как статические методы класса
+vacancies = VacancyRepository.list(db)
+vacancy = VacancyRepository.get_by_id(db, vacancy_id)
+vacancy = VacancyRepository.create(db, payload, skills_str)
+```
+
+#### Function-based репозитории (Candidate, Application)
+```python
+from app.repositories.candidate_repository import list_candidates, get_candidate
+from app.repositories.application_repository import list_applications
+
+# Прямые функции
+candidates = list_candidates(db)
+candidate = get_candidate(db, candidate_id)
+applications = list_applications(db)
+```
+
+**Правила:**
+1. **Всегда проверяйте стиль API репозитория** перед использованием
+2. **Не смешивайте стили** — используйте один стиль в пределах сервиса
+3. **При создании нового репозитория** — выберите стиль и задокументируйте
+4. **В тестах** — проверяйте что используете правильный API
+
+**Пример правильного использования в сервисе:**
+```python
+# services/vacancy/service.py
+class VacancyService:
+    @staticmethod
+    def list_vacancies(db):
+        # Используем класс-based API
+        vacancies = VacancyRepository.list(db)
+        return [Vacancy.model_validate(VacancyService._normalize_v(v)) for v in vacancies]
+
+# services/candidate/service.py
+class CandidateService:
+    @staticmethod
+    def list_candidates(db):
+        # Используем function-based API
+        candidates = list_candidates(db)
+        return [Candidate.model_validate(CandidateService._normalize_candidate(c)) for c in candidates]
+```
+
+**Частые ошибки:**
+```python
+# ❌ ОШИБКА: Пытаемся импортировать несуществующую функцию
+from app.repositories.vacancy_repo import list_vacancies  # Не существует!
+
+# ❌ ОШИБКА: Используем function-based API для class-based репозитория
+vacancies = list_vacancies(db)  # Не работает с VacancyRepository
+
+# ✅ ПРАВИЛЬНО
+from app.repositories.vacancy_repo import VacancyRepository
+vacancies = VacancyRepository.list(db)
+```
 
 ### При исправлении багов
 
