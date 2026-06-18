@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, UsersBriefcase, CalendarCheck2, Award, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { BarChart3, TrendingUp, Users, CalendarCheck2, Award, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { dashboardApi } from '../api/client';
 
 export default function AnalyticsPage() {
