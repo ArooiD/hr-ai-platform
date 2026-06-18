@@ -421,8 +421,8 @@ export default function RecruitmentPage() {
 
       <div className="card" style={{ marginBottom: 22 }}>
         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-          <button className={matchingMode === 'vacancy' ? 'primary-button' : 'secondary-button'} onClick={() => { setMatchingMode('vacancy'); setActiveTab('matching'); }}>Вакансия как центр</button>
-          <button className={matchingMode === 'candidate' ? 'primary-button' : 'secondary-button'} onClick={() => { setMatchingMode('candidate'); setActiveTab('matching'); }}>Кандидат как центр</button>
+          <button className={matchingMode === 'vacancy' ? 'primary-button' : 'secondary-button'} onClick={() => { setMatchingMode('vacancy'); setActiveTab('matching'); }}>Вокруг вакансии</button>
+          <button className={matchingMode === 'candidate' ? 'primary-button' : 'secondary-button'} onClick={() => { setMatchingMode('candidate'); setActiveTab('matching'); }}>Вокруг кандидата</button>
         </div>
 
         <div style={selectorLayoutStyle}>
