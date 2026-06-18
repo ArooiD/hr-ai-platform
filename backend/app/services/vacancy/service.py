@@ -15,16 +15,26 @@ class VacancyService:
     """Сервис для работы с вакансиями"""
     
     @staticmethod
+    def _normalize_vacancy(vacancy: dict) -> dict:
+        """Нормализовать данные вакансии (преобразовать required_skills из строки в список)"""
+        if isinstance(vacancy, dict):
+            skills = vacancy.get('required_skills', [])
+            if isinstance(skills, str):
+                vacancy = vacancy.copy()
+                vacancy['required_skills'] = [s.strip() for s in skills.split(',') if s.strip()]
+        return vacancy
+
+    @staticmethod
     def list_vacancies(db: Session) -> list[Vacancy]:
         """Получить все вакансии"""
         vacancies = VacancyRepository.list(db)
-        return [Vacancy.model_validate(v) for v in vacancies]
+        return [Vacancy.model_validate(VacancyService._normalize_vacancy(v)) for v in vacancies]
     
     @staticmethod
     def get_vacancy(db: Session, vacancy_id: int) -> Vacancy:
         """Получить вакансию по ID"""
         vacancy = VacancyRepository.get_or_404(db, vacancy_id)
-        return Vacancy.model_validate(vacancy)
+        return Vacancy.model_validate(VacancyService._normalize_vacancy(vacancy))
     
     @staticmethod
     def create_vacancy(db: Session, payload: VacancyCreate) -> Vacancy:
