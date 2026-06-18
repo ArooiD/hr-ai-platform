@@ -9,7 +9,6 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-import enum
 
 
 # revision identifiers, used by Alembic.
@@ -19,19 +18,14 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
-class UserRole(str, enum.Enum):
-    regular = "regular"
-    specialist = "specialist"
-    admin = "admin"
-
-
-class VacancyVisibility(str, enum.Enum):
-    public = "public"
-    specialist = "specialist"
-    internal = "internal"
-
-
 def upgrade() -> None:
+    # Create enum types
+    UserRole = sa.Enum('regular', 'specialist', 'admin', name='userrole')
+    UserRole.create(op.get_bind(), checkfirst=True)
+    
+    VacancyVisibility = sa.Enum('public', 'specialist', 'internal', name='vacancyvisibility')
+    VacancyVisibility.create(op.get_bind(), checkfirst=True)
+    
     # Create users table
     op.create_table(
         'users',
@@ -40,7 +34,7 @@ def upgrade() -> None:
         sa.Column('password_hash', sa.String(length=255), nullable=True),
         sa.Column('email', sa.String(length=255), nullable=True),
         sa.Column('full_name', sa.String(length=255), nullable=True),
-        sa.Column('role', sa.Enum(UserRole), default=UserRole.regular),
+        sa.Column('role', UserRole, default='regular'),
         sa.Column('specialties', sa.Text(), nullable=True),
         sa.Column('is_active', sa.Boolean(), default=True),
         sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now()),
@@ -54,7 +48,7 @@ def upgrade() -> None:
     op.create_index('ix_users_login', 'users', ['login'])
     
     # Add visibility and required_specialty columns to vacancies
-    op.add_column('vacancies', sa.Column('visibility', sa.Enum(VacancyVisibility), default=VacancyVisibility.public))
+    op.add_column('vacancies', sa.Column('visibility', VacancyVisibility, default='public'))
     op.add_column('vacancies', sa.Column('required_specialty', sa.String(length=100), nullable=True))
 
 
@@ -65,3 +59,7 @@ def downgrade() -> None:
     
     # Drop users table
     op.drop_table('users')
+    
+    # Drop enum types
+    op.execute('DROP TYPE IF EXISTS vacancyvisibility')
+    op.execute('DROP TYPE IF EXISTS userrole')
