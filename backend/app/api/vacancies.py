@@ -37,3 +37,14 @@ def delete_vacancy(vacancy_id: int, db: Session = Depends(get_db)):
 def close_vacancy(vacancy_id: int, db: Session = Depends(get_db)):
     """Закрыть вакансию"""
     return VacancyService.close_vacancy(db, vacancy_id)
+
+@router.patch("/{vacancy_id}/reopen", response_model=Vacancy)
+def reopen_vacancy(vacancy_id: int, db: Session = Depends(get_db)):
+    """Переоткрыть вакансию"""
+    return VacancyService.reopen_vacancy(db, vacancy_id)
+
+@router.post("/{vacancy_id}/auto-close")
+def auto_close_vacancy(vacancy_id: int, db: Session = Depends(get_db)):
+    """Автоматически закрыть вакансию, если все отклики обработаны"""
+    auto_closed = VacancyService.auto_close_if_completed(db, vacancy_id)
+    return {"autoClosed": auto_closed}

@@ -7,6 +7,7 @@ from pydantic import BaseModel
 class NotificationType(str, Enum):
     APPLICATION_NEW = "application_new"
     VACANCY_CLOSED = "vacancy_closed"
+    VACANCY_REOPENED = "vacancy_reopened"
     APPLICATION_STAGE_CHANGED = "application_stage_changed"
     AI_ANALYSIS_READY = "ai_analysis_ready"
 

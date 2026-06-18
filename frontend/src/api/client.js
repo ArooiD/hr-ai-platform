@@ -53,6 +53,9 @@ export const hrApi = {
   closeVacancy: (id) => apiRequest(`/api/vacancies/${id}/close`, {
     method: 'PATCH',
   }),
+  reopenVacancy: (id) => apiRequest(`/api/vacancies/${id}/reopen`, {
+    method: 'PATCH',
+  }),
   createCandidate: (payload) => apiRequest('/api/candidates', {
     method: 'POST',
     body: JSON.stringify(payload),

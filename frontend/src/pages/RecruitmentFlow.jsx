@@ -241,6 +241,24 @@ export default function RecruitmentPage() {
       setMessage(`Кандидат ${candidates.find(c => c.id === selectedApplication.candidate_id)?.full_name} переведён на этап: ${stageLabels[newStage]}`);
       setShowStageModal(false);
       setSelectedApplication(null);
+      
+      // После смены стадии проверяем, нужно ли автоматически закрыть вакансию
+      const vacancyId = selectedApplication.vacancy_id;
+      try {
+        const response = await fetch(`/api/vacancies/${vacancyId}/auto-close`, {
+          method: 'POST',
+        });
+        if (response.ok) {
+          const result = await response.json();
+          if (result.autoClosed) {
+            setMessage('Вакансия автоматически закрыта (все отклики обработаны)');
+          }
+        }
+      } catch (err) {
+        // Игнорируем ошибку автозакрытия, главное что стадия изменилась
+        console.log('Автозакрытие вакансии:', err);
+      }
+      
       await load();
     } catch (err) {
       console.error('Ошибка при смене этапа:', err);
@@ -286,13 +304,22 @@ export default function RecruitmentPage() {
   const closeVacancy = async () => {
     if (!selectedVacancyObject) return;
     try {
-      await hrApi.closeVacancy(selectedVacancyObject.id);
-      setMessage(`Вакансия "${selectedVacancyObject.title}" закрыта`);
+      const isClosed = selectedVacancyObject.status === 'closed';
+      
+      // Если закрыта - переоткрываем, иначе закрываем
+      if (isClosed) {
+        await hrApi.reopenVacancy(selectedVacancyObject.id);
+        setMessage(`Вакансия "${selectedVacancyObject.title}" переоткрыта`);
+      } else {
+        await hrApi.closeVacancy(selectedVacancyObject.id);
+        setMessage(`Вакансия "${selectedVacancyObject.title}" закрыта`);
+      }
+      
       setShowCloseVacancyModal(false);
       await load();
     } catch (err) {
-      console.error('Ошибка при закрытии вакансии:', err);
-      setMessage('Ошибка при закрытии вакансии');
+      console.error('Ошибка при изменении статуса вакансии:', err);
+      setMessage('Ошибка при изменении статуса вакансии');
     }
   };
 
@@ -1007,16 +1034,15 @@ function SelectedVacancyPanel({ vacancy, stats, onCloseClick }) {
       {isClosed && (
         <button 
           className="secondary-button" 
-          disabled
+          onClick={onCloseClick} // Переоткрываем при клике
           style={{ 
             flex: 1, 
-            background: '#f1f5f9', 
-            color: '#94a3b8',
-            borderColor: '#e2e8f0',
-            cursor: 'not-allowed'
+            background: '#f0fdf4', 
+            color: '#166534',
+            borderColor: '#bbf7d0'
           }}
         >
-          Вакансия закрыта
+          🔓 Переоткрыть вакансию
         </button>
       )}
     </div>

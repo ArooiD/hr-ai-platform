@@ -90,6 +90,67 @@ class VacancyService:
         return Vacancy.model_validate(closed)
     
     @staticmethod
+    def reopen_vacancy(db: Session, vacancy_id: int) -> Vacancy:
+        """Переоткрыть вакансию"""
+        vacancy = VacancyRepository.get_or_404(db, vacancy_id)
+        
+        if vacancy.status != VacancyStatus.closed:
+            raise HTTPException(status_code=400, detail="Вакансия не закрыта")
+        
+        reopened = VacancyRepository.reopen(db, vacancy_id)
+        
+        # Создаём уведомление
+        vacancy_schema = Vacancy.model_validate(reopened)
+        notification_service.create_notification(
+            notification_type=NotificationType.VACANCY_REOPENED,
+            title="Вакансия переоткрыта",
+            message=f'Вакансия "{vacancy_schema.title}" переоткрыта для новых откликов',
+            entity_type="vacancy",
+            entity_id=vacancy_id
+        )
+        
+        return Vacancy.model_validate(reopened)
+    
+    @staticmethod
+    def auto_close_if_completed(db: Session, vacancy_id: int) -> bool:
+        """Автоматически закрыть вакансию, если все отклики обработаны"""
+        from app.repositories.application_repository import list_by_vacancy
+        
+        vacancy = VacancyRepository.get_or_404(db, vacancy_id)
+        
+        # Если уже закрыта - ничего не делаем
+        if vacancy.status == VacancyStatus.closed:
+            return False
+        
+        # Получаем все отклики на вакансию
+        applications = list_by_vacancy(db, vacancy_id)
+        
+        if not applications:
+            return False
+        
+        # Проверяем, есть ли активные отклики
+        active_stages = ['new', 'screening', 'interview', 'offer']
+        has_active = any(app.stage in active_stages for app in applications)
+        
+        # Если нет активных - закрываем
+        if not has_active:
+            VacancyRepository.close(db, vacancy_id)
+            
+            # Создаём уведомление
+            vacancy_schema = Vacancy.model_validate(vacancy)
+            notification_service.create_notification(
+                notification_type=NotificationType.VACANCY_CLOSED,
+                title="Вакансия автоматически закрыта",
+                message=f'Все отклики обработаны. Вакансия "{vacancy_schema.title}" автоматически закрыта.',
+                entity_type="vacancy",
+                entity_id=vacancy_id
+            )
+            
+            return True
+        
+        return False
+    
+    @staticmethod
     def delete_vacancy(db: Session, vacancy_id: int) -> dict:
         """Удалить вакансию"""
         VacancyRepository.get_or_404(db, vacancy_id)

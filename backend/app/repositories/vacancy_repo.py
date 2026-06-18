@@ -67,6 +67,18 @@ class VacancyRepository:
         return vacancy
     
     @staticmethod
+    def reopen(db: Session, vacancy_id: int) -> VacancyModel:
+        """Переоткрыть вакансию"""
+        vacancy = VacancyModel.query.get(vacancy_id)
+        if not vacancy:
+            raise HTTPException(status_code=404, detail="Вакансия не найдена")
+        
+        vacancy.status = "open"
+        db.commit()
+        db.refresh(vacancy)
+        return vacancy
+    
+    @staticmethod
     def delete(db: Session, vacancy: VacancyModel) -> None:
         """Удалить вакансию"""
         db.delete(vacancy)
