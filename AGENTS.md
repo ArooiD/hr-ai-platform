@@ -1,80 +1,167 @@
 # HR AI Platform — Agent Guidelines
 
-## Проект
+## 📋 Проект
 
 MVP HR-платформы со сквозным процессом подбора персонала, wizard-интерфейсом для создания вакансий и кандидатов, AI-парсингом резюме (PDF/DOC/DOCX/TXT) и PostgreSQL базой данных.
 
-## Текущий статус (2026-01)
+## 🏗️ Архитектура
+
+### MVC структура Backend
+
+```
+backend/app/
+├── models/              # Data Layer - SQLAlchemy модели
+│   ├── __init__.py
+│   └── db_models.py     # VacancyModel, CandidateModel, ApplicationModel
+│
+├── schemas/             # DTO Layer - Pydantic схемы
+│   ├── __init__.py
+│   ├── vacancy.py       # Vacancy, VacancyCreate, VacancyUpdate
+│   ├── candidate.py     # Candidate, CandidateCreate, CandidateUpdate
+│   ├── application.py   # Application, ApplicationCreate, StageUpdate
+│   └── notification.py  # Notification, NotificationType
+│
+├── repositories/        # Data Access Layer - Репозитории
+│   ├── __init__.py
+│   ├── vacancy_repo.py       # CRUD вакансии
+│   ├── candidate_repository.py  # CRUD кандидаты
+│   └── application_repository.py  # CRUD отклики
+│
+├── services/            # Business Logic Layer - Сервисы
+│   ├── __init__.py
+│   ├── vacancy_service.py      # Бизнес-логика вакансий
+│   ├── candidate_service.py    # Бизнес-логика кандидатов
+│   ├── application_service.py  # Бизнес-логика откликов
+│   ├── notification_service.py # Уведомления
+│   ├── ai.py                   # AI анализ и вопросы
+│   ├── mapper_service.py       # Маппинг моделей ↔ схем
+│   └── text_service.py         # Утилиты для текста
+│
+├── api/                 # Controller Layer - API маршруты
+│   ├── __init__.py
+│   ├── router.py          # Главный router
+│   ├── vacancies.py       # CRUD vacancies
+│   ├── candidates.py      # CRUD candidates
+│   ├── applications.py    # CRUD applications
+│   ├── notifications.py   # CRUD notifications
+│   ├── dashboard.py       # Статистика
+│   └── auth.py            # Аутентификация
+│
+├── core/                # Configuration
+│   ├── __init__.py
+│   ├── config.py
+│   └── security.py
+│
+├── database.py          # DB подключение
+└── main.py              # FastAPI приложение
+```
+
+### Frontend структура
+
+```
+frontend/src/
+├── components/
+│   ├── VacancyWizard/       # 3-этапный wizard вакансий
+│   ├── CandidateWizard/     # 3-этапный wizard с парсингом
+│   └── layout/
+│       ├── Sidebar.jsx      # Навигация
+│       ├── Topbar.jsx       # Верхняя панель
+│       ├── TopbarSearch.jsx # Поиск
+│       └── TopbarNotifications.jsx # Уведомления
+│
+├── pages/
+│   ├── Dashboard.jsx        # Дашборд
+│   ├── Vacancies.jsx        # Список вакансий
+│   ├── VacancyDetail/       # Детали вакансии
+│   ├── Candidates.jsx       # Список кандидатов
+│   ├── CandidateDetail/     # Детали кандидата
+│   ├── RecruitmentFlow.jsx  # Pipeline откликов
+│   └── Analytics.jsx        # Аналитика
+│
+├── api/
+│   └── client.js            # API client (hrApi, notificationsApi)
+│
+├── __tests__/               # Тесты
+│   ├── api/
+│   ├── components/
+│   └── pages/
+│
+└── App.jsx                  # Root с BrowserRouter
+```
+
+## 📊 Текущий статус (2026-01)
 
 ### ✅ Завершено
+- **MVC архитектура** — чёткое разделение на слои (Models, Schemas, Repositories, Services, API)
 - **React Router** — профессиональная навигация вместо hash-based
 - **3-этапный Wizard для вакансий** — создание с AI-парсингом описания
-- **3-этапный Wizard для кандидатов** — загрузка резюме (PDF/DOC/DOCX/TXT) с AI-извлечением данных
+- **3-этапный Wizard для кандидатов** — загрузка резюме с AI-извлечением данных
 - **Компактные списки** — Vacancies и Candidates с детальными страницами
 - **PostgreSQL** — полноценная БД вместо in-memory хранилища
 - **AI-парсинг резюме** — поддержка PDF, DOC, DOCX, TXT форматов
 - **Умное извлечение данных** — имя, email, телефон, опыт, навыки (25+ технологий)
-- **Hash-based роутинг** → React Router миграция завершена
-- **Sidebar навигация** — работает с React Router
-- **PostgreSQL NUL fix** — очистка спецсимволов перед записью
+- **Система уведомлений** — backend + frontend интеграция
+  - Новые отклики
+  - Изменение стадий
+  - Закрытие вакансий
+  - Готовность AI анализа
+- **Юнит тесты** — backend (pytest) и frontend (vitest)
 
 ### 🔄 В работе
 - Интеграция с реальным AI API для парсинга (сейчас mock данные)
-- Refactoring Candidates и Analytics страниц
+- Расширение покрытия тестами
 - End-to-end тестирование полного цикла
 
-## Структура проекта
+## 🧪 Тестирование
 
-```
-hr-ai-platform/
-├── backend/                 # FastAPI backend + PostgreSQL
-│   └── app/
-│       ├── main.py         # Основные API endpoints + clean_string helpers
-│       ├── core/           # Конфигурация и безопасность
-│       │   ├── config.py   # Settings из env
-│       │   └── security.py # Auth utilities
-│       ├── services/       # Бизнес-логика
-│       │   └── auth_service.py
-│       ├── schemas.py      # Pydantic модели данных
-│       └── storage.py      # PostgreSQL storage
-├── frontend/               # React + Vite + React Router
-│   └── src/
-│       ├── App.jsx         # Root с BrowserRouter
-│       ├── api/client.js   # API client (hrApi, authApi)
-│       ├── pages/
-│       │   ├── Vacancies.jsx           # Компактный список
-│       │   ├── VacancyDetail/          # Детальная страница
-│       │   ├── Candidates.jsx          # Компактный список
-│       │   ├── CandidateDetail/        # Детальная страница с резюме
-│       │   ├── RecruitmentFlow.jsx     # Сквозной workflow
-│       │   └── Analytics.jsx           # Аналитика
-│       ├── components/
-│       │   ├── VacancyWizard/          # 3-этапный wizard для вакансий
-│       │   ├── CandidateWizard/        # 3-этапный wizard с парсингом резюме
-│       │   └── layout/
-│       │       ├── Sidebar.jsx         # Навигация с useNavigate
-│       │       └── Topbar.jsx
-│       └── styles.css
-├── docs/                   # AsciiDoc документация архитектуры
-├── infra/                  # Nginx конфигурация
-├── samples/                # Sample data (резюме, вакансии)
-├── docker-compose.yml      # Docker orchestration (PostgreSQL, MinIO, Backend, Frontend)
-├── AGENTS.md              # Настоящий файл
-└── README.md
+### Backend тесты
+
+**Запуск:**
+```bash
+cd backend
+pytest                    # Все тесты
+pytest tests/unit/        # Юнит тесты
+pytest tests/integration/ # Интеграционные тесты
+pytest --cov=app          # С coverage
 ```
 
-## Business модули
+**Структура:**
+```
+backend/tests/
+├── conftest.py              # Общие fixtures
+├── unit/
+│   ├── test_vacancy_service.py
+│   ├── test_candidate_service.py
+│   └── test_application_service.py
+└── integration/
+    ├── test_api_vacancies.py
+    ├── test_api_candidates.py
+    └── test_api_applications.py
+```
 
-1. **Dashboard** — сводная статистика по вакансиям, кандидатам, откликам
-2. **Vacancies** — управление вакансиями (Wizard + список + детали)
-3. **Candidates** — управление кандидатами (Wizard с парсингом резюме + список + детали)
-4. **Applications** — pipeline откликов (new → screening → interview → offer → hired/rejected)
-5. **AI Candidate Analysis** — анализ соответствия кандидата вакансии
-6. **AI Interview Assistant** — генерация вопросов для интервью
-7. **Analytics** — аналитика совпадений
-8. **Demo Data Generator** — seed данных для демо
+### Frontend тесты
 
-## Technology stack
+**Запуск:**
+```bash
+cd frontend
+npm run test                # Все тесты (watch mode)
+npm run test:run            # Один запуск
+npm run test:coverage       # С coverage
+```
+
+**Структура:**
+```
+frontend/src/__tests__/
+├── setup.js                 # Test setup
+├── api/
+│   └── client.test.js       # API client тесты
+├── components/
+│   └── VacancyWizard.test.jsx
+└── pages/
+    └── Vacancies.test.jsx
+```
+
+## 🛠️ Technology stack
 
 ### Backend
 - **Framework**: FastAPI 0.115.6
@@ -82,7 +169,7 @@ hr-ai-platform/
 - **Validation**: Pydantic 2.10
 - **Server**: Uvicorn 0.34
 - **Database**: PostgreSQL 15+ (alembic migrations)
-- **Storage**: PostgreSQL + MinIO (для файлов)
+- **Testing**: pytest, pytest-cov, pytest-asyncio
 
 ### Frontend
 - **Framework**: React 18
@@ -91,6 +178,7 @@ hr-ai-platform/
 - **Icons**: Lucide React
 - **HTTP Client**: Axios (через hrApi)
 - **File Parsing**: pdf-parse, mammoth (для резюме)
+- **Testing**: Vitest, @testing-library/react
 
 ### Infrastructure
 - **Containerization**: Docker + Docker Compose
@@ -98,7 +186,7 @@ hr-ai-platform/
 - **Object Storage**: MinIO (для резюме/файлов)
 - **Database**: PostgreSQL
 
-## API Endpoints
+## 📡 API Endpoints
 
 ### Authentication
 - `POST /api/auth/login` — mock login (дефолтный логин: `depopova`)
@@ -125,13 +213,20 @@ hr-ai-platform/
 - `PATCH /api/applications/{id}/stage` — обновить stage pipeline
 - `GET /api/applications/{id}/interview-questions` — получить AI-вопросы
 
+### Notifications
+- `GET /api/notifications` — список уведомлений
+- `GET /api/notifications/unread-count` — счётчик непрочитанных
+- `POST /api/notifications/{id}/read` — пометить как прочитанное
+- `POST /api/notifications/read-all` — пометить все как прочитанные
+- `DELETE /api/notifications/{id}` — удалить уведомление
+
 ### Dashboard
 - `GET /api/dashboard` — сводная статистика
 
 ### Demo
 - `POST /api/demo-seed` — создать demo данные
 
-## Data Models
+## 📐 Data Models
 
 ### Vacancy
 ```python
@@ -171,18 +266,21 @@ hr-ai-platform/
 }
 ```
 
-### AiAnalysis
+### Notification
 ```python
 {
-    score: int  # 0-100
-    matched_skills: List[str]
-    missing_skills: List[str]
-    summary: str
-    recommendation: str
+    id: str
+    type: "application_new" | "vacancy_closed" | "application_stage_changed" | "ai_analysis_ready"
+    title: str
+    message: str
+    created_at: str
+    is_read: bool
+    entity_type: Optional[str]
+    entity_id: Optional[int]
 }
 ```
 
-## AI Logic
+## 🤖 AI Logic
 
 ### Парсинг резюме (Frontend)
 **Поддерживаемые форматы:**
@@ -216,47 +314,7 @@ hr-ai-platform/
 - 1 общий вопрос о соответствии позиции
 - Максимум 8 вопросов
 
-## Frontend Components
-
-### Wizard Компоненты
-
-**VacancyWizard** (`/components/VacancyWizard/`)
-- Этап 1: Ввод описания (чат или файл) + AI-парсинг
-- Этап 2: Проверка и редактирование полей
-- Этап 3: Успешное создание
-
-**CandidateWizard** (`/components/CandidateWizard/`)
-- Этап 1: Загрузка резюме (PDF/DOC/DOCX/TXT) + AI-извлечение
-- Этап 2: Проверка и редактирование данных
-- Этап 3: Успешное создание
-
-### Страницы
-
-**Vacancies** (`/pages/Vacancies.jsx`)
-- Компактный список карточек
-- Название, отдел, зарплата, 2-3 навыка
-- Клик → детальная страница
-- Кнопка "Создать вакансию" → Wizard
-
-**VacancyDetail** (`/pages/VacancyDetail/`)
-- Полное описание
-- Все навыки
-- Информация (отдел, зарплата, статус)
-- Действия: Редактировать, Удалить
-
-**Candidates** (`/pages/Candidates.jsx`)
-- Компактный список карточек
-- Имя, email, опыт, 2-3 навыка
-- Клик → детальная страница
-- Кнопка "Добавить кандидата" → Wizard
-
-**CandidateDetail** (`/pages/CandidateDetail/`)
-- Полное резюме
-- Все навыки
-- Контакты (имя, email, телефон, опыт)
-- Действия: Редактировать, Удалить
-
-## Development
+## 🚀 Development
 
 ### Запуск через Docker
 ```bash
@@ -267,6 +325,7 @@ docker-compose up
 - Backend: http://localhost:8000
 - MinIO Console: http://localhost:9001
 - Nginx: http://localhost:80
+- OpenAPI docs: http://localhost:8000/docs
 
 ### Локальный запуск
 
@@ -284,61 +343,93 @@ npm install
 npm run dev
 ```
 
+**Тесты Backend:**
+```bash
+cd backend
+pytest --cov=app
+```
+
+**Тесты Frontend:**
+```bash
+cd frontend
+npm run test
+```
+
 ### Login для демо
 - Логин: `depopova`
 - Пароль: не требуется (mock)
 
-## Architecture
+## 📝 Правила для агентов
 
-Текущая реализация — монолит с PostgreSQL базой данных.
+### При работе с кодом
 
-Документация архитектуры (docs/arch/):
-- `architecture.adoc` — схема сервисов (планируемая микросервисная архитектура)
-- `dataflow.adoc` — движение данных
-- `hr_api_service.adoc` — структура API
+1. **Понимать контекст**: Прочитать AGENTS.md, ARCHITECTURE.md, CONTRIBUTING.md
+2. **Следовать MVC**: Размещать код в правильном слое
+   - Models → `models/db_models.py`
+   - Schemas → `schemas/*.py`
+   - Repositories → `repositories/*_repo.py`
+   - Services → `services/*_service.py`
+   - API → `api/*.py`
+3. **Писать тесты**: Для каждой новой функции писать юнит тесты
+4. **Документировать**: Добавлять docstrings для функций и классов
+5. **Использовать type hints**: Обязательно для backend
+6. **Проверять**: Запускать тесты перед завершением задачи
 
-Планируемые сервисы:
-- hr-api-service
-- hr-etl-service
-- hr-job-service
-- hr-matching-service
-- hr-analytics-service
-- hr-ontology-service
+### При создании новых сущностей
 
-## Testing
+1. Создать модель в `models/db_models.py`
+2. Создать схемы в `schemas/`
+3. Создать репозиторий в `repositories/`
+4. Создать сервис в `services/`
+5. Создать API контроллер в `api/`
+6. Подключить в `api/router.py`
+7. Написать юнит тесты в `tests/unit/`
+8. Написать интеграционные тесты в `tests/integration/`
+9. Обновить документацию
 
-Запуск демо-сценария:
-1. Создать вакансию (Wizard)
-2. Добавить кандидата (Wizard с резюме)
-3. Создать отклик (связать кандидата с вакансией)
-4. Выполнить AI-анализ
-5. Пройти по pipeline stages
-6. Получить вопросы для интервью
+### При исправлении багов
 
-Или использовать `POST /api/demo-seed` для быстрого старта с demo данными.
+1. Воспроизвести баг
+2. Написать тест, который падает
+3. Исправить код
+4. Убедиться что тест проходит
+5. Проверить что другие тесты не сломались
 
-## Files of interest
+### Коммиты
 
-### Backend
-- `backend/app/main.py` — все API endpoints + clean_string helpers
-- `backend/app/core/config.py` — конфигурация
-- `backend/app/core/security.py` — auth utilities
-- `backend/app/services/auth_service.py` — auth сервис
-- `backend/app/schemas.py` — все data models
-- `backend/app/storage.py` — PostgreSQL storage
+Использовать семантические коммиты:
+```
+<type>(<scope>): <subject>
 
-### Frontend
-- `frontend/src/App.jsx` — BrowserRouter + Routes
-- `frontend/src/pages/Vacancies.jsx` — список вакансий
-- `frontend/src/pages/VacancyDetail/index.jsx` — детали вакансии
-- `frontend/src/pages/Candidates.jsx` — список кандидатов
-- `frontend/src/pages/CandidateDetail/index.jsx` — детали кандидата
-- `frontend/src/components/VacancyWizard/index.jsx` — wizard вакансий
-- `frontend/src/components/CandidateWizard/index.jsx` — wizard кандидатов с парсингом
-- `frontend/src/components/layout/Sidebar.jsx` — навигация
-- `frontend/src/api/client.js` — API client методы
+<body>
 
-## Build roadmap (из README)
+<footer>
+```
+
+**Типы:**
+- `feat`: Новая функция
+- `fix`: Исправление бага
+- `docs`: Документация
+- `refactor`: Рефакторинг
+- `test`: Добавление тестов
+- `chore`: Изменения инструментов
+
+**Примеры:**
+```bash
+feat(vacancies): добавить фильтрацию по отделу
+fix(application): исправить ошибку при анализе
+refactor(architecture): переход на MVC структуру
+test(vacancy): добавить юнит тесты для сервиса
+```
+
+## 📚 Документация
+
+- `README.md` — общее описание проекта
+- `CONTRIBUTING.md` — правила вклада и разработки
+- `backend/app/ARCHITECTURE.md` — архитектура backend
+- `docs/` — дополнительная документация (AsciiDoc)
+
+## 🎯 Build roadmap
 
 1. ✅ Project bootstrap
 2. ✅ Application layout
@@ -350,6 +441,11 @@ npm run dev
 8. ✅ Interview assistant
 9. ✅ Analytics
 10. ✅ Demo scenario
-11. 🔄 Real AI API integration
-12. 🔄 Advanced analytics
-13. 🔄 Email notifications
+11. ✅ Notification system
+12. ✅ MVC refactoring
+13. ✅ Unit tests
+14. 🔄 Real AI API integration
+15. 🔄 Integration tests
+16. 🔄 E2E tests
+17. 🔄 Advanced analytics
+18. 🔄 Email notifications

@@ -8,3 +8,9 @@ asyncpg>=0.29.0
 databases[postgresql]>=0.8.0
 alembic>=1.13.0
 psycopg2-binary>=2.9.0
+
+# Testing
+pytest==7.4.3
+pytest-cov==4.1.0
+pytest-asyncio==0.21.1
+sqlite3-utils==0.3.0
