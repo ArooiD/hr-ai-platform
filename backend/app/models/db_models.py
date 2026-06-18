@@ -1,9 +1,21 @@
-from sqlalchemy import Column, Integer, String, Text, Enum, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Text, Enum, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
 
 from app.database import Base
+
+
+class UserRole(str, enum.Enum):
+    regular = "regular"
+    specialist = "specialist"
+    admin = "admin"
+
+
+class VacancyVisibility(str, enum.Enum):
+    public = "public"
+    specialist = "specialist"
+    internal = "internal"
 
 
 class VacancyStatus(str, enum.Enum):
@@ -26,6 +38,21 @@ class CandidateStatus(str, enum.Enum):
     hired = "hired"
 
 
+class UserModel(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    login = Column(String(100), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=True)  # Пока nullable для mock auth
+    email = Column(String(255), unique=True, nullable=True)
+    full_name = Column(String(255), nullable=True)
+    role = Column(Enum(UserRole), default=UserRole.regular)
+    specialties = Column(Text, default="")  # Комма-разделенный список специализаций
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+
 class VacancyModel(Base):
     __tablename__ = "vacancies"
 
@@ -37,6 +64,8 @@ class VacancyModel(Base):
     salary_from = Column(Integer, nullable=True)
     salary_to = Column(Integer, nullable=True)
     status = Column(Enum(VacancyStatus), default=VacancyStatus.open)
+    visibility = Column(Enum(VacancyVisibility), default=VacancyVisibility.public)
+    required_specialty = Column(String(100), nullable=True)  # Требуемая специализация
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
