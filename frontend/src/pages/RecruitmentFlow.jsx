@@ -138,11 +138,17 @@ export default function RecruitmentPage() {
 
   const load = async () => {
     try {
-      const [vacancyData, candidateData, applicationData] = await Promise.all([
+      const [vacancyResponse, candidateResponse, applicationResponse] = await Promise.all([
         hrApi.vacancies(),
         hrApi.candidates(),
         hrApi.applications(),
       ]);
+      
+      // Извлекаем данные из пагинированного ответа
+      const vacancyData = vacancyResponse.data || vacancyResponse;
+      const candidateData = candidateResponse.data || candidateResponse;
+      const applicationData = applicationResponse.data || applicationResponse;
+      
       setVacancies(vacancyData);
       setCandidates(candidateData);
       setApplications(applicationData);
@@ -318,7 +324,8 @@ export default function RecruitmentPage() {
       setShowCloseVacancyModal(false);
       
       // Обновляем список вакансий - selectedVacancyObject обновится автоматически через useMemo
-      const updatedVacancies = await hrApi.vacancies();
+      const vacancyResponse = await hrApi.vacancies();
+      const updatedVacancies = vacancyResponse.data || vacancyResponse;
       setVacancies(updatedVacancies);
       
       await load();
