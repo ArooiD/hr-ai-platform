@@ -45,12 +45,21 @@ export function useSSEEvents(eventTypes = []) {
   const [events, setEvents] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const statsRef = useRef(null);
+  const initializedRef = useRef(false);
   
   useEffect(() => {
     if (!sseClient) {
-      console.warn('[SSE] Client not initialized');
+      // Client еще не инициализирован (пользователь не вошел)
+      // Это нормально, будет инициализирован после входа
+      if (!initializedRef.current) {
+        console.debug('[SSE] Client not initialized yet, waiting...');
+        initializedRef.current = true;
+      }
       return;
     }
+    
+    // Сброс флага инициализации при наличии client
+    initializedRef.current = true;
     
     // Setup listeners for requested event types
     const unsubscribeFns = [];
@@ -71,6 +80,7 @@ export function useSSEEvents(eventTypes = []) {
     
     // Connect if not connected
     if (!sseClient.isConnected) {
+      console.log('[SSE] Connecting from useSSEEvents...');
       sseClient.connect();
     }
     
