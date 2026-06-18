@@ -17,13 +17,13 @@ class VacancyService:
     @staticmethod
     def list_vacancies(db: Session) -> list[Vacancy]:
         """Получить все вакансии"""
-        vacancies = VacancyRepository.list_vacancies(db)
+        vacancies = VacancyRepository.list(db)
         return [Vacancy.model_validate(v) for v in vacancies]
     
     @staticmethod
     def get_vacancy(db: Session, vacancy_id: int) -> Vacancy:
         """Получить вакансию по ID"""
-        vacancy = VacancyRepository.get_vacancy_or_404(db, vacancy_id)
+        vacancy = VacancyRepository.get_or_404(db, vacancy_id)
         return Vacancy.model_validate(vacancy)
     
     @staticmethod
@@ -34,7 +34,7 @@ class VacancyService:
         
         # Маппинг и создание
         vacancy_data = VacancyMapper.to_model(payload)
-        vacancy = VacancyRepository.create_vacancy(db, vacancy_data)
+        vacancy = VacancyRepository.create(db, vacancy_data)
         
         return Vacancy.model_validate(vacancy)
     
@@ -42,26 +42,26 @@ class VacancyService:
     def update_vacancy(db: Session, vacancy_id: int, payload: VacancyCreate) -> Vacancy:
         """Обновить вакансию"""
         # Проверка существования
-        VacancyRepository.get_vacancy_or_404(db, vacancy_id)
+        VacancyRepository.get_or_404(db, vacancy_id)
         
         # Валидация
         VacancyValidator.validate_update(payload)
         
         # Маппинг и обновление
         vacancy_data = VacancyMapper.to_model(payload)
-        updated = VacancyRepository.update_vacancy(db, vacancy_id, vacancy_data)
+        updated = VacancyRepository.update(db, vacancy_id, vacancy_data)
         
         return Vacancy.model_validate(updated)
     
     @staticmethod
     def close_vacancy(db: Session, vacancy_id: int) -> Vacancy:
         """Закрыть вакансию"""
-        vacancy = VacancyRepository.get_vacancy_or_404(db, vacancy_id)
+        vacancy = VacancyRepository.get_or_404(db, vacancy_id)
         
         if vacancy.status == VacancyStatus.closed:
             raise HTTPException(status_code=400, detail="Вакансия уже закрыта")
         
-        closed = VacancyRepository.close_vacancy(db, vacancy_id)
+        closed = VacancyRepository.close(db, vacancy_id)
         
         # Создаём уведомление
         vacancy_schema = Vacancy.model_validate(closed)
@@ -78,6 +78,6 @@ class VacancyService:
     @staticmethod
     def delete_vacancy(db: Session, vacancy_id: int) -> dict:
         """Удалить вакансию"""
-        VacancyRepository.get_vacancy_or_404(db, vacancy_id)
-        VacancyRepository.delete_vacancy(db, vacancy_id)
+        VacancyRepository.get_or_404(db, vacancy_id)
+        VacancyRepository.delete(db, vacancy_id)
         return {"status": "deleted", "vacancy_id": vacancy_id}

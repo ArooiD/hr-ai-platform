@@ -20,16 +20,26 @@ class CandidateService:
     """Сервис для работы с кандидатами"""
     
     @staticmethod
+    def _normalize_candidate(candidate: dict) -> dict:
+        """Нормализовать данные кандидата (преобразовать skills из строки в список)"""
+        if isinstance(candidate, dict):
+            skills = candidate.get('skills', [])
+            if isinstance(skills, str):
+                candidate = candidate.copy()
+                candidate['skills'] = [s.strip() for s in skills.split(',') if s.strip()]
+        return candidate
+
+    @staticmethod
     def list_candidates(db: Session) -> list[Candidate]:
         """Получить всех кандидатов"""
         candidates = list_candidates(db)
-        return [Candidate.model_validate(c) for c in candidates]
+        return [Candidate.model_validate(CandidateService._normalize_candidate(c)) for c in candidates]
     
     @staticmethod
     def get_candidate(db: Session, candidate_id: int) -> Candidate:
         """Получить кандидата по ID"""
         candidate = get_candidate_or_404(db, candidate_id)
-        return Candidate.model_validate(candidate)
+        return Candidate.model_validate(CandidateService._normalize_candidate(candidate))
     
     @staticmethod
     def create_candidate(db: Session, payload: CandidateCreate) -> Candidate:
