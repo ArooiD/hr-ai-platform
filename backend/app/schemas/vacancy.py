@@ -16,7 +16,7 @@ class VacancyBase(BaseModel):
     required_skills: List[str] = Field(default_factory=list)
     salary_from: Optional[int] = None
     salary_to: Optional[int] = None
-    visibility: str = "public"  # public, specialist, internal
+    visibility: Optional[str] = "public"  # public, specialist, internal
     required_specialty: Optional[str] = None
 
 

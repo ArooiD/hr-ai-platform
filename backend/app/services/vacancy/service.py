@@ -17,7 +17,7 @@ class VacancyService:
     
     @staticmethod
     def _normalize_vacancy(vacancy) -> dict:
-        """Нормализовать данные вакансии (преобразовать required_skills из строки в список)"""
+        """Нормализовать данные вакансии (преобразовать required_skills из строки в список, visibility из NULL)"""
         # Преобразуем SQLAlchemy модель в dict
         if hasattr(vacancy, '__dict__'):
             vacancy = {k: v for k, v in vacancy.__dict__.items() if not k.startswith('_')}
@@ -27,6 +27,11 @@ class VacancyService:
             if isinstance(skills, str):
                 vacancy = vacancy.copy()
                 vacancy['required_skills'] = [s.strip() for s in skills.split(',') if s.strip()]
+            
+            # Нормализуем visibility (NULL → "public")
+            if vacancy.get('visibility') is None:
+                vacancy = vacancy.copy()
+                vacancy['visibility'] = 'public'
         return vacancy
 
     @staticmethod
