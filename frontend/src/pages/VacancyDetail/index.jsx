@@ -13,17 +13,15 @@ export default function VacancyDetailPage() {
   useEffect(() => {
     const loadVacancy = async () => {
       try {
-        const response = await hrApi.vacancies();
-        // Извлекаем данные из пагинированного ответа
-        const allVacancies = response.data || response;
-        const found = allVacancies.find(v => v.id === parseInt(id));
-        if (found) {
-          setVacancy(found);
-        } else {
-          setError('Вакансия не найдена');
-        }
+        // Загружаем конкретную вакансию по ID
+        const vacancyData = await hrApi.getVacancy(parseInt(id));
+        setVacancy(vacancyData);
       } catch (err) {
-        setError('Ошибка при загрузке вакансии: ' + err.message);
+        if (err.message.includes('404')) {
+          setError('Вакансия не найдена');
+        } else {
+          setError('Ошибка при загрузке вакансии: ' + err.message);
+        }
       } finally {
         setLoading(false);
       }

@@ -40,7 +40,9 @@ export const hrApi = {
     const path = `/api/vacancies${queryString ? `?${queryString}` : ''}`;
     return apiRequest(path);
   },
+  getVacancy: (id) => apiRequest(`/api/vacancies/${id}`),
   candidates: () => apiRequest('/api/candidates'),
+  getCandidate: (id) => apiRequest(`/api/candidates/${id}`),
   applications: () => apiRequest('/api/applications'),
   seedDemo: () => apiRequest('/api/demo-seed', { method: 'POST' }),
   createVacancy: (payload) => apiRequest('/api/vacancies', {
