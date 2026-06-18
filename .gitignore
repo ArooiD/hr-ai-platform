@@ -21,3 +21,8 @@ env/
 
 # Frontend build
 frontend/dist/
+# Coverage reports
+.coverage
+htmlcov/
+.coverage*
+
