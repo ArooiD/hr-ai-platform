@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ArrowRight, BriefcaseBusiness, CalendarCheck2, ChartNoAxesColumnIncreasing, FileText, UserRoundCheck, UsersRound, Users } from 'lucide-react';
+import { ArrowRight, Briefcase, CalendarCheck2, ChartNoAxesColumnIncreasing, FileText, UserRoundCheck, UsersRound, Users } from 'lucide-react';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
 import RecruitmentFlow from './pages/RecruitmentFlow';
@@ -41,7 +41,7 @@ function LoginPage({ onLogin }) {
     <main className="login-page">
       <section className="login-hero visual">
         <div className="login-brand">
-          <div className="login-logo"><BriefcaseBusiness size={26} /></div>
+          <div className="login-logo"><Briefcase size={26} /></div>
           <span>HR Platform</span>
         </div>
         <div className="login-dashboard-art" aria-hidden="true">

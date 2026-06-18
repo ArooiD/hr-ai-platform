@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Search, X, FileText, UserRound, BriefcaseBusiness } from 'lucide-react';
+import { Search, X, FileText, UserRound, Briefcase } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { hrApi } from '../../api/client';
 
@@ -62,7 +62,7 @@ export default function TopbarSearch() {
             id: v.id,
             title: v.title,
             subtitle: v.department,
-            icon: BriefcaseBusiness
+            icon: Briefcase
           }));
 
         const candidateResults = candidates
@@ -266,7 +266,7 @@ export default function TopbarSearch() {
                   textAlign: 'left'
                 }}
               >
-                <BriefcaseBusiness size={16} color="#64748b" />
+                <Briefcase size={16} color="#64748b" />
                 <span style={{ fontSize: '14px', fontWeight: '600' }}>Все вакансии</span>
               </button>
               <button

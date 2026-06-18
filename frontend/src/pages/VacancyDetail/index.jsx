@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, BriefcaseBusiness, MapPin, DollarSign, Calendar, Users, Edit2, Trash2 } from 'lucide-react';
+import { ArrowLeftBriefcase, MapPin, DollarSign, Calendar, Users, Edit2, Trash2 } from 'lucide-react';
 import { hrApi } from '../../api/client';
 
 export default function VacancyDetailPage() {
@@ -102,7 +102,7 @@ export default function VacancyDetailPage() {
           {/* Description */}
           <div className="card">
             <h2 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <BriefcaseBusiness size={20} /> Описание вакансии
+              <Briefcase size={20} /> Описание вакансии
             </h2>
             <div style={{ lineHeight: '1.8', whiteSpace: 'pre-wrap' }}>
               {vacancy.description || 'Описание отсутствует'}
@@ -183,7 +183,7 @@ export default function VacancyDetailPage() {
                 onClick={() => navigate(`/analytics`)}
                 style={{ justifyContent: 'flex-start' }}
               >
-                <BriefcaseBusiness size={16} style={{ marginRight: '8px' }} />
+                <Briefcase size={16} style={{ marginRight: '8px' }} />
                 Статистика
               </button>
             </div>

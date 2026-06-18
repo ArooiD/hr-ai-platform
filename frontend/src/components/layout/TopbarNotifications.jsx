@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, X, CheckCircle2, Clock, UserPlus, BriefcaseBusiness } from 'lucide-react';
+import { Bell, X, CheckCircle2, Clock, UserPlus, Briefcase } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { notificationsApi } from '../../api/client';
 import { useSSENotifications } from '../../api/sseNotifications';
@@ -86,7 +86,7 @@ export default function TopbarNotifications() {
         color = '#16a34a';
         break;
       case 'application_stage_changed':
-        icon = BriefcaseBusiness;
+        icon = Briefcase;
         color = '#f59e0b';
         break;
       default:

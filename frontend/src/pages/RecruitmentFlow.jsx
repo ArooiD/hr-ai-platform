@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { AlertTriangle, Award, Brain, BriefcaseBusiness, Calendar, CheckCircle2, FileQuestion, Plus, Search, Sparkles, Target, UserPlus, UsersRound } from 'lucide-react';
+import { AlertTriangle, Award, BrainBriefcase, Calendar, CheckCircle2, FileQuestion, Plus, Search, Sparkles, Target, UserPlus, UsersRound } from 'lucide-react';
 import { hrApi } from '../api/client';
 import { stages, stageLabels } from '../data/constants';
 
@@ -213,7 +213,7 @@ export default function RecruitmentPage() {
       {message && <div style={{ marginBottom: 20, padding: '12px 16px', borderRadius: 12, background: '#d1fae5', color: '#065f46' }}>{message}</div>}
 
       <div className="cards-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 18 }}>
-        <SummaryCard color="#2563eb" icon={<BriefcaseBusiness size={20} />} title="Открытые вакансии" value={openVacancies.length} text="позиции требуют управления подбором" />
+        <SummaryCard color="#2563eb" icon={<Briefcase size={20} />} title="Открытые вакансии" value={openVacancies.length} text="позиции требуют управления подбором" />
         <SummaryCard color="#d97706" icon={<AlertTriangle size={20} />} title="Без активных кандидатов" value={vacanciesWithoutCandidates.length} text="нужно добавить кандидатов или закрыть вакансию" />
         <SummaryCard color="#15803d" icon={<UsersRound size={20} />} title="Кандидаты в работе" value={candidatesInWork} text="не наняты и не отклонены" />
       </div>
@@ -250,7 +250,7 @@ export default function RecruitmentPage() {
       {activeTab === 'matching' && matchingMode === 'vacancy' && (
         <div className="card" style={{ marginBottom: 22 }}>
           <SectionHeader icon={<Sparkles size={22} />} title="Подбор кандидатов под вакансию" subtitle={selectedVacancyObject ? `${selectedVacancyObject.title} · ${selectedVacancyObject.department}` : 'Выберите конкретную вакансию выше'} />
-          {!selectedVacancyObject ? <Empty icon={<BriefcaseBusiness size={42} />} text="Выберите вакансию, чтобы увидеть релевантных кандидатов" /> : <div style={{ display: 'grid', gap: 14 }}>{matchedCandidates.map(({ candidate, existingApplication, match }) => <MatchCandidateRow key={candidate.id} candidate={candidate} existingApplication={existingApplication} match={match} vacancyClosed={selectedVacancyObject.status === 'closed'} onCreate={() => createApplicationForCandidate(candidate.id)} onOpen={() => { setActiveTab('pipeline'); setFilterStage(existingApplication.stage); }} />)}</div>}
+          {!selectedVacancyObject ? <Empty icon={<Briefcase size={42} />} text="Выберите вакансию, чтобы увидеть релевантных кандидатов" /> : <div style={{ display: 'grid', gap: 14 }}>{matchedCandidates.map(({ candidate, existingApplication, match }) => <MatchCandidateRow key={candidate.id} candidate={candidate} existingApplication={existingApplication} match={match} vacancyClosed={selectedVacancyObject.status === 'closed'} onCreate={() => createApplicationForCandidate(candidate.id)} onOpen={() => { setActiveTab('pipeline'); setFilterStage(existingApplication.stage); }} />)}</div>}
         </div>
       )}
 
@@ -293,7 +293,7 @@ function CandidateSelector({ candidateStats, selectedCandidateCenter, search, se
 }
 
 function SelectedVacancyPanel({ vacancy, stats }) {
-  if (!vacancy) return <Empty icon={<BriefcaseBusiness size={38} />} text="Выберите вакансию слева" />;
+  if (!vacancy) return <Empty icon={<Briefcase size={38} />} text="Выберите вакансию слева" />;
   const status = vacancyStatuses[vacancy.status] || vacancyStatuses.open;
   return <div><div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}><div><h2 style={{ margin: 0 }}>{vacancy.title}</h2><p style={{ margin: '4px 0 0', color: '#64748b' }}>{vacancy.department}</p></div><span style={{ borderRadius: 999, padding: '5px 12px', background: status.bg, color: status.color, fontSize: 12, fontWeight: 900 }}>{status.label}</span></div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 14, marginBottom: 12 }}><MiniStat label="откликов" value={stats?.total || 0} /><MiniStat label="в работе" value={stats?.active || 0} /><MiniStat label="нанято" value={stats?.hired || 0} /></div><div className="skills">{(vacancy.required_skills || []).slice(0, 8).map(skill => <span key={skill} className="skill-tag">{skill}</span>)}</div><button className="secondary-button" style={{ marginTop: 14 }}>Открыть карточку вакансии</button></div>;
 }

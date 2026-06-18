@@ -1,12 +1,12 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import { BarChart3, BriefcaseBusiness, CalendarDays, HelpCircle, Menu, Users } from 'lucide-react';
+import { BarChart3, Briefcase, CalendarDays, HelpCircle, Menu, Users } from 'lucide-react';
 
 export default function Sidebar({ user, isOpen, onToggle }) {
   const navigate = useNavigate();
   const location = useLocation();
 
   const navItems = [
-    { label: 'Вакансии', icon: BriefcaseBusiness, path: '/vacancies', id: 'nav-vacancies' },
+    { label: 'Вакансии', icon: Briefcase, path: '/vacancies', id: 'nav-vacancies' },
     { label: 'Кандидаты', icon: Users, path: '/candidates', id: 'nav-candidates' },
     { label: 'Подбор', icon: CalendarDays, path: '/recruitment', id: 'nav-recruitment' },
     { label: 'Аналитика', icon: BarChart3, path: '/analytics', id: 'nav-analytics' },

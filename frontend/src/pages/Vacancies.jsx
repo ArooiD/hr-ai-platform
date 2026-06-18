@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState, useMemo } from 'react';
-import { BriefcaseBusiness, Plus, Trash2, Edit2, X, Check, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Briefcase, Plus, Trash2, Edit2, X, Check, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { hrApi } from '../api/client';
 import VacancyWizard from '../components/VacancyWizard';
 
@@ -128,7 +128,7 @@ const VacanciesPage = () => {
     <div className="page-container">
       <div className="page-header">
         <div>
-          <h1><BriefcaseBusiness size={24} /> Вакансии</h1>
+          <h1><Briefcase size={24} /> Вакансии</h1>
           <p>Управление вакансиями компании</p>
         </div>
         <button className="primary-button" onClick={handleCreate}>
@@ -157,7 +157,7 @@ const VacanciesPage = () => {
         <div className="loading-state">Загрузка...</div>
       ) : filteredVacancies.length === 0 ? (
         <div className="empty-state">
-          <BriefcaseBusiness size={48} />
+          <Briefcase size={48} />
           <p>Вакансий не найдено</p>
           <p style={{ color: '#6b7280', marginBottom: '24px' }}>Нажмите кнопку выше, чтобы создать первую вакансию</p>
         </div>

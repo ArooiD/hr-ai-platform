@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BarChart3, TrendingUp, Users, BriefcaseBusiness, CalendarCheck2, Award, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { BarChart3, TrendingUp, UsersBriefcase, CalendarCheck2, Award, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { dashboardApi } from '../api/client';
 
 export default function AnalyticsPage() {
@@ -41,7 +41,7 @@ export default function AnalyticsPage() {
   }
 
   const stats = [
-    { label: 'Открытые вакансии', value: data.open_vacancies, icon: BriefcaseBusiness, color: '#0b73ff' },
+    { label: 'Открытые вакансии', value: data.open_vacancies, icon: Briefcase, color: '#0b73ff' },
     { label: 'Закрытые вакансии', value: data.closed_vacancies, icon: CalendarCheck2, color: '#9aa0a8' },
     { label: 'Кандидатов всего', value: data.candidates, icon: Users, color: '#34c759' },
     { label: 'Откликов', value: data.applications, icon: Award, color: '#a855f7' },
