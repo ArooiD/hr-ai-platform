@@ -1,46 +1,38 @@
-"""All schemas"""
-from app.schemas.vacancy import (
+"""Pydantic schemas - Data models for API"""
+
+# Import from domain-specific modules
+from app.schemas.vacancy import Vacancy, VacancyCreate, VacancyUpdate
+from app.schemas.candidate import Candidate, CandidateCreate, CandidateUpdate
+from app.schemas.application import Application, ApplicationCreate, StageUpdate
+from app.schemas.notification import Notification
+
+# Import enums and other models
+from app.schemas.models import (
     VacancyStatus,
-    VacancyBase,
-    VacancyCreate,
-    VacancyUpdate,
-    Vacancy,
-)
-from app.schemas.candidate import (
-    CandidateBase,
-    CandidateCreate,
-    CandidateUpdate,
-    Candidate,
-)
-from app.schemas.application import (
     ApplicationStage,
-    AiAnalysis,
-    ApplicationBase,
-    ApplicationCreate,
-    StageUpdate,
-    Application,
-)
-from app.schemas.notification import (
     NotificationType,
-    Notification,
+    AiAnalysis,
 )
 
 __all__ = [
+    # Enums
     "VacancyStatus",
-    "VacancyBase",
+    "ApplicationStage",
+    "NotificationType",
+    # Vacancy
+    "Vacancy",
     "VacancyCreate",
     "VacancyUpdate",
-    "Vacancy",
-    "CandidateBase",
+    # Candidate
+    "Candidate",
     "CandidateCreate",
     "CandidateUpdate",
-    "Candidate",
-    "ApplicationStage",
-    "AiAnalysis",
-    "ApplicationBase",
+    # Application
+    "Application",
     "ApplicationCreate",
     "StageUpdate",
-    "Application",
-    "NotificationType",
+    # AI
+    "AiAnalysis",
+    # Notification
     "Notification",
 ]
