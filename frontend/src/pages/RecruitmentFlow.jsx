@@ -316,6 +316,17 @@ export default function RecruitmentPage() {
       }
       
       setShowCloseVacancyModal(false);
+      
+      // Обновляем selectedVacancyObject сразу
+      const updatedVacancies = await hrApi.vacancies();
+      setVacancies(updatedVacancies);
+      
+      // Находим обновлённую вакансию
+      const updatedVacancy = updatedVacancies.find(v => v.id === selectedVacancyObject.id);
+      if (updatedVacancy) {
+        setSelectedVacancyObject(updatedVacancy);
+      }
+      
       await load();
     } catch (err) {
       console.error('Ошибка при изменении статуса вакансии:', err);
