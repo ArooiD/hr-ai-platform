@@ -3,7 +3,7 @@ import pytest
 from fastapi import HTTPException
 
 from app.schemas import VacancyCreate
-from app.services.vacancy_service import VacancyService
+from app.services.vacancy.service import VacancyService
 from app.repositories.vacancy_repo import VacancyRepository
 
 

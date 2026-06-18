@@ -29,31 +29,22 @@ class VacancyRepository:
         return vacancy
     
     @staticmethod
-    def create(db: Session, payload: VacancyCreate, skills_str: str) -> VacancyModel:
+    def create(db: Session, vacancy: VacancyModel) -> VacancyModel:
         """Создать вакансию"""
-        vacancy = VacancyModel(
-            title=payload.title,
-            department=payload.department,
-            description=payload.description,
-            required_skills=skills_str,
-            salary_from=payload.salary_from,
-            salary_to=payload.salary_to,
-            status="open"
-        )
         db.add(vacancy)
         db.commit()
         db.refresh(vacancy)
         return vacancy
     
     @staticmethod
-    def update(db: Session, vacancy: VacancyModel, payload: VacancyCreate, skills_str: str) -> VacancyModel:
+    def update(db: Session, vacancy: VacancyModel, updated_vacancy: VacancyModel) -> VacancyModel:
         """Обновить вакансию"""
-        vacancy.title = payload.title
-        vacancy.department = payload.department
-        vacancy.description = payload.description
-        vacancy.required_skills = skills_str
-        vacancy.salary_from = payload.salary_from
-        vacancy.salary_to = payload.salary_to
+        vacancy.title = updated_vacancy.title
+        vacancy.department = updated_vacancy.department
+        vacancy.description = updated_vacancy.description
+        vacancy.required_skills = updated_vacancy.required_skills
+        vacancy.salary_from = updated_vacancy.salary_from
+        vacancy.salary_to = updated_vacancy.salary_to
         db.commit()
         db.refresh(vacancy)
         return vacancy
@@ -61,7 +52,7 @@ class VacancyRepository:
     @staticmethod
     def close(db: Session, vacancy_id: int) -> VacancyModel:
         """Закрыть вакансию"""
-        vacancy = VacancyModel.query.get(vacancy_id)
+        vacancy = VacancyRepository.get_by_id(db, vacancy_id)
         if not vacancy:
             raise HTTPException(status_code=404, detail="Вакансия не найдена")
         
@@ -73,7 +64,7 @@ class VacancyRepository:
     @staticmethod
     def reopen(db: Session, vacancy_id: int) -> VacancyModel:
         """Переоткрыть вакансию"""
-        vacancy = VacancyModel.query.get(vacancy_id)
+        vacancy = VacancyRepository.get_by_id(db, vacancy_id)
         if not vacancy:
             raise HTTPException(status_code=404, detail="Вакансия не найдена")
         

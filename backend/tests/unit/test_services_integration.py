@@ -89,12 +89,15 @@ class TestServicesIntegration:
         assert hasattr(VacancyRepository, 'get_by_id')
         
         from app.schemas.vacancy import VacancyCreate
+        from app.services.vacancy.mapper import VacancyMapper
+        
         payload = VacancyCreate(
             title="Repo Test",
             department="IT",
             description="Test",
-            required_skills=[]
+            required_skills=["Python", "SQL"]
         )
-        vacancy = VacancyRepository.create(test_db, payload, "Python,SQL")
+        vacancy_data = VacancyMapper.to_model(payload)
+        vacancy = VacancyRepository.create(test_db, vacancy_data)
         
         assert vacancy.id is not None

@@ -50,22 +50,22 @@ class VacancyService:
         vacancy_data = VacancyMapper.to_model(payload)
         vacancy = VacancyRepository.create(db, vacancy_data)
         
-        return Vacancy.model_validate(vacancy)
+        return Vacancy.model_validate(VacancyService._normalize_vacancy(vacancy))
     
     @staticmethod
     def update_vacancy(db: Session, vacancy_id: int, payload: VacancyCreate) -> Vacancy:
         """Обновить вакансию"""
         # Проверка существования
-        VacancyRepository.get_or_404(db, vacancy_id)
+        vacancy = VacancyRepository.get_or_404(db, vacancy_id)
         
         # Валидация
         VacancyValidator.validate_update(payload)
         
         # Маппинг и обновление
-        vacancy_data = VacancyMapper.to_model(payload)
-        updated = VacancyRepository.update(db, vacancy_id, vacancy_data)
+        updated_vacancy = VacancyMapper.to_model(payload)
+        updated = VacancyRepository.update(db, vacancy, updated_vacancy)
         
-        return Vacancy.model_validate(updated)
+        return Vacancy.model_validate(VacancyService._normalize_vacancy(updated))
     
     @staticmethod
     def close_vacancy(db: Session, vacancy_id: int) -> Vacancy:
@@ -77,8 +77,11 @@ class VacancyService:
         
         closed = VacancyRepository.close(db, vacancy_id)
         
+        # Нормализуем данные и создаём схему для уведомления
+        closed_normalized = VacancyService._normalize_vacancy(closed)
+        vacancy_schema = Vacancy.model_validate(closed_normalized)
+        
         # Создаём уведомление
-        vacancy_schema = Vacancy.model_validate(closed)
         notification_service.create_notification(
             notification_type=NotificationType.VACANCY_CLOSED,
             title="Вакансия закрыта",
@@ -87,7 +90,7 @@ class VacancyService:
             entity_id=vacancy_id
         )
         
-        return Vacancy.model_validate(closed)
+        return vacancy_schema
     
     @staticmethod
     def reopen_vacancy(db: Session, vacancy_id: int) -> Vacancy:
@@ -99,8 +102,11 @@ class VacancyService:
         
         reopened = VacancyRepository.reopen(db, vacancy_id)
         
+        # Нормализуем данные и создаём схему для уведомления
+        reopened_normalized = VacancyService._normalize_vacancy(reopened)
+        vacancy_schema = Vacancy.model_validate(reopened_normalized)
+        
         # Создаём уведомление
-        vacancy_schema = Vacancy.model_validate(reopened)
         notification_service.create_notification(
             notification_type=NotificationType.VACANCY_REOPENED,
             title="Вакансия переоткрыта",
@@ -109,7 +115,7 @@ class VacancyService:
             entity_id=vacancy_id
         )
         
-        return Vacancy.model_validate(reopened)
+        return vacancy_schema
     
     @staticmethod
     def auto_close_if_completed(db: Session, vacancy_id: int) -> bool:
@@ -136,8 +142,9 @@ class VacancyService:
         if not has_active:
             VacancyRepository.close(db, vacancy_id)
             
-            # Создаём уведомление
-            vacancy_schema = Vacancy.model_validate(vacancy)
+            # Создаём уведомление (используем исходную вакансию, т.к. она уже была загружена)
+            vacancy_normalized = VacancyService._normalize_vacancy(vacancy)
+            vacancy_schema = Vacancy.model_validate(vacancy_normalized)
             notification_service.create_notification(
                 notification_type=NotificationType.VACANCY_CLOSED,
                 title="Вакансия автоматически закрыта",
@@ -153,6 +160,6 @@ class VacancyService:
     @staticmethod
     def delete_vacancy(db: Session, vacancy_id: int) -> dict:
         """Удалить вакансию"""
-        VacancyRepository.get_or_404(db, vacancy_id)
-        VacancyRepository.delete(db, vacancy_id)
+        vacancy = VacancyRepository.get_or_404(db, vacancy_id)
+        VacancyRepository.delete(db, vacancy)
         return {"status": "deleted", "vacancy_id": vacancy_id}
