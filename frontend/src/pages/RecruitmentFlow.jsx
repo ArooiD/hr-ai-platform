@@ -65,6 +65,8 @@ export default function RecruitmentPage() {
   const [message, setMessage] = useState('');
   const [showLinkModal, setShowLinkModal] = useState(false);
   const [showCloseVacancyModal, setShowCloseVacancyModal] = useState(false);
+  const [showStageModal, setShowStageModal] = useState(false);
+  const [selectedApplication, setSelectedApplication] = useState(null);
   const [filterStage, setFilterStage] = useState('all');
   const [activeTab, setActiveTab] = useState('matching');
 
@@ -126,6 +128,25 @@ export default function RecruitmentPage() {
     await hrApi.updateApplicationStage(id, stage);
     setMessage(`Кандидат переведён на этап: ${stageLabels[stage]}`);
     await load();
+  };
+
+  const openStageModal = (application) => {
+    setSelectedApplication(application);
+    setShowStageModal(true);
+  };
+
+  const confirmStageChange = async (newStage) => {
+    if (!selectedApplication) return;
+    try {
+      await hrApi.updateApplicationStage(selectedApplication.id, newStage);
+      setMessage(`Кандидат ${candidates.find(c => c.id === selectedApplication.candidate_id)?.full_name} переведён на этап: ${stageLabels[newStage]}`);
+      setShowStageModal(false);
+      setSelectedApplication(null);
+      await load();
+    } catch (err) {
+      console.error('Ошибка при смене этапа:', err);
+      setMessage('Ошибка при изменении этапа');
+    }
   };
 
   const closeVacancy = async () => {
@@ -283,7 +304,7 @@ export default function RecruitmentPage() {
         <>
           <div className="cards-grid" style={{ gridTemplateColumns: 'repeat(6, 1fr)', marginBottom: 20 }}>{stages.map(stage => { const view = stageView[stage]; return <button key={stage} type="button" onClick={() => setFilterStage(stage)} className="card" style={{ padding: 16, textAlign: 'center', borderColor: filterStage === stage ? view.color : view.border, background: filterStage === stage ? view.bg : '#fff' }}><div style={{ fontSize: 24, fontWeight: 900, color: view.color }}>{stats[stage] || 0}</div><div style={{ fontSize: 12, color: view.color, marginTop: 4, fontWeight: 900 }}>{stageLabels[stage]}</div><div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>{view.label}</div></button>; })}</div>
           <div className="filters-bar"><div className="filter-group"><label>Этап</label><select value={filterStage} onChange={(e) => setFilterStage(e.target.value)}><option value="all">Все этапы</option>{stages.map(stage => <option key={stage} value={stage}>{stageLabels[stage]}</option>)}</select></div><div className="filter-group"><label>Вакансия</label><select value={selectedVacancyFilter} onChange={(e) => setSelectedVacancyFilter(e.target.value)}><option value="all">Все вакансии</option>{vacancies.map(v => <option key={v.id} value={v.id}>{v.title}</option>)}</select></div></div>
-          <div className="card"><div style={{ display: 'grid', gap: 16 }}>{visibleApplications.map(application => <PipelineRow key={application.id} application={application} vacancies={vacancies} candidates={candidates} analyze={analyze} loadQuestions={loadQuestions} updateStage={updateStage} />)}{!visibleApplications.length && <div style={{ textAlign: 'center', padding: 40, color: '#9ca3af' }}><Target size={48} style={{ marginBottom: 12, opacity: 0.5 }} /><p>Нет откликов под выбранные фильтры</p><button className="primary-button" onClick={() => setActiveTab('matching')} style={{ marginTop: 12 }}><Sparkles size={18} /> Вернуться к подбору</button></div>}</div></div>
+          <div className="card"><div style={{ display: 'grid', gap: 16 }}>{visibleApplications.map(application => <PipelineRow key={application.id} application={application} vacancies={vacancies} candidates={candidates} analyze={analyze} loadQuestions={loadQuestions} updateStage={updateStage} openStageModal={openStageModal} />)}{!visibleApplications.length && <div style={{ textAlign: 'center', padding: 40, color: '#9ca3af' }}><Target size={48} style={{ marginBottom: 12, opacity: 0.5 }} /><p>Нет откликов под выбранные фильтры</p><button className="primary-button" onClick={() => setActiveTab('matching')} style={{ marginTop: 12 }}><Sparkles size={18} /> Вернуться к подбору</button></div>}</div></div>
         </>
       )}
 
@@ -343,6 +364,126 @@ export default function RecruitmentPage() {
                 }}
               >
                 🔒 Закрыть вакансию
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showStageModal && selectedApplication && (
+        <div className="modal-overlay" onClick={() => setShowStageModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
+            <div className="modal-header">
+              <h2><Target size={20} style={{ marginRight: 8, color: '#059669' }} /> Изменить этап</h2>
+              <button className="icon-button" onClick={() => setShowStageModal(false)}>✕</button>
+            </div>
+            <div style={{ padding: '8px 0 20px' }}>
+              <p style={{ fontSize: 15, marginBottom: 16 }}>
+                Отклик #<strong>{selectedApplication.id}</strong>
+              </p>
+              
+              <div style={{ 
+                padding: 16, 
+                background: '#f8fafc', 
+                borderRadius: 12,
+                marginBottom: 20,
+                border: '1px solid var(--line)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                  <div className="candidate-avatar" style={{ width: 48, height: 48, fontSize: 18 }}>
+                    {initials(candidates.find(c => c.id === selectedApplication.candidate_id)?.full_name || '?')}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <strong style={{ fontSize: 15 }}>
+                      {candidates.find(c => c.id === selectedApplication.candidate_id)?.full_name || 'Кандидат'}
+                    </strong>
+                    <div style={{ fontSize: 13, color: '#64748b', marginTop: 2 }}>
+                      {vacancies.find(v => v.id === selectedApplication.vacancy_id)?.title || 'Вакансия'}
+                    </div>
+                  </div>
+                </div>
+                
+                <div style={{ 
+                  padding: 10, 
+                  background: stageView[selectedApplication.stage]?.bg, 
+                  borderRadius: 8,
+                  border: `1px solid ${stageView[selectedApplication.stage]?.border}`
+                }}>
+                  <span style={{ 
+                    color: stageView[selectedApplication.stage]?.color,
+                    fontWeight: 700,
+                    fontSize: 13
+                  }}>
+                    Текущий этап: {stageLabels[selectedApplication.stage]}
+                  </span>
+                </div>
+              </div>
+
+              <p style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>
+                Перевести на этап:
+              </p>
+              
+              <div style={{ display: 'grid', gap: 10 }}>
+                {stages.map(stage => {
+                  const view = stageView[stage];
+                  const isCurrent = stage === selectedApplication.stage;
+                  
+                  return (
+                    <button
+                      key={stage}
+                      type="button"
+                      onClick={() => confirmStageChange(stage)}
+                      disabled={isCurrent}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        padding: 14,
+                        border: `2px solid ${isCurrent ? view.color : view.border}`,
+                        borderRadius: 12,
+                        background: isCurrent ? view.bg : '#fff',
+                        cursor: isCurrent ? 'default' : 'pointer',
+                        opacity: isCurrent ? 0.7 : 1,
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      <div style={{ 
+                        width: 24, 
+                        height: 24, 
+                        borderRadius: '50%',
+                        background: view.color,
+                        display: 'grid',
+                        placeItems: 'center'
+                      }}>
+                        {isCurrent ? (
+                          <CheckCircle2 size={16} style={{ color: '#fff' }} />
+                        ) : (
+                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#fff' }} />
+                        )}
+                      </div>
+                      <div style={{ flex: 1, textAlign: 'left' }}>
+                        <div style={{ fontWeight: 700, color: view.color }}>
+                          {stageLabels[stage]}
+                        </div>
+                        {stage === selectedApplication.stage && (
+                          <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>
+                            Текущий этап
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            
+            <div className="form-actions">
+              <button 
+                type="button" 
+                className="secondary-button" 
+                onClick={() => setShowStageModal(false)}
+              >
+                Отмена
               </button>
             </div>
           </div>
@@ -463,11 +604,82 @@ function MatchVacancyRow({ vacancy, existingApplication, match, onCreate, onOpen
   return <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px 190px', gap: 16, alignItems: 'center', border: `1px solid ${view.border}`, borderRadius: 16, padding: 16, background: '#fff' }}><div><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}><div><strong>{vacancy.title}</strong><div style={{ color: '#64748b', fontSize: 13, marginTop: 3 }}>{vacancy.department}</div></div><span style={{ borderRadius: 999, padding: '4px 10px', background: status.bg, color: status.color, fontSize: 12, fontWeight: 900 }}>{status.label}</span></div><div className="skills" style={{ marginTop: 12 }}>{(vacancy.required_skills || []).slice(0, 7).map(skill => { const matched = match.matchedSkills.map(normalize).includes(normalize(skill)); return <span key={skill} className="skill-tag" style={{ background: matched ? '#dcfce7' : '#f1f5f9', color: matched ? '#166534' : '#64748b' }}>{skill}</span>; })}</div><p style={{ margin: '10px 0 0', color: '#475569', fontSize: 13 }}>{match.reason}</p>{!!match.missedSkills.length && <p style={{ margin: '6px 0 0', color: '#b91c1c', fontSize: 12 }}>Не хватает у кандидата: {match.missedSkills.join(', ')}</p>}</div><ScoreCard match={match} view={view} /><div style={{ display: 'grid', gap: 8 }}>{existingApplication ? <><span className="status-badge" style={{ justifySelf: 'start', background: stageView[existingApplication.stage]?.bg, color: stageView[existingApplication.stage]?.color }}>уже в pipeline: {stageLabels[existingApplication.stage]}</span><button className="secondary-button" onClick={onOpen}>Открыть отклик</button></> : <button className="primary-button" onClick={onCreate} disabled={vacancy.status === 'closed'} style={{ opacity: vacancy.status === 'closed' ? 0.55 : 1 }}><Plus size={16} /> Создать отклик</button>}</div></div>;
 }
 
-function PipelineRow({ application, vacancies, candidates, analyze, loadQuestions, updateStage }) {
+function PipelineRow({ application, vacancies, candidates, analyze, loadQuestions, updateStage, openStageModal }) {
   const vacancy = vacancies.find(v => v.id === application.vacancy_id);
   const candidate = candidates.find(c => c.id === application.candidate_id);
   const view = stageView[application.stage] || stageView.new;
-  return <div style={{ padding: 16, borderRadius: 14, border: `1px solid ${view.border}`, background: '#fff', boxShadow: '0 8px 24px rgba(15,23,42,.04)' }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}><div><div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><b>Отклик #{application.id}</b><span className="status-badge" style={{ background: view.bg, color: view.color }}>{stageLabels[application.stage]}</span></div><div style={{ color: '#6b7280', fontSize: 14, marginTop: 4 }}>{candidate?.full_name || 'Кандидат'} → {vacancy?.title || 'Вакансия'}</div></div><div style={{ display: 'flex', gap: 8 }}><button className="icon-button" onClick={() => analyze(application.id)} title="AI-анализ"><Brain size={16} /></button><button className="icon-button" onClick={() => loadQuestions(application.id)} title="Вопросы интервью"><FileQuestion size={16} /></button><select value={application.stage} onChange={(e) => updateStage(application.id, e.target.value)} style={{ padding: 8, borderRadius: 8, border: `1px solid ${view.border}`, fontSize: 13, background: view.bg, color: view.color, fontWeight: 800 }}>{stages.map(stage => <option key={stage} value={stage}>{stageLabels[stage]}</option>)}</select></div></div>{application.ai_analysis && <div style={{ padding: 12, borderRadius: 10, background: application.ai_analysis.score >= 70 ? '#dcfce7' : application.ai_analysis.score >= 45 ? '#fef3c7' : '#fee2e2', marginTop: 12 }}><div style={{ display: 'flex', alignItems: 'center', gap: 8, color: application.ai_analysis.score >= 70 ? '#166534' : application.ai_analysis.score >= 45 ? '#92400e' : '#991b1b' }}><Award size={16} /><strong>AI Score: {application.ai_analysis.score}%</strong></div><div style={{ fontSize: 13, color: '#334155', marginTop: 4 }}>{application.ai_analysis.recommendation}</div></div>}</div>;
+  
+  return (
+    <div style={{ 
+      padding: 16, 
+      borderRadius: 14, 
+      border: `1px solid ${view.border}`, 
+      background: '#fff', 
+      boxShadow: '0 8px 24px rgba(15,23,42,.04)' 
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <b>Отклик #{application.id}</b>
+            <span className="status-badge" style={{ background: view.bg, color: view.color }}>
+              {stageLabels[application.stage]}
+            </span>
+          </div>
+          <div style={{ color: '#6b7280', fontSize: 14, marginTop: 4 }}>
+            {candidate?.full_name || 'Кандидат'} → {vacancy?.title || 'Вакансия'}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button 
+            className="icon-button" 
+            onClick={() => analyze(application.id)} 
+            title="AI-анализ"
+          >
+            <Brain size={16} />
+          </button>
+          <button 
+            className="icon-button" 
+            onClick={() => loadQuestions(application.id)} 
+            title="Вопросы интервью"
+          >
+            <FileQuestion size={16} />
+          </button>
+          <button
+            className="secondary-button"
+            onClick={() => openStageModal(application)}
+            style={{
+              background: view.bg,
+              color: view.color,
+              borderColor: view.border,
+              fontWeight: 700,
+              fontSize: 13,
+              padding: '8px 12px'
+            }}
+          >
+            <Target size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
+            Изменить этап
+          </button>
+        </div>
+      </div>
+      
+      {application.ai_analysis && (
+        <div style={{ 
+          padding: 12, 
+          borderRadius: 10, 
+          background: application.ai_analysis.score >= 70 ? '#dcfce7' : application.ai_analysis.score >= 45 ? '#fef3c7' : '#fee2e2', 
+          marginTop: 12 
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: application.ai_analysis.score >= 70 ? '#166534' : application.ai_analysis.score >= 45 ? '#92400e' : '#991b1b' }}>
+            <Award size={16} />
+            <strong>AI Score: {application.ai_analysis.score}%</strong>
+          </div>
+          <div style={{ fontSize: 13, color: '#334155', marginTop: 4 }}>
+            {application.ai_analysis.recommendation}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function ScoreCard({ match, view }) {
