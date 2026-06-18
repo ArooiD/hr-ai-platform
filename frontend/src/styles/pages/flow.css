@@ -1,0 +1,36 @@
+/* ============================================
+   RECRUITMENT FLOW PAGE
+   ============================================ */
+
+.flow-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 28px; margin-bottom: 20px; }
+.flow-message { width: fit-content; margin-bottom: 18px; border-radius: 12px; background: #eff6ff; padding: 10px 14px; color: #1d4ed8; font-weight: 800; }
+
+.flow-steps { display: grid; grid-template-columns: repeat(2, minmax(320px, 1fr)); gap: 18px; }
+
+.flow-card { border: 1px solid var(--line); border-radius: 20px; background: rgba(255, 255, 255, 0.82); padding: 20px; box-shadow: 0 10px 30px rgba(15,23,42,.04); }
+.flow-card h3 { margin: 0 0 8px; }
+.flow-card p { color: #64748b; }
+
+.flow-card.wide { grid-column: 1 / -1; }
+.flow-card h2 { display: flex; align-items: center; gap: 9px; margin: 0 0 18px; color: #111318; font-size: 24px; font-weight: 900; }
+
+/* Flow Forms */
+.flow-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.flow-form textarea, .flow-form input, .flow-linker select, .flow-application select { width: 100%; border: 1px solid #dbe3ee; border-radius: 12px; background: #fff; padding: 11px 12px; color: #111827; outline: none; }
+.flow-form textarea { min-height: 70px; resize: vertical; }
+.flow-form button, .flow-linker button, .flow-application button { border: 0; border-radius: 12px; background: var(--blue); color: #fff; padding: 11px 14px; font-weight: 900; }
+.flow-form button { grid-column: 1 / -1; }
+
+.flow-linker { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; margin-bottom: 18px; }
+.flow-linker button:disabled { background: #d1d5db; cursor: not-allowed; }
+
+.flow-applications { display: grid; gap: 12px; }
+.flow-application { display: grid; grid-template-columns: 1.2fr 190px auto auto 150px; gap: 12px; align-items: center; border: 1px solid var(--line); border-radius: 16px; background: #fff; padding: 14px; }
+.flow-application p { margin: 5px 0 0; color: var(--muted); }
+.flow-application button { display: inline-flex; align-items: center; gap: 7px; justify-content: center; }
+
+.flow-ai { display: grid; gap: 3px; border-radius: 12px; background: #f0fdf4; padding: 10px; color: #166534; font-size: 12px; }
+.flow-ai strong { font-size: 20px; }
+
+.question-list { display: grid; gap: 10px; }
+.question-list > div { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: #f8fafc; }

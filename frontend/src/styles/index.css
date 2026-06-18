@@ -1,0 +1,32 @@
+/* ============================================
+   HR AI Platform - Global Styles
+   ============================================
+   
+   This file imports all style modules in the correct order:
+   1. Variables (CSS custom properties)
+   2. Login page
+   3. Layout (sidebar, topbar, navigation)
+   4. Common components (buttons, cards, forms)
+   5. Page-specific styles
+   6. Responsive breakpoints
+   ============================================ */
+
+/* Core */
+@import './variables.css';
+
+/* Pages */
+@import './pages/login.css';
+
+/* Layout */
+@import './layout.css';
+
+/* Components */
+@import './components.css';
+
+/* Page-specific */
+@import './pages/dashboard.css';
+@import './pages/flow.css';
+@import './pages/candidates.css';
+
+/* Responsive */
+@import './responsive.css';

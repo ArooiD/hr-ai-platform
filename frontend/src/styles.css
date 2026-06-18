@@ -222,8 +222,10 @@ button { cursor: pointer; }
 .flow-card { border: 1px solid var(--line); border-radius: 20px; background: rgba(255, 255, 255, 0.82); padding: 20px; box-shadow: 0 10px 30px rgba(15,23,42,.04); }
 .flow-card h3 { margin: 0 0 8px; }
 .flow-card p { color: #64748b; }
-.card-grid, .cards-grid { display: grid; gap: 18px; }
-.card { border: 1px solid var(--line); border-radius: 18px; background: rgba(255, 255, 255, 0.9); padding: 20px; box-shadow: 0 10px 30px rgba(15,23,42,.04); }
+.card-grid, .cards-grid, .candidates-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; }
+.card { border: 1px solid var(--line); border-radius: 18px; background: rgba(255, 255, 255, 0.9); padding: 20px; box-shadow: 0 10px 30px rgba(15,23,42,.04); transition: all 0.2s; }
+.card:hover { box-shadow: 0 8px 28px rgba(30, 41, 59, 0.08); transform: translateY(-2px); }
+.candidate-card { display: flex; flex-direction: column; }
 .page-container { max-width: 100%; }
 .page-header { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; margin-bottom: 24px; }
 .page-header h1 { margin: 0 0 6px; font-size: 40px; line-height: 1; letter-spacing: -0.05em; }
@@ -250,7 +252,10 @@ button { cursor: pointer; }
 .empty-state { display: grid; place-items: center; color: #94a3b8; text-align: center; }
 .question-list { display: grid; gap: 10px; }
 .question-list > div { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: #f8fafc; }
-.candidate-avatar { display: grid; place-items: center; border-radius: 999px; background: #eaf4ff; color: var(--blue); font-weight: 900; }
+.candidate-avatar { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 999px; background: #eaf4ff; color: var(--blue); font-size: 20px; font-weight: 900; margin-bottom: 12px; }
+.contact-info { display: flex; flex-direction: column; gap: 4px; margin: 10px 0; color: #6b7280; font-size: 13px; }
+.contact-info span { display: flex; align-items: center; gap: 6px; }
+.candidate-meta { display: flex; gap: 12px; color: #9ca3af; font-size: 13px; margin-bottom: 10px; }
 
 @media (max-width: 900px) {
   body { min-width: 0; }
@@ -259,5 +264,5 @@ button { cursor: pointer; }
   .sidebar-toggle-mobile { display: block; }
   .topbar { padding: 0 22px; }
   .single-page-workspace, .workspace-grid { padding: 18px 22px 42px; }
-  .cards-grid { grid-template-columns: 1fr !important; }
+  .cards-grid, .candidates-grid { grid-template-columns: 1fr !important; }
 }

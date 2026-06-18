@@ -1,0 +1,96 @@
+/* ============================================
+   RESPONSIVE STYLES
+   ============================================ */
+
+@media (max-width: 1300px) {
+  body { min-width: 1024px; }
+  .sidebar { width: 245px; padding: 22px; }
+  .flow-application { grid-template-columns: 1fr; }
+  .dashboard-stats { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-charts { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 900px) {
+  body { min-width: 0; }
+  
+  .sidebar { 
+    position: fixed; 
+    z-index: 30; 
+    transform: translateX(0); 
+  }
+  .sidebar.closed { 
+    transform: translateX(-100%); 
+    width: 280px; 
+  }
+  
+  .sidebar-toggle-mobile { display: block; }
+  .topbar { padding: 0 22px; }
+  .single-page-workspace, .workspace-grid { padding: 18px 22px 42px; }
+  
+  /* Grids become single column on mobile */
+  .cards-grid, .candidates-grid, .card-grid { 
+    grid-template-columns: 1fr !important; 
+  }
+  
+  .dashboard-stats { 
+    grid-template-columns: 1fr !important; 
+  }
+  
+  .dashboard-charts { 
+    grid-template-columns: 1fr !important; 
+  }
+  
+  .flow-steps { 
+    grid-template-columns: 1fr !important; 
+  }
+  
+  .page-header { 
+    flex-direction: column; 
+    align-items: flex-start !important; 
+  }
+  
+  .page-header h1 { 
+    font-size: 28px !important; 
+  }
+  
+  .vacancy-form, .candidate-form {
+    padding: 0 12px;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .login-page {
+    grid-template-columns: 1fr !important;
+    padding: 22px;
+  }
+  
+  .login-hero {
+    padding: 32px;
+  }
+  
+  .login-card {
+    padding: 22px;
+  }
+  
+  .modal-content {
+    width: 96vw;
+    margin: 0 2vw;
+  }
+  
+  .filters-bar {
+    flex-direction: column;
+    align-items: stretch !important;
+  }
+  
+  .filter-group {
+    width: 100%;
+  }
+  
+  .filter-group select {
+    width: 100%;
+  }
+}

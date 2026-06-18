@@ -11,7 +11,7 @@ import AnalyticsPage from './pages/Analytics';
 import CandidateDetailPage from './pages/CandidateDetail';
 import SupportPage from './pages/Support';
 import { authApi } from './api/client';
-import './styles.css';
+import './styles/index.css';
 
 // Страница входа - форма авторизации
 function LoginPage({ onLogin }) {

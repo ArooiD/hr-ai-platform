@@ -1,0 +1,25 @@
+/* ============================================
+   DASHBOARD PAGE
+   ============================================ */
+
+.dashboard-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 28px; }
+.stat-card { border: 1px solid var(--line); border-radius: 16px; background: rgba(255, 255, 255, 0.9); padding: 20px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04); }
+.stat-card h3 { margin: 0 0 8px; color: #64748b; font-size: 13px; font-weight: 600; text-transform: uppercase; }
+.stat-card .stat-value { font-size: 32px; font-weight: 900; color: #111318; }
+.stat-card .stat-change { font-size: 12px; font-weight: 600; margin-top: 8px; }
+.stat-change.positive { color: #059669; }
+.stat-change.negative { color: #dc2626; }
+
+.dashboard-charts { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; }
+.chart-card { border: 1px solid var(--line); border-radius: 16px; background: rgba(255, 255, 255, 0.9); padding: 20px; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04); }
+.chart-card h3 { margin: 0 0 16px; color: #111318; font-size: 16px; font-weight: 700; }
+
+.recent-activity { margin-top: 24px; }
+.recent-activity h3 { margin: 0 0 16px; color: #111318; font-size: 18px; font-weight: 700; }
+.activity-list { display: grid; gap: 12px; }
+.activity-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.8); }
+.activity-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; background: var(--soft-blue); color: var(--blue); }
+.activity-content { flex: 1; }
+.activity-content h4 { margin: 0; font-size: 14px; font-weight: 600; color: #111318; }
+.activity-content p { margin: 4px 0 0; font-size: 12px; color: #64748b; }
+.activity-time { font-size: 12px; color: #9ca3af; }
