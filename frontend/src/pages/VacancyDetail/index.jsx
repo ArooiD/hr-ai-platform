@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeftBriefcase, MapPin, DollarSign, Calendar, Users, Edit2, Trash2 } from 'lucide-react';
+import { ArrowLeft, MapPin, DollarSign, Calendar, Users, Edit2, Trash2 } from 'lucide-react';
 import { hrApi } from '../../api/client';
 
 export default function VacancyDetailPage() {
