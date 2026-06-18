@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.schemas import Candidate, CandidateCreate, CandidateUpdate
-from app.services.candidate_service import CandidateService
+from app.services.candidate.service import CandidateService
 
 router = APIRouter(prefix="/candidates", tags=["candidates"])
 

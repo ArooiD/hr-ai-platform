@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.schemas import Application, ApplicationCreate, StageUpdate
-from app.services.application_service import ApplicationService
+from app.services.application.service import ApplicationService
 
 router = APIRouter(prefix="/applications", tags=["applications"])
 

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.schemas import Vacancy, VacancyCreate
-from app.services.vacancy_service import VacancyService
+from app.services.vacancy.service import VacancyService
 
 router = APIRouter(prefix="/vacancies", tags=["vacancies"])
 
