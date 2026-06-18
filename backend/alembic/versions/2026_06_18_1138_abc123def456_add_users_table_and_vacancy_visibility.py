@@ -19,18 +19,22 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Create enum types (if not exists)
-    try:
-        UserRole = sa.Enum('regular', 'specialist', 'admin', name='userrole')
-        UserRole.create(op.get_bind(), checkfirst=True)
-    except Exception:
-        pass  # Type already exists
+    # Create enum types using raw SQL with IF NOT EXISTS
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE userrole AS ENUM ('regular', 'specialist', 'admin');
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """)
     
-    try:
-        VacancyVisibility = sa.Enum('public', 'specialist', 'internal', name='vacancyvisibility')
-        VacancyVisibility.create(op.get_bind(), checkfirst=True)
-    except Exception:
-        pass  # Type already exists
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE vacancyvisibility AS ENUM ('public', 'specialist', 'internal');
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """)
     
     # Create users table
     op.create_table(
