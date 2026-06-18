@@ -317,15 +317,9 @@ export default function RecruitmentPage() {
       
       setShowCloseVacancyModal(false);
       
-      // Обновляем selectedVacancyObject сразу
+      // Обновляем список вакансий - selectedVacancyObject обновится автоматически через useMemo
       const updatedVacancies = await hrApi.vacancies();
       setVacancies(updatedVacancies);
-      
-      // Находим обновлённую вакансию
-      const updatedVacancy = updatedVacancies.find(v => v.id === selectedVacancyObject.id);
-      if (updatedVacancy) {
-        setSelectedVacancyObject(updatedVacancy);
-      }
       
       await load();
     } catch (err) {
