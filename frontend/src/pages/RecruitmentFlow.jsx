@@ -923,12 +923,53 @@ function SelectedVacancyPanel({ vacancy, stats, onCloseClick }) {
   if (!vacancy) return <Empty icon={<Briefcase size={38} />} text="Выберите вакансию слева" />;
   const status = vacancyStatuses[vacancy.status] || vacancyStatuses.open;
   const isClosed = vacancy.status === 'closed';
+  const hasHired = (stats?.hired || 0) > 0;
+  const hasActive = (stats?.active || 0) > 0;
   
   return <div>
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
       <div>
         <h2 style={{ margin: 0 }}>{vacancy.title}</h2>
         <p style={{ margin: '4px 0 0', color: '#64748b' }}>{vacancy.department}</p>
+        
+        {/* Подсказка о статусе вакансии */}
+        {!isClosed && hasHired && !hasActive && (
+          <div style={{ 
+            marginTop: 8, 
+            padding: 8, 
+            background: '#fef3c7', 
+            borderRadius: 8,
+            border: '1px solid #fde68a',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            fontSize: 12
+          }}>
+            <span>💡</span>
+            <span style={{ color: '#92400e' }}>
+              Все отклики обработаны ({stats.hired} нанято). Можно закрыть вакансию.
+            </span>
+          </div>
+        )}
+        
+        {!isClosed && hasHired && hasActive && (
+          <div style={{ 
+            marginTop: 8, 
+            padding: 8, 
+            background: '#f0fdf4', 
+            borderRadius: 8,
+            border: '1px solid #bbf7d0',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            fontSize: 12
+          }}>
+            <span>✅</span>
+            <span style={{ color: '#166534' }}>
+              {stats.hired} кандидат(ов) нанято, {stats.active} в процессе подбора.
+            </span>
+          </div>
+        )}
       </div>
       <span style={{ borderRadius: 999, padding: '5px 12px', background: status.bg, color: status.color, fontSize: 12, fontWeight: 900 }}>
         {status.label}
@@ -955,12 +996,12 @@ function SelectedVacancyPanel({ vacancy, stats, onCloseClick }) {
           onClick={onCloseClick}
           style={{ 
             flex: 1, 
-            background: '#fef2f2', 
-            color: '#dc2626',
-            borderColor: '#fecaca'
+            background: hasHired && !hasActive ? '#fef3c7' : '#fef2f2', 
+            color: hasHired && !hasActive ? '#92400e' : '#dc2626',
+            borderColor: hasHired && !hasActive ? '#fde68a' : '#fecaca'
           }}
         >
-          🔒 Закрыть вакансию
+          {hasHired && !hasActive ? '💡 Закрыть вакансию' : '🔒 Закрыть вакансию'}
         </button>
       )}
       {isClosed && (
