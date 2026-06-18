@@ -204,7 +204,7 @@ export default function RecruitmentPage() {
     <div className="page-container">
       <div className="page-header">
         <div>
-          <h1>Подбор</h1>
+          <h1><Calendar size={26} style={{ marginRight: 12, verticalAlign: 'middle' }} /> Подбор</h1>
           <p>Двусторонний AI matching: вакансия → кандидаты и кандидат → вакансии</p>
         </div>
         <button className="primary-button" onClick={() => setShowLinkModal(true)}><Plus size={18} /> Создать отклик</button>
