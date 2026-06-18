@@ -5,7 +5,7 @@ class DashboardService:
     """Сервис дашборда"""
     
     @staticmethod
-    def get_stats(db):
+    def get_dashboard(db):
         from app.repositories.vacancy_repo import list_vacancies
         from app.repositories.candidate_repository import list_candidates
         from app.repositories.application_repository import list_applications
