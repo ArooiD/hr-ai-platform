@@ -20,15 +20,22 @@ def create_vacancy(payload: VacancyCreate, db: Session = Depends(get_db)):
 @router.get("")
 def list_vacancies(
     db: Session = Depends(get_db),
-    page: int = Query(1, ge=1, description="Номер страницы"),
-    per_page: int = Query(20, ge=1, le=100, description="Элементов на странице")
+    page: Optional[int] = Query(None, ge=1, description="Номер страницы"),
+    per_page: Optional[int] = Query(None, ge=1, le=100, description="Элементов на странице")
 ):
     """
-    Получить все вакансии с пагинацией
+    Получить все вакансии
     
-    RESTful response с метаданными пагинации
+    - Если параметры не переданы: возвращает все вакансии (массив)
+    - Если переданы page/per_page: возвращает пагинированный ответ
     """
     vacancies = VacancyService.list_vacancies(db)
+    
+    # Если параметры пагинации не переданы, возвращаем все вакансии
+    if page is None or per_page is None:
+        return vacancies
+    
+    # Иначе возвращаем пагинированный ответ
     return paginate(vacancies, page=page, per_page=per_page)
 
 
