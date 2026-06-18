@@ -9,6 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import text
 
 
 # revision identifiers, used by Alembic.
@@ -22,13 +23,13 @@ def upgrade() -> None:
     # Create enum types - check if they exist first
     # Using raw SQL to check existence
     result = op.get_bind().execute(
-        "SELECT EXISTS(SELECT 1 FROM pg_type WHERE typname = 'userrole')"
+        text("SELECT EXISTS(SELECT 1 FROM pg_type WHERE typname = 'userrole')")
     )
     if not result.scalar():
         op.execute("CREATE TYPE userrole AS ENUM ('regular', 'specialist', 'admin')")
     
     result = op.get_bind().execute(
-        "SELECT EXISTS(SELECT 1 FROM pg_type WHERE typname = 'vacancyvisibility')"
+        text("SELECT EXISTS(SELECT 1 FROM pg_type WHERE typname = 'vacancyvisibility')")
     )
     if not result.scalar():
         op.execute("CREATE TYPE vacancyvisibility AS ENUM ('public', 'specialist', 'internal')")
