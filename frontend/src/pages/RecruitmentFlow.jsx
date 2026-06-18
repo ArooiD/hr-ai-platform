@@ -133,6 +133,8 @@ export default function RecruitmentPage() {
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [filterStage, setFilterStage] = useState('all');
   const [activeTab, setActiveTab] = useState('matching');
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'kanban'
+  const [draggedApp, setDraggedApp] = useState(null);
 
   const load = async () => {
     try {
@@ -243,6 +245,41 @@ export default function RecruitmentPage() {
     } catch (err) {
       console.error('Ошибка при смене этапа:', err);
       setMessage('Ошибка при изменении этапа');
+    }
+  };
+
+  // Drag-and-drop handlers для Kanban
+  const handleDragStart = (e, application) => {
+    setDraggedApp(application);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = async (e, targetStage) => {
+    e.preventDefault();
+    
+    if (!draggedApp) return;
+    
+    // Проверка разрешения перехода
+    if (!isTransitionAllowed(draggedApp.stage, targetStage)) {
+      setMessage(`Переход с "${stageLabels[draggedApp.stage]}" на "${stageLabels[targetStage]}" не разрешён`);
+      setDraggedApp(null);
+      return;
+    }
+    
+    try {
+      await hrApi.updateApplicationStage(draggedApp.id, targetStage);
+      setMessage(`Кандидат перемещён на этап: ${stageLabels[targetStage]}`);
+      await load();
+    } catch (err) {
+      console.error('Ошибка при перемещении:', err);
+      setMessage('Ошибка при перемещении кандидата');
+    } finally {
+      setDraggedApp(null);
     }
   };
 
@@ -399,9 +436,191 @@ export default function RecruitmentPage() {
 
       {activeTab === 'pipeline' && (
         <>
-          <div className="cards-grid" style={{ gridTemplateColumns: 'repeat(6, 1fr)', marginBottom: 20 }}>{stages.map(stage => { const view = stageView[stage]; return <button key={stage} type="button" onClick={() => setFilterStage(stage)} className="card" style={{ padding: 16, textAlign: 'center', borderColor: filterStage === stage ? view.color : view.border, background: filterStage === stage ? view.bg : '#fff' }}><div style={{ fontSize: 24, fontWeight: 900, color: view.color }}>{stats[stage] || 0}</div><div style={{ fontSize: 12, color: view.color, marginTop: 4, fontWeight: 900 }}>{stageLabels[stage]}</div><div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>{view.label}</div></button>; })}</div>
-          <div className="filters-bar"><div className="filter-group"><label>Этап</label><select value={filterStage} onChange={(e) => setFilterStage(e.target.value)}><option value="all">Все этапы</option>{stages.map(stage => <option key={stage} value={stage}>{stageLabels[stage]}</option>)}</select></div><div className="filter-group"><label>Вакансия</label><select value={selectedVacancyFilter} onChange={(e) => setSelectedVacancyFilter(e.target.value)}><option value="all">Все вакансии</option>{vacancies.map(v => <option key={v.id} value={v.id}>{v.title}</option>)}</select></div></div>
-          <div className="card"><div style={{ display: 'grid', gap: 16 }}>{visibleApplications.map(application => <PipelineRow key={application.id} application={application} vacancies={vacancies} candidates={candidates} analyze={analyze} loadQuestions={loadQuestions} updateStage={updateStage} openStageModal={openStageModal} />)}{!visibleApplications.length && <div style={{ textAlign: 'center', padding: 40, color: '#9ca3af' }}><Target size={48} style={{ marginBottom: 12, opacity: 0.5 }} /><p>Нет откликов под выбранные фильтры</p><button className="primary-button" onClick={() => setActiveTab('matching')} style={{ marginTop: 12 }}><Sparkles size={18} /> Вернуться к подбору</button></div>}</div></div>
+          {/* Переключатель режимов */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button 
+                className={viewMode === 'list' ? 'primary-button' : 'secondary-button'}
+                onClick={() => setViewMode('list')}
+                style={{ padding: '8px 16px' }}
+              >
+                📋 Список
+              </button>
+              <button 
+                className={viewMode === 'kanban' ? 'primary-button' : 'secondary-button'}
+                onClick={() => setViewMode('kanban')}
+                style={{ padding: '8px 16px' }}
+              >
+                🗂️ Kanban
+              </button>
+            </div>
+            {viewMode === 'list' && (
+              <div className="filters-bar" style={{ marginBottom: 0 }}>
+                <div className="filter-group"><label>Этап</label><select value={filterStage} onChange={(e) => setFilterStage(e.target.value)}><option value="all">Все этапы</option>{stages.map(stage => <option key={stage} value={stage}>{stageLabels[stage]}</option>)}</select></div>
+                <div className="filter-group"><label>Вакансия</label><select value={selectedVacancyFilter} onChange={(e) => setSelectedVacancyFilter(e.target.value)}><option value="all">Все вакансии</option>{vacancies.map(v => <option key={v.id} value={v.id}>{v.title}</option>)}</select></div>
+              </div>
+            )}
+          </div>
+
+          {viewMode === 'list' ? (
+            <>
+              <div className="cards-grid" style={{ gridTemplateColumns: 'repeat(6, 1fr)', marginBottom: 20 }}>{stages.map(stage => { const view = stageView[stage]; return <button key={stage} type="button" onClick={() => setFilterStage(stage)} className="card" style={{ padding: 16, textAlign: 'center', borderColor: filterStage === stage ? view.color : view.border, background: filterStage === stage ? view.bg : '#fff' }}><div style={{ fontSize: 24, fontWeight: 900, color: view.color }}>{stats[stage] || 0}</div><div style={{ fontSize: 12, color: view.color, marginTop: 4, fontWeight: 900 }}>{stageLabels[stage]}</div><div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>{view.label}</div></button>; })}</div>
+              <div className="card"><div style={{ display: 'grid', gap: 16 }}>{visibleApplications.map(application => <PipelineRow key={application.id} application={application} vacancies={vacancies} candidates={candidates} analyze={analyze} loadQuestions={loadQuestions} updateStage={updateStage} openStageModal={openStageModal} />)}{!visibleApplications.length && <div style={{ textAlign: 'center', padding: 40, color: '#9ca3af' }}><Target size={48} style={{ marginBottom: 12, opacity: 0.5 }} /><p>Нет откликов под выбранные фильтры</p><button className="primary-button" onClick={() => setActiveTab('matching')} style={{ marginTop: 12 }}><Sparkles size={18} /> Вернуться к подбору</button></div>}</div></div>
+            </>
+          ) : (
+            /* Kanban доска */
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 16, minHeight: '600px' }}>
+              {stages.map(stage => {
+                const view = stageView[stage];
+                const stageApps = applications.filter(app => app.stage === stage);
+                const rules = stageRules[stage];
+                const StageIcon = rules?.icon || Target;
+                
+                return (
+                  <div
+                    key={stage}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, stage)}
+                    style={{
+                      background: '#f8fafc',
+                      borderRadius: 16,
+                      padding: 16,
+                      border: `2px dashed ${view.border}`,
+                      minHeight: '500px',
+                      display: 'flex',
+                      flexDirection: 'column'
+                    }}
+                  >
+                    {/* Заголовок колонки */}
+                    <div style={{ 
+                      padding: '8px 12px', 
+                      background: view.bg, 
+                      borderRadius: 10,
+                      marginBottom: 16,
+                      border: `2px solid ${view.border}`
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                        <StageIcon size={18} style={{ color: view.color }} />
+                        <span style={{ fontWeight: 800, color: view.color, fontSize: 14 }}>
+                          {rules?.title || stageLabels[stage]}
+                        </span>
+                      </div>
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        fontSize: 12,
+                        color: view.color,
+                        opacity: 0.9
+                      }}>
+                        <span>{rules?.description}</span>
+                        <span style={{ 
+                          background: view.color, 
+                          color: '#fff',
+                          padding: '2px 8px',
+                          borderRadius: 12,
+                          fontWeight: 700
+                        }}>
+                          {stageApps.length}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Карточки кандидатов */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
+                      {stageApps.map(application => {
+                        const candidate = candidates.find(c => c.id === application.candidate_id);
+                        const vacancy = vacancies.find(v => v.id === application.vacancy_id);
+                        
+                        return (
+                          <div
+                            key={application.id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, application)}
+                            onClick={() => openStageModal(application)}
+                            style={{
+                              background: '#fff',
+                              borderRadius: 12,
+                              padding: 14,
+                              border: `2px solid ${view.border}`,
+                              boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                              cursor: 'grab',
+                              transition: 'all 0.2s',
+                              opacity: draggedApp?.id === application.id ? 0.5 : 1
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = 'translateY(-2px)';
+                              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.12)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = 'translateY(0)';
+                              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                              <div className="candidate-avatar" style={{ width: 36, height: 36, fontSize: 14 }}>
+                                {initials(candidate?.full_name || '?')}
+                              </div>
+                              <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 700, fontSize: 13 }}>
+                                  {candidate?.full_name || 'Кандидат'}
+                                </div>
+                                <div style={{ fontSize: 11, color: '#64748b' }}>
+                                  #{application.id}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div style={{ 
+                              padding: 8, 
+                              background: '#f1f5f9', 
+                              borderRadius: 8,
+                              fontSize: 11,
+                              color: '#475569'
+                            }}>
+                              {vacancy?.title || 'Вакансия'}
+                            </div>
+                            
+                            {application.ai_analysis && (
+                              <div style={{ 
+                                marginTop: 8, 
+                                padding: 6, 
+                                background: application.ai_analysis.score >= 70 ? '#dcfce7' : application.ai_analysis.score >= 45 ? '#fef3c7' : '#fee2e2',
+                                borderRadius: 6,
+                                fontSize: 11,
+                                fontWeight: 700,
+                                color: application.ai_analysis.score >= 70 ? '#166534' : application.ai_analysis.score >= 45 ? '#92400e' : '#991b1b',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 4
+                              }}>
+                                <Award size={12} />
+                                Score: {application.ai_analysis.score}%
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                      
+                      {stageApps.length === 0 && (
+                        <div style={{ 
+                          padding: 20, 
+                          textAlign: 'center', 
+                          color: '#94a3b8',
+                          fontSize: 13,
+                          border: '2px dashed #e2e8f0',
+                          borderRadius: 12,
+                          background: 'rgba(248,250,252,0.5)'
+                        }}>
+                          📭 Пусто
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </>
       )}
 
