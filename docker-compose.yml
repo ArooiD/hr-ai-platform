@@ -149,7 +149,7 @@ services:
       - "11434:11434"
 
   mineru:
-    image: mineru:latest
+    image: alexsuntop/mineru:3.1.0
     container_name: hr-ai-mineru
     restart: unless-stopped
     environment:
