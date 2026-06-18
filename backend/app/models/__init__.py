@@ -5,6 +5,7 @@ from app.models.db_models import (
     ApplicationModel,
     VacancyStatus,
     ApplicationStage,
+    CandidateStatus,
 )
 
 __all__ = [
@@ -13,4 +14,5 @@ __all__ = [
     "ApplicationModel",
     "VacancyStatus",
     "ApplicationStage",
+    "CandidateStatus",
 ]

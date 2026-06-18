@@ -39,6 +39,7 @@ class CandidateCreate(BaseModel):
     skills: List[str] = Field(default_factory=list)
     experience_years: int = 0
     resume_text: str = ""
+    status: str = "active"
 
 
 class Candidate(CandidateCreate):
@@ -52,6 +53,7 @@ class CandidateUpdate(BaseModel):
     skills: List[str] | None = None
     experience_years: int | None = None
     resume_text: str | None = None
+    status: str | None = None
 
 
 class ApplicationCreate(BaseModel):

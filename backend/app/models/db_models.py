@@ -20,6 +20,12 @@ class ApplicationStage(str, enum.Enum):
     rejected = "rejected"
 
 
+class CandidateStatus(str, enum.Enum):
+    active = "active"
+    reserve = "reserve"
+    hired = "hired"
+
+
 class VacancyModel(Base):
     __tablename__ = "vacancies"
 
@@ -47,6 +53,7 @@ class CandidateModel(Base):
     skills = Column(Text, default="")  # JSON-like string separated by commas
     experience_years = Column(Integer, default=0)
     resume_text = Column(Text, nullable=True)
+    status = Column(Enum(CandidateStatus), default=CandidateStatus.active)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

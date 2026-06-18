@@ -31,3 +31,9 @@ def update_candidate(candidate_id: int, payload: CandidateUpdate, db: Session = 
 def delete_candidate(candidate_id: int, db: Session = Depends(get_db)):
     """Удалить кандидата"""
     return CandidateService.delete_candidate(db, candidate_id)
+
+
+@router.patch("/{candidate_id}/status", response_model=Candidate)
+def set_candidate_status(candidate_id: int, status: str, db: Session = Depends(get_db)):
+    """Установить статус кандидата (active, reserve, hired)"""
+    return CandidateService.set_candidate_status(db, candidate_id, status)

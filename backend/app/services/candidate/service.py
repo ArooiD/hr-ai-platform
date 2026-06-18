@@ -91,3 +91,23 @@ class CandidateService:
         candidate = get_candidate_or_404(db, candidate_id)
         delete_candidate(db, candidate)
         return {"status": "deleted", "candidate_id": candidate_id}
+    
+    @staticmethod
+    def set_candidate_status(db: Session, candidate_id: int, status: str) -> Candidate:
+        """Установить статус кандидата"""
+        from app.models import CandidateStatus
+        
+        # Валидация статуса
+        valid_statuses = [s.value for s in CandidateStatus]
+        if status not in valid_statuses:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Недопустимый статус. Допустимые: {', '.join(valid_statuses)}"
+            )
+        
+        candidate = get_candidate_or_404(db, candidate_id)
+        candidate.status = status
+        db.commit()
+        db.refresh(candidate)
+        
+        return Candidate.model_validate(CandidateService._normalize_candidate(candidate))
