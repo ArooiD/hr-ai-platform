@@ -21,6 +21,12 @@ def list_candidates(db: Session = Depends(get_db)):
     return CandidateService.list_candidates(db)
 
 
+@router.get("/{candidate_id}", response_model=Candidate)
+def get_candidate(candidate_id: int, db: Session = Depends(get_db)):
+    """Получить кандидата по ID"""
+    return CandidateService.get_candidate(db, candidate_id)
+
+
 @router.put("/{candidate_id}", response_model=Candidate)
 def update_candidate(candidate_id: int, payload: CandidateUpdate, db: Session = Depends(get_db)):
     """Обновить кандидата"""
