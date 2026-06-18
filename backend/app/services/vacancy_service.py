@@ -4,6 +4,8 @@ from app.repositories import vacancy_repository
 from app.schemas import Vacancy, VacancyCreate
 from app.services.mapper_service import vacancy_to_schema
 from app.services.text_service import clean_string, join_clean_list
+from app.services.notification_service import notification_service
+from app.schemas import NotificationType
 
 
 def list_vacancies(db: Session) -> list[Vacancy]:
@@ -39,6 +41,17 @@ def update_vacancy(db: Session, vacancy_id: int, payload: VacancyCreate) -> Vaca
 
 def close_vacancy(db: Session, vacancy_id: int) -> Vacancy:
     vacancy = vacancy_repository.get_vacancy_or_404(db, vacancy_id)
+    vacancy_schema = vacancy_to_schema(vacancy)
+    
+    # Создаём уведомление о закрытии вакансии
+    notification_service.create_notification(
+        notification_type=NotificationType.VACANCY_CLOSED,
+        title="Вакансия закрыта",
+        message=f'Вакансия "{vacancy_schema.title}" закрыта',
+        entity_type="vacancy",
+        entity_id=vacancy.id
+    )
+    
     return vacancy_to_schema(vacancy_repository.close_vacancy(db, vacancy))
 
 

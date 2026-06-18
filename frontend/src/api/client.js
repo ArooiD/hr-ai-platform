@@ -76,3 +76,21 @@ export const hrApi = {
 export const dashboardApi = {
   getDashboard: () => apiRequest('/api/dashboard'),
 };
+
+// API для уведомлений
+export const notificationsApi = {
+  getNotifications: (limit = 20, unreadOnly = false) => 
+    apiRequest(`/api/notifications?limit=${limit}&unread_only=${unreadOnly}`),
+  
+  getUnreadCount: () => 
+    apiRequest('/api/notifications/unread-count'),
+  
+  markAsRead: (notificationId) => 
+    apiRequest(`/api/notifications/${notificationId}/read`, { method: 'POST' }),
+  
+  markAllAsRead: () => 
+    apiRequest('/api/notifications/read-all', { method: 'POST' }),
+  
+  deleteNotification: (notificationId) => 
+    apiRequest(`/api/notifications/${notificationId}`, { method: 'DELETE' }),
+};

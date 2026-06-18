@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, X, CheckCircle2, XCircle, Clock, UserPlus, BriefcaseBusiness } from 'lucide-react';
+import { Bell, X, CheckCircle2, Clock, UserPlus, BriefcaseBusiness } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { hrApi } from '../../api/client';
+import { notificationsApi } from '../../api/client';
 
 export default function TopbarNotifications() {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,58 +23,63 @@ export default function TopbarNotifications() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Загрузка уведомлений
+  // Загрузка уведомлений с backend
   const loadNotifications = async () => {
     try {
-      const [applications, vacancies] = await Promise.all([
-        hrApi.applications(),
-        hrApi.vacancies()
+      const [notifsData, countData] = await Promise.all([
+        notificationsApi.getNotifications(20, false),
+        notificationsApi.getUnreadCount()
       ]);
 
-      const notifs = [];
-      
-      // Новые отклики
-      applications.forEach(app => {
-        const vacancy = vacancies.find(v => v.id === app.vacancy_id);
-        notifs.push({
-          id: `app-${app.id}`,
-          type: 'application',
-          title: 'Новый отклик',
-          message: `Поступил отклик на вакансию "${vacancy?.title || 'unknown'}"`,
-          time: new Date(),
-          unread: app.stage === 'new',
-          icon: UserPlus,
-          color: '#0b73ff',
-          action: () => navigate(`/recruitment`),
-          actionLabel: 'Посмотреть'
-        });
-      });
-
-      // Закрытые вакансии
-      vacancies.forEach(vacancy => {
-        if (vacancy.status === 'closed') {
-          notifs.push({
-            id: `vacancy-${vacancy.id}`,
-            type: 'vacancy_closed',
-            title: 'Вакансия закрыта',
-            message: `Вакансия "${vacancy.title}" закрыта`,
-            time: new Date(),
-            unread: false,
-            icon: CheckCircle2,
-            color: '#16a34a',
-            action: () => navigate(`/vacancies/${vacancy.id}`),
-            actionLabel: 'Открыть'
-          });
+      // Преобразуем данные с backend в формат компонента
+      const notifs = notifsData.map(n => {
+        let icon = UserPlus;
+        let color = '#0b73ff';
+        
+        switch (n.type) {
+          case 'application_new':
+            icon = UserPlus;
+            color = '#0b73ff';
+            break;
+          case 'vacancy_closed':
+            icon = CheckCircle2;
+            color = '#16a34a';
+            break;
+          case 'application_stage_changed':
+            icon = BriefcaseBusiness;
+            color = '#f59e0b';
+            break;
+          default:
+            icon = UserPlus;
+            color = '#0b73ff';
         }
+
+        return {
+          id: n.id,
+          type: n.type,
+          title: n.title,
+          message: n.message,
+          time: new Date(n.created_at),
+          unread: !n.is_read,
+          icon,
+          color,
+          action: () => {
+            if (n.entity_type === 'vacancy' && n.entity_id) {
+              navigate(`/vacancies/${n.entity_id}`);
+            } else if (n.entity_type === 'application' && n.entity_id) {
+              navigate(`/recruitment`);
+            }
+          },
+          actionLabel: 'Открыть'
+        };
       });
 
-      // Сортировка по времени (новые сначала)
-      notifs.sort((a, b) => b.time - a.time);
-      
       setNotifications(notifs.slice(0, 10));
-      setUnreadCount(notifs.filter(n => n.unread).length);
+      setUnreadCount(countData.count);
     } catch (err) {
       console.error('Failed to load notifications:', err);
+      setNotifications([]);
+      setUnreadCount(0);
     } finally {
       setLoading(false);
     }
@@ -86,16 +91,26 @@ export default function TopbarNotifications() {
     }
   }, [isOpen]);
 
-  const markAsRead = (id) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === id ? { ...n, unread: false } : n)
-    );
-    setUnreadCount(prev => Math.max(0, prev - 1));
+  const markAsRead = async (id) => {
+    try {
+      await notificationsApi.markAsRead(id);
+      setNotifications(prev => 
+        prev.map(n => n.id === id ? { ...n, unread: false } : n)
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (err) {
+      console.error('Failed to mark notification as read:', err);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
-    setUnreadCount(0);
+  const markAllAsRead = async () => {
+    try {
+      await notificationsApi.markAllAsRead();
+      setNotifications(prev => prev.map(n => ({ ...n, unread: false })));
+      setUnreadCount(0);
+    } catch (err) {
+      console.error('Failed to mark all notifications as read:', err);
+    }
   };
 
   const formatTime = (date) => {
