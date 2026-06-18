@@ -6,11 +6,11 @@ class DashboardService:
     
     @staticmethod
     def get_dashboard(db):
-        from app.repositories.vacancy_repo import list_vacancies
+        from app.repositories.vacancy_repo import VacancyRepository
         from app.repositories.candidate_repository import list_candidates
         from app.repositories.application_repository import list_applications
         
-        vacancies = list_vacancies(db)
+        vacancies = VacancyRepository.list(db)
         candidates = list_candidates(db)
         applications = list_applications(db)
         
