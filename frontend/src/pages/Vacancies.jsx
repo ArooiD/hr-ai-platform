@@ -10,6 +10,7 @@ const ITEMS_PER_PAGE = 12; // Количество элементов на ст�
 const VacanciesPage = () => {
   const navigate = useNavigate();
   const [vacancies, setVacancies] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showWizard, setShowWizard] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -29,8 +30,12 @@ const VacanciesPage = () => {
 
   const loadVacancies = async () => {
     try {
+      // Загружаем все вакансии (без пагинации от API) для работы с поиском на frontend
       const data = await hrApi.vacancies();
-      setVacancies(data);
+      
+      // API теперь возвращает пагинированный ответ: {data: [...], total: N, page: N, ...}
+      setVacancies(data.data || data); // Поддержка обоих форматов
+      setTotalCount(data.total || data.length || 0);
     } catch (err) {
       console.error('Failed to load vacancies:', err);
     } finally {
@@ -99,7 +104,7 @@ const VacanciesPage = () => {
     [vacancies, debouncedSearch]
   );
 
-  // Вычисляем данные для текущей страницы
+  // Вычисляем данные для текущей страницы (после фильтрации)
   const totalPages = Math.ceil(filteredVacancies.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;

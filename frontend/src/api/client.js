@@ -35,7 +35,11 @@ export const authApi = {
 // API для работы с вакансиями, кандидатами, откликами
 export const hrApi = {
   dashboard: () => apiRequest('/api/dashboard'),
-  vacancies: () => apiRequest('/api/vacancies'),
+  vacancies: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const path = `/api/vacancies${queryString ? `?${queryString}` : ''}`;
+    return apiRequest(path);
+  },
   candidates: () => apiRequest('/api/candidates'),
   applications: () => apiRequest('/api/applications'),
   seedDemo: () => apiRequest('/api/demo-seed', { method: 'POST' }),
