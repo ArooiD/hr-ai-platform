@@ -13,15 +13,15 @@ export default function CandidateDetailPage() {
   useEffect(() => {
     const loadCandidate = async () => {
       try {
-        const allCandidates = await hrApi.candidates();
-        const found = allCandidates.find(c => c.id === parseInt(id));
-        if (found) {
-          setCandidate(found);
-        } else {
-          setError('Кандидат не найден');
-        }
+        // Загружаем конкретного кандидата по ID
+        const candidateData = await hrApi.getCandidate(parseInt(id));
+        setCandidate(candidateData);
       } catch (err) {
-        setError('Ошибка при загрузке кандидата');
+        if (err.message.includes('404')) {
+          setError('Кандидат не найден');
+        } else {
+          setError('Ошибка при загрузке кандидата: ' + err.message);
+        }
       } finally {
         setLoading(false);
       }
@@ -56,7 +56,9 @@ export default function CandidateDetailPage() {
       <div className="page-container">
         <div className="empty-state">
           <p>{error || 'Кандидат не найден'}</p>
-          <button onClick={() => navigate('/candidates')}>← Вернуться к списку</button>
+          <button className="primary-button" onClick={() => navigate('/candidates')}>
+            ← Вернуться к списку
+          </button>
         </div>
       </div>
     );
