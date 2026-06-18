@@ -1,73 +1,123 @@
-"""AI-powered candidate analysis and interview question generation."""
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from app.schemas import Candidate, Vacancy, AiAnalysis
+"""AI Analyzer - Анализ кандидатов и генерация вопросов"""
+from typing import Dict, List, Optional
 
 
-# Анализ соответствия кандидата вакансии
-def analyze_candidate(candidate: "Candidate", vacancy: "Vacancy") -> "AiAnalysis":
-    """Analyze candidate's fit for a vacancy using AI logic.
+class AIAnalyzer:
+    """Сервис для AI анализа кандидатов"""
     
-    Args:
-        candidate: Candidate object with skills and experience
-        vacancy: Vacancy object with required skills
+    # Список поддерживаемых навыков
+    KNOWN_SKILLS = [
+        "Python", "Java", "JavaScript", "TypeScript", "React", "Vue", "Angular",
+        "Node.js", "Django", "Flask", "FastAPI", "Spring", "PHP", "C#", "Go",
+        "PostgreSQL", "MySQL", "MongoDB", "Redis",
+        "Docker", "Kubernetes", "AWS", "Azure", "Git", "Linux",
+        "HTML", "CSS", "SASS"
+    ]
+    
+    @staticmethod
+    def analyze_candidate(candidate: Dict, vacancy: Dict) -> Dict:
+        """
+        Проанализировать соответствие кандидата вакансии
         
-    Returns:
-        AiAnalysis object with score, matched/missing skills, and recommendation
-    """
-    from app.schemas import AiAnalysis
-    from app.services.ai.utils import normalize_skill
-    
-    candidate_skills = {normalize_skill(skill) for skill in candidate.skills}
-    required_skills = {normalize_skill(skill) for skill in vacancy.required_skills}
-
-    matched = sorted(candidate_skills & required_skills)
-    missing = sorted(required_skills - candidate_skills)
-    score = 50 if not required_skills else round(len(matched) / len(required_skills) * 100)
-
-    if score >= 80:
-        recommendation = "Кандидат хорошо подходит. Рекомендуется техническое интервью."
-    elif score >= 50:
-        recommendation = "Кандидат частично подходит. Рекомендуется дополнительный скрининг."
-    else:
-        recommendation = "Кандидат слабо соответствует вакансии. Рекомендуется отказ или резерв."
-
-    summary = (
-        f"Кандидат {candidate.full_name} имеет {candidate.experience_years} лет опыта. "
-        f"Совпадающие навыки: {', '.join(matched) if matched else 'нет'}. "
-        f"Недостающие навыки: {', '.join(missing) if missing else 'нет'}."
-    )
-
-    return AiAnalysis(
-        score=score,
-        matched_skills=matched,
-        missing_skills=missing,
-        summary=summary,
-        recommendation=recommendation,
-    )
-
-
-# Генерация вопросов для интервью на основе навыков
-def generate_interview_questions(candidate: "Candidate", vacancy: "Vacancy") -> list[str]:
-    """Generate interview questions based on candidate and vacancy.
-    
-    Args:
-        candidate: Candidate object
-        vacancy: Vacancy object with required skills
+        Args:
+            candidate: Данные кандидата
+            vacancy: Данные вакансии
+            
+        Returns:
+            Dict с анализом (score, matched_skills, missing_skills, summary, recommendation)
+        """
+        # Нормализация навыков
+        candidate_skills = [s.lower().strip() for s in candidate.get("skills", [])]
+        required_skills = [s.lower().strip() for s in vacancy.get("required_skills", [])]
         
-    Returns:
-        List of up to 8 interview questions
-    """
-    questions: list[str] = []
+        # Поиск пересечений
+        matched_skills = []
+        missing_skills = []
+        
+        for req_skill in required_skills:
+            if any(req_skill in cand_skill for cand_skill in candidate_skills):
+                matched_skills.append(req_skill)
+            else:
+                missing_skills.append(req_skill)
+        
+        # Расчёт score
+        if len(required_skills) > 0:
+            score = int(len(matched_skills) / len(required_skills) * 100)
+        else:
+            score = 0
+        
+        # Генерация summary
+        summary = (
+            f"Кандидат имеет {len(matched_skills)} из {len(required_skills)} "
+            f"необходимых навыков ({score}% совпадение)"
+        )
+        
+        # Генерация рекомендации
+        if score >= 80:
+            recommendation = "хорошо подходит для позиции"
+        elif score >= 50:
+            recommendation = "частично подходит для позиции"
+        else:
+            recommendation = "слабо подходит для позиции"
+        
+        return {
+            "score": score,
+            "matched_skills": matched_skills,
+            "missing_skills": missing_skills,
+            "summary": summary,
+            "recommendation": recommendation
+        }
+    
+    @staticmethod
+    def generate_interview_questions(candidate: Dict, vacancy: Dict, max_questions: int = 8) -> Dict:
+        """
+        Сгенерировать вопросы для интервью
+        
+        Args:
+            candidate: Данные кандидата
+            vacancy: Данные вакансии
+            max_questions: Максимальное количество вопросов
+            
+        Returns:
+            Dict со списком вопросов
+        """
+        questions = []
+        required_skills = vacancy.get("required_skills", [])
+        
+        # По 2 вопроса на каждый навык (максимум)
+        for skill in required_skills[:max_questions // 2]:
+            questions.append(
+                f"Расскажите о вашем опыте работы с {skill}. "
+                f"Какие проекты вы реализовывали с использованием этой технологии?"
+            )
+            questions.append(
+                f"Какие сложности вы сталкивались при работе с {skill} "
+                f"и как их преодолевали?"
+            )
+            
+            if len(questions) >= max_questions - 1:
+                break
+        
+        # Общий вопрос о соответствии
+        questions.append(
+            f"Почему вы считаете себя подходящим кандидатом на позицию "
+            f"'{vacancy.get('title', 'вакансию')}'? "
+            f"Какие ваши сильные стороны соответствуют требованиям?"
+        )
+        
+        return {"questions": questions[:max_questions]}
 
-    # 2 questions per required skill
-    for skill in vacancy.required_skills:
-        questions.append(f"Расскажите о практическом опыте с {skill}.")
-        questions.append(f"Какие сложные задачи вы решали с использованием {skill}?")
 
-    # 1 general question about fit
-    questions.append(f"Почему ваш опыт подходит для позиции «{vacancy.title}»?")
+# Глобальный экземпляр
+ai_analyzer = AIAnalyzer()
 
-    return questions[:8]
+
+# Для обратной совместимости
+def analyze_candidate(candidate: Dict, vacancy: Dict) -> Dict:
+    """Функция-обёртка для обратной совместимости"""
+    return ai_analyzer.analyze_candidate(candidate, vacancy)
+
+
+def generate_interview_questions(candidate: Dict, vacancy: Dict, max_questions: int = 8) -> Dict:
+    """Функция-обёртка для обратной совместимости"""
+    return ai_analyzer.generate_interview_questions(candidate, vacancy, max_questions)

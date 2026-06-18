@@ -1,6 +1,4 @@
-"""
-Notification Service - Управление уведомлениями
-"""
+"""Notification Service - Управление уведомлениями"""
 from datetime import datetime
 from typing import List, Optional
 from uuid import uuid4
