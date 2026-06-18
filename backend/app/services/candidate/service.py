@@ -20,8 +20,12 @@ class CandidateService:
     """Сервис для работы с кандидатами"""
     
     @staticmethod
-    def _normalize_candidate(candidate: dict) -> dict:
+    def _normalize_candidate(candidate) -> dict:
         """Нормализовать данные кандидата (преобразовать skills из строки в список)"""
+        # Преобразуем SQLAlchemy модель в dict
+        if hasattr(candidate, '__dict__'):
+            candidate = {k: v for k, v in candidate.__dict__.items() if not k.startswith('_')}
+        
         if isinstance(candidate, dict):
             skills = candidate.get('skills', [])
             if isinstance(skills, str):
