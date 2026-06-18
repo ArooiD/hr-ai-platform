@@ -106,6 +106,8 @@ frontend/src/
   - Закрытие вакансий
   - Готовность AI анализа
 - **Юнит тесты** — backend (pytest) и frontend (vitest)
+- **Интеграционные тесты сервисов** — покрытие нормализации данных и Service → Repository интеграции
+- **Нормализация данных из БД** — автоматическое преобразование строк в списки для skills/required_skills
 
 ### 🔄 В работе
 - Интеграция с реальным AI API для парсинга (сейчас mock данные)
@@ -132,12 +134,19 @@ backend/tests/
 ├── unit/
 │   ├── test_vacancy_service.py
 │   ├── test_candidate_service.py
-│   └── test_application_service.py
+│   ├── test_application_service.py
+│   └── test_services_integration.py  # Интеграционные тесты сервисов
 └── integration/
     ├── test_api_vacancies.py
     ├── test_api_candidates.py
     └── test_api_applications.py
 ```
+
+**Интеграционные тесты сервисов** (`tests/unit/test_services_integration.py`):
+- Проверяют нормализацию данных из БД (строки → списки)
+- Тестируют Service → Repository интеграцию
+- Покрывают DashboardService
+- Поймают проблемы с API репозиториев при рефакторинге
 
 ### Frontend тесты
 
@@ -390,10 +399,35 @@ npm run test
 ### При исправлении багов
 
 1. Воспроизвести баг
-2. Написать тест, который падает
+2. Написать тест, который падает (**если теста нет — создать!** )
 3. Исправить код
 4. Убедиться что тест проходит
 5. Проверить что другие тесты не сломались
+6. **Добавить тест в интеграционные тесты если баг был в Service → Repository слое**
+
+### Нормализация данных из БД
+
+**Проблема:** Данные в PostgreSQL хранятся как строки (`"Python,Django"`), а Pydantic ожидает списки (`["Python", "Django"]`).
+
+**Решение:** В каждом сервисе добавить метод нормализации:
+
+```python
+# services/vacancy/service.py
+@staticmethod
+def _normalize_vacancy(vacancy) -> dict:
+    """Преобразовать SQLAlchemy модель в dict и нормализовать required_skills"""
+    if hasattr(vacancy, '__dict__'):
+        vacancy = {k: v for k, v in vacancy.__dict__.items() if not k.startswith('_')}
+    
+    if isinstance(vacancy, dict):
+        skills = vacancy.get('required_skills', [])
+        if isinstance(skills, str):
+            vacancy = vacancy.copy()
+            vacancy['required_skills'] = [s.strip() for s in skills.split(',') if s.strip()]
+    return vacancy
+```
+
+**Важно:** Всегда проверять что Repository возвращает (SQLAlchemy модель или dict) перед нормализацией!
 
 ### Коммиты
 
@@ -444,8 +478,9 @@ test(vacancy): добавить юнит тесты для сервиса
 11. ✅ Notification system
 12. ✅ MVC refactoring
 13. ✅ Unit tests
-14. 🔄 Real AI API integration
-15. 🔄 Integration tests
-16. 🔄 E2E tests
-17. 🔄 Advanced analytics
-18. 🔄 Email notifications
+14. ✅ Интеграционные тесты сервисов (нормализация данных)
+15. 🔄 Real AI API integration
+16. 🔄 Integration tests (API layer)
+17. 🔄 E2E tests
+18. 🔄 Advanced analytics
+19. 🔄 Email notifications
