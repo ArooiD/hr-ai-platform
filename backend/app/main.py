@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api.router import api_router
 from app.api.websockets import router as websocket_router
@@ -20,8 +21,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Добавляем middleware для RESTful caching headers
-app.add_middleware(restful_cache_middleware)
+# Добавляем middleware для RESTful caching headers через add_api_route
+# Используем обёртку для корректной работы с FastAPI
+class RestfulCacheMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        return await restful_cache_middleware(request, call_next)
+
+app.add_middleware(RestfulCacheMiddleware)
 
 
 @app.get("/health")
