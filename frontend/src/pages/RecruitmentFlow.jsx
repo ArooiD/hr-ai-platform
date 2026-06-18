@@ -64,6 +64,7 @@ export default function RecruitmentPage() {
   const [questions, setQuestions] = useState([]);
   const [message, setMessage] = useState('');
   const [showLinkModal, setShowLinkModal] = useState(false);
+  const [showCloseVacancyModal, setShowCloseVacancyModal] = useState(false);
   const [filterStage, setFilterStage] = useState('all');
   const [activeTab, setActiveTab] = useState('matching');
 
@@ -125,6 +126,19 @@ export default function RecruitmentPage() {
     await hrApi.updateApplicationStage(id, stage);
     setMessage(`Кандидат переведён на этап: ${stageLabels[stage]}`);
     await load();
+  };
+
+  const closeVacancy = async () => {
+    if (!selectedVacancyObject) return;
+    try {
+      await hrApi.closeVacancy(selectedVacancyObject.id);
+      setMessage(`Вакансия "${selectedVacancyObject.title}" закрыта`);
+      setShowCloseVacancyModal(false);
+      await load();
+    } catch (err) {
+      console.error('Ошибка при закрытии вакансии:', err);
+      setMessage('Ошибка при закрытии вакансии');
+    }
   };
 
   const loadQuestions = async (id) => {
@@ -233,7 +247,11 @@ export default function RecruitmentPage() {
 
           <div style={{ border: '1px solid var(--line)', borderRadius: 18, background: '#fff', padding: 18, minHeight: 150 }}>
             {matchingMode === 'vacancy' ? (
-              <SelectedVacancyPanel vacancy={selectedVacancyObject} stats={selectedVacancyStats} />
+              <SelectedVacancyPanel 
+                vacancy={selectedVacancyObject} 
+                stats={selectedVacancyStats}
+                onCloseClick={() => setShowCloseVacancyModal(true)}
+              />
             ) : (
               <SelectedCandidatePanel candidate={selectedCandidateObject} stats={selectedCandidateStats} />
             )}
@@ -272,6 +290,64 @@ export default function RecruitmentPage() {
       {activeTab === 'questions' && <div className="card"><h2 style={{ marginBottom: 16 }}><FileQuestion size={20} style={{ marginRight: 8 }} /> Вопросы для интервью</h2><div className="question-list">{questions.map((question, idx) => <div key={idx}>{idx + 1}. {question}</div>)}{!questions.length && <p style={{ color: '#9ca3af', textAlign: 'center', padding: 40 }}>Нажмите "Вопросы интервью" у отклика, чтобы получить AI-план интервью</p>}</div></div>}
 
       {showLinkModal && <div className="modal-overlay" onClick={() => setShowLinkModal(false)}><div className="modal-content" onClick={(e) => e.stopPropagation()}><div className="modal-header"><h2><CheckCircle2 size={20} style={{ marginRight: 8 }} /> Создать отклик</h2><button className="icon-button" onClick={() => setShowLinkModal(false)}>✕</button></div><div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}><div className="form-group"><label>Вакансия</label><select value={selectedVacancy} onChange={(e) => setSelectedVacancy(e.target.value)}><option value="">Выберите вакансию</option>{vacancies.filter(v => v.status !== 'closed').map(v => <option key={v.id} value={v.id}>{v.title}</option>)}</select></div><div className="form-group"><label>Кандидат</label><select value={selectedCandidate} onChange={(e) => setSelectedCandidate(e.target.value)}><option value="">Выберите кандидата</option>{candidates.map(c => <option key={c.id} value={c.id}>{c.full_name}</option>)}</select></div><div className="form-actions"><button type="button" className="secondary-button" onClick={() => setShowLinkModal(false)}>Отмена</button><button type="button" className="primary-button" onClick={createApplication} disabled={!selectedVacancy || !selectedCandidate} style={{ opacity: (!selectedVacancy || !selectedCandidate) ? 0.5 : 1 }}>Создать отклик</button></div></div></div></div>}
+
+      {showCloseVacancyModal && selectedVacancyObject && (
+        <div className="modal-overlay" onClick={() => setShowCloseVacancyModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 500 }}>
+            <div className="modal-header">
+              <h2><AlertTriangle size={20} style={{ marginRight: 8, color: '#dc2626' }} /> Закрыть вакансию</h2>
+              <button className="icon-button" onClick={() => setShowCloseVacancyModal(false)}>✕</button>
+            </div>
+            <div style={{ padding: '8px 0 20px' }}>
+              <p style={{ fontSize: 15, marginBottom: 16 }}>
+                Вы собираетесь закрыть вакансию <strong>"{selectedVacancyObject.title}"</strong>.
+              </p>
+              <div style={{ 
+                padding: 16, 
+                background: '#fef2f2', 
+                borderRadius: 12,
+                border: '1px solid #fecaca',
+                marginBottom: 20
+              }}>
+                <p style={{ margin: 0, color: '#991b1b', fontSize: 14 }}>
+                  ⚠️ После закрытия:
+                </p>
+                <ul style={{ 
+                  margin: '10px 0 0', 
+                  paddingLeft: 20, 
+                  color: '#7f1d1d',
+                  fontSize: 13
+                }}>
+                  <li>Нельзя будет создать новые отклики</li>
+                  <li>Кандидаты увидят, что вакансия закрыта</li>
+                  <li>Активные отклики останутся в pipeline</li>
+                </ul>
+              </div>
+            </div>
+            <div className="form-actions">
+              <button 
+                type="button" 
+                className="secondary-button" 
+                onClick={() => setShowCloseVacancyModal(false)}
+              >
+                Отмена
+              </button>
+              <button 
+                type="button" 
+                className="primary-button" 
+                onClick={closeVacancy}
+                style={{ 
+                  background: '#dc2626', 
+                  borderColor: '#dc2626',
+                  hover: '#b91c1c'
+                }}
+              >
+                🔒 Закрыть вакансию
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -292,10 +368,67 @@ function CandidateSelector({ candidateStats, selectedCandidateCenter, search, se
   return <div><h2 style={{ margin: '0 0 6px', fontSize: 20 }}>Кандидаты</h2><p style={{ margin: '0 0 12px', color: '#64748b', fontSize: 13 }}>Список кандидатов не раздувает страницу.</p><SearchBox value={search} onChange={setSearch} placeholder="Поиск кандидата, email или навыка..." /><div style={compactListStyle}>{candidateStats.map(({ candidate, active }) => { const selected = selectedCandidateCenter === String(candidate.id); return <button key={candidate.id} type="button" onClick={() => onSelect(candidate.id)} style={{ textAlign: 'left', border: selected ? '2px solid #0b73ff' : '1px solid var(--line)', borderRadius: 14, background: selected ? '#eff6ff' : '#fff', padding: 12, cursor: 'pointer' }}><div style={{ display: 'flex', gap: 10, alignItems: 'center' }}><div className="candidate-avatar" style={{ width: 38, height: 38, margin: 0, fontSize: 13 }}>{initials(candidate.full_name)}</div><div><strong>{candidate.full_name}</strong><div style={{ color: '#64748b', fontSize: 12 }}>{candidate.experience_years || 0} лет опыта · {active} в работе</div></div></div><div className="skills" style={{ marginTop: 8 }}>{(candidate.skills || []).slice(0, 3).map(skill => <span key={skill} className="skill-tag">{skill}</span>)}</div></button>; })}{!candidateStats.length && <SmallEmpty text="Ничего не найдено" />}</div></div>;
 }
 
-function SelectedVacancyPanel({ vacancy, stats }) {
+function SelectedVacancyPanel({ vacancy, stats, onCloseClick }) {
   if (!vacancy) return <Empty icon={<Briefcase size={38} />} text="Выберите вакансию слева" />;
   const status = vacancyStatuses[vacancy.status] || vacancyStatuses.open;
-  return <div><div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}><div><h2 style={{ margin: 0 }}>{vacancy.title}</h2><p style={{ margin: '4px 0 0', color: '#64748b' }}>{vacancy.department}</p></div><span style={{ borderRadius: 999, padding: '5px 12px', background: status.bg, color: status.color, fontSize: 12, fontWeight: 900 }}>{status.label}</span></div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 14, marginBottom: 12 }}><MiniStat label="откликов" value={stats?.total || 0} /><MiniStat label="в работе" value={stats?.active || 0} /><MiniStat label="нанято" value={stats?.hired || 0} /></div><div className="skills">{(vacancy.required_skills || []).slice(0, 8).map(skill => <span key={skill} className="skill-tag">{skill}</span>)}</div><button className="secondary-button" style={{ marginTop: 14 }}>Открыть карточку вакансии</button></div>;
+  const isClosed = vacancy.status === 'closed';
+  
+  return <div>
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
+      <div>
+        <h2 style={{ margin: 0 }}>{vacancy.title}</h2>
+        <p style={{ margin: '4px 0 0', color: '#64748b' }}>{vacancy.department}</p>
+      </div>
+      <span style={{ borderRadius: 999, padding: '5px 12px', background: status.bg, color: status.color, fontSize: 12, fontWeight: 900 }}>
+        {status.label}
+      </span>
+    </div>
+    
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginTop: 14, marginBottom: 12 }}>
+      <MiniStat label="откликов" value={stats?.total || 0} />
+      <MiniStat label="в работе" value={stats?.active || 0} />
+      <MiniStat label="нанято" value={stats?.hired || 0} />
+    </div>
+    
+    <div className="skills">
+      {(vacancy.required_skills || []).slice(0, 8).map(skill => (
+        <span key={skill} className="skill-tag">{skill}</span>
+      ))}
+    </div>
+    
+    <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+      <button className="secondary-button" style={{ flex: 1 }}>Открыть карточку вакансии</button>
+      {!isClosed && (
+        <button 
+          className="secondary-button" 
+          onClick={onCloseClick}
+          style={{ 
+            flex: 1, 
+            background: '#fef2f2', 
+            color: '#dc2626',
+            borderColor: '#fecaca'
+          }}
+        >
+          🔒 Закрыть вакансию
+        </button>
+      )}
+      {isClosed && (
+        <button 
+          className="secondary-button" 
+          disabled
+          style={{ 
+            flex: 1, 
+            background: '#f1f5f9', 
+            color: '#94a3b8',
+            borderColor: '#e2e8f0',
+            cursor: 'not-allowed'
+          }}
+        >
+          Вакансия закрыта
+        </button>
+      )}
+    </div>
+  </div>;
 }
 
 function SelectedCandidatePanel({ candidate, stats }) {
