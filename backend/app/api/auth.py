@@ -15,4 +15,4 @@ class LoginRequest(BaseModel):
 
 @router.post("/login")
 def login(payload: LoginRequest):
-    return auth_service.authenticate(payload.login, payload.password)
+    return auth_service.login(payload.login, payload.password)
