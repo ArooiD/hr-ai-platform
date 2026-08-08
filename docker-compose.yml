@@ -46,7 +46,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./infra/nginx:/etc/nginx/conf.d:ro
+      - ./nginx:/etc/nginx/conf.d:ro
     depends_on:
       - frontend
       - backend
