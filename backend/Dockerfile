@@ -23,8 +23,10 @@ RUN pip install --upgrade pip && \
 
 # Copy application code
 COPY backend/ app/
-COPY backend/alembic/ app/alembic/
+
+# Copy migration files to root (alembic expects them here)
 COPY backend/alembic.ini .
+COPY backend/alembic/ alembic/
 COPY backend/run_migrations.py .
 
 # Create non-root user
