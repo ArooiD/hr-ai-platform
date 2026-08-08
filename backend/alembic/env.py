@@ -1,7 +1,12 @@
 import os
+import sys
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from alembic import context
+
+# Add parent directory to sys.path so we can import app.*
+# This is needed when alembic runs from /workspace/backend but app is in /workspace/backend/app/
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Import our models
 from app.database import Base
