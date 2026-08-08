@@ -53,7 +53,7 @@ services:
       - minio
 
   postgres:
-    image: postgres:16
+    image: postgres:latest
     environment:
       POSTGRES_DB: hr_platform
       POSTGRES_USER: hradmin
