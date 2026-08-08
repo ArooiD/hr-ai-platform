@@ -4,6 +4,7 @@ from sqlalchemy import engine_from_config, pool
 from alembic import context
 
 # Import our models
+# Note: sys.path is configured in alembic.ini via prepend_sys_path = .:..
 from app.database import Base
 from app.models import VacancyModel, CandidateModel, ApplicationModel
 

@@ -43,6 +43,7 @@ def run_migrations():
         ["alembic", "upgrade", "head"],
         cwd=os.path.dirname(os.path.abspath(__file__)),
         capture_output=False,
+        env={**os.environ, "PYTHONPATH": os.path.dirname(os.path.abspath(__file__))},
     )
     
     if result.returncode != 0:
