@@ -22,7 +22,7 @@ RUN pip install --upgrade pip && \
     pip install -r requirements.txt
 
 # Copy application code
-COPY backend/ app/
+COPY backend/app ./app
 
 # Copy migration files to root (alembic expects them here)
 COPY backend/alembic.ini .

@@ -59,7 +59,7 @@ services:
       POSTGRES_USER: hradmin
       POSTGRES_PASSWORD: hradmin123
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+      - ./data/postgres:/var/lib/postgresql/18/docker
     ports:
       - "5432:5432"
 
