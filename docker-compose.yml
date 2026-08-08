@@ -1,11 +1,10 @@
 services:
   backend:
-    image: ghcr.io/darap2839/hr-ai-platform/backend:53406094ed3b18629518fef4f35d7a06722810b1
-#    image: python:3.12-slim
-    working_dir: /workspace/backend
-    volumes:
-      - .:/workspace
-    command: sh -c "pip install --no-cache-dir -r requirements.txt && python run_migrations.py && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    image: ghcr.io/darap2839/hr-ai-platform/backend:master
+#    working_dir: /workspace/backend
+#    volumes:
+#      - .:/workspace
+#    command: sh -c "pip install --no-cache-dir -r requirements.txt && python run_migrations.py && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
     environment:
       DATABASE_URL: postgresql://hradmin:hradmin123@postgres:5432/hr_platform
       DB_HOST: postgres
@@ -30,8 +29,8 @@ services:
       DEMO_USER_FULL_NAME: Дарья Попова
       DEMO_USER_ROLE: HR business partner
       DEMO_USER_DEPARTMENT: HR
-    expose:
-      - "8000"
+#    expose:
+#      - "8000"
     depends_on:
       - postgres
       - minio
@@ -39,18 +38,18 @@ services:
       - keycloak
 
   frontend:
-    image: node:22
-    working_dir: /workspace/frontend
-    volumes:
-      - .:/workspace
-    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    image: ghcr.io/darap2839/hr-ai-platform/frontend:master
+#    working_dir: /workspace/frontend
+#    volumes:
+#      - .:/workspace
+#    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
     environment:
       VITE_API_URL: ""
       VITE_KEYCLOAK_URL: http://localhost:8081
       VITE_KEYCLOAK_REALM: hr-ai
       VITE_KEYCLOAK_CLIENT_ID: hr-ai-frontend
-    expose:
-      - "5173"
+#    expose:
+#      - "5173"
     depends_on:
       - backend
 
