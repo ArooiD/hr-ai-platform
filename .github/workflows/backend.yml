@@ -4,17 +4,15 @@ run-name: "CI: Backend / ${{ github.ref_name }} / ${{ github.actor }}"
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
-      - develop
+    branches-ignore:
+      - 'gh-readonly-queue/**'
     paths:
       - 'backend/**'
       - 'docker/Dockerfile.backend'
       - '.github/workflows/backend.yml'
   pull_request:
-    branches:
-      - main
-      - develop
+    branches-ignore:
+      - 'gh-readonly-queue/**'
     paths:
       - 'backend/**'
       - 'docker/Dockerfile.backend'
