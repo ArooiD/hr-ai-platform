@@ -1,6 +1,7 @@
 services:
   backend:
-    image: python:3.12-slim
+    image: ghcr.io/darap2839/hr-ai-platform/backend:53406094ed3b18629518fef4f35d7a06722810b1
+#    image: python:3.12-slim
     working_dir: /workspace/backend
     volumes:
       - .:/workspace

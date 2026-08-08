@@ -8,14 +8,12 @@ on:
       - 'gh-readonly-queue/**'
     paths:
       - 'frontend/**'
-      - 'docker/Dockerfile.frontend'
       - '.github/workflows/frontend.yml'
   pull_request:
     branches-ignore:
       - 'gh-readonly-queue/**'
     paths:
       - 'frontend/**'
-      - 'docker/Dockerfile.frontend'
       - '.github/workflows/frontend.yml'
 
 concurrency:
@@ -73,7 +71,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: docker/Dockerfile.frontend
+          file: frontend/Dockerfile
           push: true
           tags: |
             ghcr.io/${{ github.repository }}/frontend:latest
@@ -84,7 +82,7 @@ jobs:
       - name: Build image for local testing
         run: |
           docker build \
-            -f docker/Dockerfile.frontend \
+            -f frontend/Dockerfile \
             -t hr-frontend-ci:${GITHUB_SHA::8} \
             .
 
