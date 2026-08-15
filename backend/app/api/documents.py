@@ -6,7 +6,7 @@ from datetime import datetime
 
 from app.database import get_db
 from app.models.db_models import DocumentModel
-from app.schemas.document import DocumentResponse, DocumentCreate
+from app.schemas.document import DocumentResponse, DocumentCreate, DocumentType, DocumentStatus
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
