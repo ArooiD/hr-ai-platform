@@ -61,14 +61,14 @@ export async function apiRequest(path, options = {}) {
 // API для аутентификации (Keycloak)
 // Эти функции должны вызываться из компонентов, где есть useKeycloak hook
 export const authApi = {
-  // Получить URL для входа с redirect
+  // Получить URL для входа с redirect (через OIDC callback)
   getLoginUrl: async (redirectAfter = null) => {
     const params = new URLSearchParams();
     if (redirectAfter) {
       params.append('redirect_after', redirectAfter);
     }
     
-    const response = await fetch(`/api/auth/login-url${params.toString() ? `?${params}` : ''}`);
+    const response = await fetch(`/api/oidc/login-url${params.toString() ? `?${params}` : ''}`);
     if (!response.ok) {
       throw new Error('Failed to get login URL');
     }
