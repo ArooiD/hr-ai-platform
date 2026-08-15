@@ -1,6 +1,7 @@
 services:
   backend:
     image: ghcr.io/darap2839/hr-ai-platform/backend:master
+    pull_policy: always
     environment:
       DATABASE_URL: postgresql://hradmin:hradmin123@postgres:5432/hr_platform
       DB_HOST: postgres
@@ -33,6 +34,7 @@ services:
 
   frontend:
     image: ghcr.io/darap2839/hr-ai-platform/frontend:master
+    pull_policy: always
     environment:
       VITE_API_URL: ""
       VITE_KEYCLOAK_URL: http://localhost:8081
