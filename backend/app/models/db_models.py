@@ -26,20 +26,6 @@ class CandidateStatus(str, enum.Enum):
     hired = "hired"
 
 
-class DocumentType(str, enum.Enum):
-    policy = "policy"
-    procedure = "procedure"
-    role_profile = "role_profile"
-    template = "template"
-    guide = "guide"
-
-
-class DocumentStatus(str, enum.Enum):
-    draft = "draft"
-    published = "published"
-    archived = "archived"
-
-
 class UserModel(Base):
     __tablename__ = "users"
 
@@ -113,12 +99,12 @@ class DocumentModel(Base):
     title = Column(String(200), nullable=False, index=True)
     description = Column(Text)
     
-    # Типы документов
-    doc_type = Column(Enum(DocumentType), nullable=False, default=DocumentType.guide)
+    # Типы документов - используем String вместо Enum для простоты
+    doc_type = Column(String(50), nullable=False, default="guide")  # policy, procedure, role_profile, template, guide
     department = Column(String(100), index=True)  # Отдел-владелец (IT, HR, Finance)
     role = Column(String(100), index=True)  # Должность (для role_profile)
     
-    status = Column(Enum(DocumentStatus), default=DocumentStatus.draft)
+    status = Column(String(50), default="draft")  # draft, published, archived
     tags = Column(Text, default="")  # Комма-разделенный список тегов
     access_level = Column(String(50), default="public")  # public, department, private
     

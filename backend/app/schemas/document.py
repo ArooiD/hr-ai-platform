@@ -1,28 +1,18 @@
 """Document schemas"""
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Literal
 from datetime import datetime
-from enum import Enum
 
 
-class DocumentType(str, Enum):
-    policy = "policy"
-    procedure = "procedure"
-    role_profile = "role_profile"
-    template = "template"
-    guide = "guide"
-
-
-class DocumentStatus(str, Enum):
-    draft = "draft"
-    published = "published"
-    archived = "archived"
+# String literals for document types and status
+DocumentType = Literal["policy", "procedure", "role_profile", "template", "guide"]
+DocumentStatus = Literal["draft", "published", "archived"]
 
 
 class DocumentBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
     description: Optional[str] = None
-    doc_type: DocumentType = DocumentType.guide
+    doc_type: DocumentType = "guide"
     department: Optional[str] = None
     role: Optional[str] = None
     tags: Optional[str] = ""
