@@ -249,3 +249,5 @@ function UploadModal({ onClose, onSubmit }) {
     </div>
   );
 }
+
+export default KnowledgeBase;
