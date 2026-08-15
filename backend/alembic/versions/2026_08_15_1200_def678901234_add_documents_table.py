@@ -1,7 +1,7 @@
 """add_documents_table_with_types
 
-Revision ID: 2026_08_15_1200_def678901234
-Revises: abc123def456
+Revision ID: def678901234
+Revises: 2026_06_18_1138_abc123def456
 Create Date: 2026-08-15 12:00:00.000000
 
 """
@@ -11,7 +11,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = 'def678901234'
-down_revision = 'abc123def456'
+down_revision = '2026_06_18_1138_abc123def456'
 branch_labels = None
 depends_on = None
 
