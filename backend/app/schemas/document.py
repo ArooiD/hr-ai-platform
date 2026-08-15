@@ -38,9 +38,11 @@ class DocumentResponse(DocumentBase):
     id: int
     status: Annotated[DocumentStatus, Field(default="draft")] = "draft"
     author_id: Optional[int] = None
+    file_path: Optional[str] = None
     file_name: Optional[str] = None
     file_size: Optional[int] = None
     mime_type: Optional[str] = None
+    content_text: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
     published_at: Optional[datetime] = None
