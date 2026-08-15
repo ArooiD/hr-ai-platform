@@ -27,10 +27,10 @@ def create_document(
 ):
     """Создать документ с загрузкой файла в MinIO"""
     try:
-        try:
-            doc_type_enum = DocumentType(doc_type)
-        except ValueError:
-            doc_type_enum = DocumentType.guide
+        # Валидируем doc_type
+        valid_doc_types = ["policy", "procedure", "role_profile", "template", "guide"]
+        if doc_type not in valid_doc_types:
+            doc_type = "guide"
         
         file_path = None
         file_name = file.filename if file else None
@@ -57,7 +57,7 @@ def create_document(
         db_doc = DocumentModel(
             title=title,
             description=description,
-            doc_type=doc_type_enum,
+            doc_type=doc_type,
             department=department,
             role=role,
             tags=tags,
@@ -67,7 +67,7 @@ def create_document(
             file_size=file_size,
             mime_type=mime_type,
             content_text=content_text,
-            status=DocumentStatus.draft
+            status="draft"
         )
         
         db.add(db_doc)
