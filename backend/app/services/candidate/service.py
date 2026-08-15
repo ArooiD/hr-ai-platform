@@ -62,7 +62,8 @@ class CandidateService:
         # Создание через репозиторий
         candidate = create_candidate(db, payload, email, skills_str)
         
-        return Candidate.model_validate(candidate)
+        # Нормализация данных (skills из строки в список)
+        return Candidate.model_validate(CandidateService._normalize_candidate(candidate))
     
     @staticmethod
     def update_candidate(db: Session, candidate_id: int, payload: CandidateUpdate) -> Candidate:
