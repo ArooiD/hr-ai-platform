@@ -1,5 +1,6 @@
 from typing import Optional
 from urllib.parse import quote
+import os
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
@@ -62,4 +63,43 @@ def get_login_url(request: Request, redirect_after: Optional[str] = None):
         "login_url": keycloak_url,
         "redirect_after": redirect_after,
         "redirect_uri": redirect_uri
+    }
+
+
+@router.get("/keycloak-config")
+def get_keycloak_config(request: Request):
+    """
+    Получить конфигурацию Keycloak для frontend
+    
+    Returns:
+        Конфигурация Keycloak включая URL, realm, clientId
+    """
+    # Получаем host из запроса для определения внешнего URL
+    host = request.headers.get("host", "localhost:80")
+    protocol = "https" if request.headers.get("x-forwarded-proto") == "https" else "http"
+    
+    # В production здесь можно вернуть внешний OIDC провайдер
+    # Например, если используется Azure AD, Google Auth, etc.
+    external_oidc_url = os.getenv("EXTERNAL_OIDC_URL")
+    
+    if external_oidc_url:
+        # Возвращаем конфигурацию внешнего OIDC провайдера
+        return {
+            "url": external_oidc_url,
+            "realm": os.getenv("EXTERNAL_OIDC_REALM", ""),
+            "clientId": os.getenv("EXTERNAL_OIDC_CLIENT_ID", ""),
+            "isExternal": True,
+            "provider": os.getenv("EXTERNAL_OIDC_PROVIDER", "custom")
+        }
+    
+    # Возвращаем конфигурацию внутреннего Keycloak
+    # Важно: возвращаем URL без /auth, так как keycloak-js сам добавляет путь
+    keycloak_base_url = KEYCLOAK_URL.rstrip("/auth")
+    
+    return {
+        "url": keycloak_base_url,
+        "realm": KEYCLOAK_REALM,
+        "clientId": KEYCLOAK_CLIENT_ID,
+        "isExternal": False,
+        "provider": "keycloak"
     }

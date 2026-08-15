@@ -5,15 +5,48 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import Keycloak from 'keycloak-js';
 
-// Keycloak configuration from environment variables
-const keycloakConfig = {
-  url: import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8080/auth',
-  realm: import.meta.env.VITE_KEYCLOAK_REALM || 'hr-ai',
-  clientId: import.meta.env.VITE_KEYCLOAK_CLIENT_ID || 'hr-ai-frontend',
+/**
+ * Получить конфигурацию Keycloak от backend
+ */
+const fetchKeycloakConfig = async () => {
+  try {
+    const response = await fetch('/api/auth/keycloak-config');
+    if (!response.ok) {
+      throw new Error('Failed to fetch Keycloak config');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching Keycloak config:', error);
+    // Fallback to default configuration
+    return {
+      url: 'http://localhost:8080',
+      realm: 'hr-ai',
+      clientId: 'hr-ai-frontend',
+      isExternal: false,
+      provider: 'keycloak'
+    };
+  }
 };
 
-// Create Keycloak instance
-const keycloak = new Keycloak(keycloakConfig);
+// Keycloak configuration (будет загружена асинхронно)
+let keycloakConfig = null;
+let configLoadingPromise = null;
+
+const getKeycloakConfig = async () => {
+  if (keycloakConfig) {
+    return keycloakConfig;
+  }
+  
+  if (!configLoadingPromise) {
+    configLoadingPromise = fetchKeycloakConfig().then(config => {
+      keycloakConfig = config;
+      configLoadingPromise = null;
+      return config;
+    });
+  }
+  
+  return configLoadingPromise;
+};
 
 // Create context
 const KeycloakContext = createContext(null);
@@ -26,27 +59,38 @@ export function KeycloakProvider({ children }) {
   const [initializing, setInitializing] = useState(true);
   const [userInfo, setUserInfo] = useState(null);
   const [error, setError] = useState(null);
+  const [keycloakInstance, setKeycloakInstance] = useState(null);
 
   // Initialize Keycloak
   useEffect(() => {
     const initKeycloak = async () => {
       try {
-        const authenticated = await keycloak.init({
+        const config = await getKeycloakConfig();
+        
+        // Создаем Keycloak instance с конфигурацией от backend
+        const kc = new Keycloak({
+          url: config.url,
+          realm: config.realm,
+          clientId: config.clientId,
+        });
+
+        const authenticated = await kc.init({
           flow: 'standard',
           checkLoginIframe: false,
           silentCheckSsoRedirect: false,
         });
 
+        setKeycloakInstance(kc);
         setAuthenticated(authenticated);
         setInitializing(false);
 
         if (authenticated) {
           // Get user info
-          const userInfo = await keycloak.loadUserInfo();
+          const userInfo = await kc.loadUserInfo();
           setUserInfo(userInfo);
           
           // Start token refresh
-          startTokenRefresh();
+          startTokenRefresh(kc);
         }
       } catch (err) {
         console.error('Keycloak initialization failed:', err);
@@ -59,48 +103,55 @@ export function KeycloakProvider({ children }) {
   }, []);
 
   // Token refresh timer
-  const startTokenRefresh = useCallback(() => {
+  const startTokenRefresh = (kc) => {
     // Refresh token every 10 minutes
     setInterval(() => {
-      keycloak.updateToken(70).catch((err) => {
+      kc.updateToken(70).catch((err) => {
         console.error('Failed to refresh token:', err);
         // If refresh fails, user needs to re-login
         logout();
       });
     }, 600000); // 10 minutes
-  }, []);
+  };
 
   // Login
   const login = useCallback((options = {}) => {
-    keycloak.login(options);
-  }, []);
+    if (keycloakInstance) {
+      keycloakInstance.login(options);
+    }
+  }, [keycloakInstance]);
 
   // Logout
   const logout = useCallback((options = {}) => {
     setAuthenticated(false);
     setUserInfo(null);
-    keycloak.logout(options);
-  }, []);
+    if (keycloakInstance) {
+      keycloakInstance.logout(options);
+    }
+  }, [keycloakInstance]);
 
   // Get token
   const getToken = useCallback(() => {
-    return keycloak.token;
-  }, []);
+    return keycloakInstance?.token;
+  }, [keycloakInstance]);
 
   // Get ID token
   const getIdToken = useCallback(() => {
-    return keycloak.idToken;
-  }, []);
+    return keycloakInstance?.idToken;
+  }, [keycloakInstance]);
 
   // Check if user has role
   const hasRole = useCallback((role) => {
-    return keycloak.hasResourceRoles(role);
-  }, []);
+    return keycloakInstance?.hasResourceRoles(role) || false;
+  }, [keycloakInstance]);
 
   // Update token manually
   const updateToken = useCallback(async (minValidity = 5) => {
+    if (!keycloakInstance) {
+      throw new Error('Keycloak not initialized');
+    }
     try {
-      const refreshed = await keycloak.updateToken(minValidity);
+      const refreshed = await keycloakInstance.updateToken(minValidity);
       if (refreshed) {
         console.log('Token refreshed successfully');
       }
@@ -109,10 +160,10 @@ export function KeycloakProvider({ children }) {
       console.error('Failed to update token:', err);
       throw err;
     }
-  }, []);
+  }, [keycloakInstance]);
 
   const value = {
-    keycloak,
+    keycloak: keycloakInstance,
     authenticated,
     initializing,
     userInfo,
@@ -123,8 +174,6 @@ export function KeycloakProvider({ children }) {
     getIdToken,
     hasRole,
     updateToken,
-    realm: keycloakConfig.realm,
-    clientId: keycloakConfig.clientId,
   };
 
   if (initializing) {
@@ -156,4 +205,5 @@ export function useKeycloak() {
   return context;
 }
 
-export { keycloak };
+// Экспортируем функцию для получения конфигурации (если нужно где-то еще)
+export { getKeycloakConfig };
