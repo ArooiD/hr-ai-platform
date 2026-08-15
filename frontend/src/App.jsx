@@ -14,29 +14,15 @@ import SupportPage from './pages/Support';
 import KnowledgeBase from './pages/KnowledgeBase';
 import { authApi } from './api/client';
 import { initSSEClient } from './api/sseNotifications';
+import { KeycloakProvider, useKeycloak } from './contexts/KeycloakContext';
 import './styles/index.css';
 
-// Страница входа - форма авторизации
-function LoginPage({ onLogin }) {
-  const [login, setLogin] = useState('depopova');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+// Страница входа - Keycloak login
+function LoginPage() {
+  const { login } = useKeycloak();
 
-  // Обработчик отправки формы входа
-  const submit = async (event) => {
-    event.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      const session = await authApi.login({ login, password });
-      onLogin(session);
-    } catch (err) {
-      setError('Неверный логин или пароль.');
-    } finally {
-      setLoading(false);
-    }
+  const handleLogin = () => {
+    login();
   };
 
   return (
@@ -64,41 +50,59 @@ function LoginPage({ onLogin }) {
           <div className="login-user-icon"><UserRoundCheck size={24} /></div>
           <div>
             <h2>Вход в систему</h2>
-            <p>Дарья Попова</p>
+            <p>Аутентификация через Keycloak</p>
           </div>
         </div>
 
-        <form onSubmit={submit} className="login-form">
-          <label>
-            <span>Логин</span>
-            <input value={login} onChange={(event) => setLogin(event.target.value)} placeholder="depopova" autoFocus />
-          </label>
-          <label>
-            <span>Пароль</span>
-            <input 
-              type="password" 
-              value={password} 
-              onChange={(event) => setPassword(event.target.value)} 
-              placeholder="••••••••" 
-            />
-          </label>
-
-          {error && <div className="login-error">{error}</div>}
-
-          <button type="submit" disabled={loading}>{loading ? 'вход...' : <>войти <ArrowRight size={18} /></>}</button>
-        </form>
+        <div className="login-form">
+          <p style={{ marginBottom: '20px', color: '#6b7280' }}>
+            Для доступа к системе пожалуйста войдите через корпоративную учётную запись.
+          </p>
+          
+          <button 
+            type="button" 
+            onClick={handleLogin}
+            className="keycloak-login-button"
+            style={{
+              width: '100%',
+              padding: '12px 24px',
+              background: '#0b73ff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
+            }}
+          >
+            <UserRoundCheck size={20} />
+            Войти через Keycloak
+          </button>
+        </div>
       </section>
     </main>
   );
 }
 
 function ProtectedRoute({ children }) {
-  const [session] = useState(() => {
-    const saved = localStorage.getItem('hr-session');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const { authenticated, initializing } = useKeycloak();
 
-  if (!session) {
+  if (initializing) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-content">
+          <div className="loading-spinner"></div>
+          <p>Проверка аутентификации...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!authenticated) {
     return <Navigate to="/login" replace />;
   }
 
@@ -106,15 +110,20 @@ function ProtectedRoute({ children }) {
 }
 
 function AppLayout({ children }) {
-  const [session] = useState(() => {
-    const saved = localStorage.getItem('hr-session');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const { userInfo, logout, getToken } = useKeycloak();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const logout = () => {
-    localStorage.removeItem('hr-session');
-    window.location.href = '/';
+  // Создаем объект user из userInfo Keycloak
+  const user = userInfo ? {
+    id: userInfo.sub,
+    email: userInfo.email,
+    name: `${userInfo.given_name || ''} ${userInfo.family_name || ''}`.trim() || userInfo.preferred_username,
+    username: userInfo.preferred_username,
+    roles: userInfo.roles || [],
+  } : null;
+
+  const handleLogout = () => {
+    logout({ redirectUri: window.location.origin });
   };
 
   const toggleSidebar = () => {
@@ -123,9 +132,9 @@ function AppLayout({ children }) {
 
   return (
     <div className="app-shell">
-      <Sidebar user={session.user} isOpen={sidebarOpen} onToggle={toggleSidebar} />
+      <Sidebar user={user} isOpen={sidebarOpen} onToggle={toggleSidebar} />
       <main className="workspace">
-        <Topbar user={session.user} onLogout={logout} onToggleSidebar={toggleSidebar} />
+        <Topbar user={user} onLogout={handleLogout} onToggleSidebar={toggleSidebar} />
         <div className="single-page-workspace">
           {children}
         </div>
@@ -137,26 +146,29 @@ function AppLayout({ children }) {
 
 // Root компонент приложения с React Router
 export default function App() {
-  const [session, setSession] = useState(() => {
-    const saved = localStorage.getItem('hr-session');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const { authenticated, initializing, getToken } = useKeycloak();
 
   // Инициализация SSE client после входа
   useEffect(() => {
-    if (session?.token) {
+    if (authenticated && getToken()) {
       console.log('[App] Initializing SSE client...');
-      initSSEClient(session.token);
+      initSSEClient(getToken());
     }
-  }, [session]);
+  }, [authenticated, getToken]);
 
-  const login = (nextSession) => {
-    localStorage.setItem('hr-session', JSON.stringify(nextSession));
-    setSession(nextSession);
-  };
+  if (initializing) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-content">
+          <div className="loading-spinner"></div>
+          <p>Загрузка системы...</p>
+        </div>
+      </div>
+    );
+  }
 
-  if (!session) {
-    return <LoginPage onLogin={login} />;
+  if (!authenticated) {
+    return <LoginPage />;
   }
 
   return (
@@ -178,3 +190,14 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
+// Обёртка приложения с Keycloak Provider
+function AppWithProviders() {
+  return (
+    <KeycloakProvider>
+      <App />
+    </KeycloakProvider>
+  );
+}
+
+export default AppWithProviders;

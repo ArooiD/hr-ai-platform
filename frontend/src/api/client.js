@@ -1,9 +1,30 @@
+/**
+ * API Client with Keycloak Authentication
+ */
+import { keycloak } from '../contexts/KeycloakContext';
+
 const API_URL = import.meta.env.VITE_API_URL || '';
 
+/**
+ * Get authorization header with Keycloak token
+ */
+const getAuthHeaders = () => {
+  const token = keycloak?.token;
+  if (token) {
+    return {
+      'Authorization': `Bearer ${token}`,
+    };
+  }
+  return {};
+};
+
 export async function apiRequest(path, options = {}) {
+  const authHeaders = getAuthHeaders();
+  
   const response = await fetch(`${API_URL}${path}`, {
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
       ...(options.headers || {}),
     },
     ...options,
@@ -23,13 +44,28 @@ export async function apiRequest(path, options = {}) {
   return response.json();
 }
 
-// API для аутентификации
+// API для аутентификации (Keycloak)
 export const authApi = {
-  // Вход в систему с логином и паролем
-  login: (payload) => apiRequest('/api/auth/login', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  }),
+  // Вход через Keycloak
+  login: (options = {}) => {
+    // Keycloak обрабатывает вход через redirect
+    keycloak.login(options);
+    return Promise.resolve({});
+  },
+  
+  // Выход из системы
+  logout: (options = {}) => {
+    keycloak.logout(options);
+    return Promise.resolve({});
+  },
+  
+  // Получить текущий пользователь
+  getCurrentUser: () => {
+    if (!keycloak.authenticated) {
+      return Promise.reject(new Error('Not authenticated'));
+    }
+    return keycloak.loadUserInfo();
+  },
 };
 
 // API для работы с вакансиями, кандидатами, откликами

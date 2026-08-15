@@ -5,9 +5,9 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.core.keycloak_auth import extract_user_from_token, verify_keycloak_token
 
-# Пока используем простой HTTP Bearer для примера
-# В production нужно добавить JWT или session-based auth
+# Используем HTTP Bearer для JWT токенов
 security = HTTPBearer(auto_error=False)
 
 
@@ -19,8 +19,9 @@ def get_current_user(
     """
     Получить текущего пользователя из запроса
     
-    Пока используется mock auth - проверяем login из query params или headers
-    В production заменить на JWT token validation
+    Поддерживает:
+    1. Keycloak JWT tokens (Authorization: Bearer <token>)
+    2. Mock auth через query params (для разработки)
     """
     # Если нет credentials, пробуем получить из query params (для разработки)
     if not credentials:
@@ -35,24 +36,18 @@ def get_current_user(
             }
         return None
     
-    # В production здесь будет валидация JWT token
+    # Валидация Keycloak JWT token
     token = credentials.credentials
     
-    # Пока просто декодируем token как JSON (для примера)
-    # В production использовать JWT library
     try:
-        # Mock implementation
-        user_login = token  # В production: decode JWT token
-        return {
-            "id": 1,
-            "login": user_login,
-            "role": "admin" if user_login == "admin" else "regular",
-            "specialties": []
-        }
-    except Exception:
+        user = extract_user_from_token(token)
+        return user
+    except HTTPException:
+        raise
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Невалидные учетные данные"
+            detail=f"Невалидные учетные данные: {str(e)}"
         )
 
 

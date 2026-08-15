@@ -16,11 +16,11 @@ services:
       WEAVIATE_URL: http://weaviate:8080
       OLLAMA_BASE_URL: http://ollama:11434
       MINERU_URL: http://mineru:30000
-      AUTH_MODE: mock
-      KEYCLOAK_URL: http://keycloak:8080
+      AUTH_MODE: keycloak
+      KEYCLOAK_URL: http://keycloak:8080/auth
       KEYCLOAK_REALM: hr-ai
       KEYCLOAK_CLIENT_ID: hr-ai-frontend
-      JWT_ISSUER: hr-ai-platform
+      JWT_ISSUER: hr-ai
       JWT_SECRET: hr-ai-dev-local-key
       DEMO_USER_LOGIN: depopova
       DEMO_USER_FULL_NAME: Дарья Попова
@@ -37,7 +37,7 @@ services:
     pull_policy: always
     environment:
       VITE_API_URL: ""
-      VITE_KEYCLOAK_URL: http://localhost:8081
+      VITE_KEYCLOAK_URL: http://localhost:8080/auth
       VITE_KEYCLOAK_REALM: hr-ai
       VITE_KEYCLOAK_CLIENT_ID: hr-ai-frontend
     depends_on:

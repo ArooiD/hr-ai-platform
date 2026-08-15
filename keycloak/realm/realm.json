@@ -1,7 +1,7 @@
 {
-  "realm": "platform",
+  "realm": "hr-ai",
   "enabled": true,
-  "displayName": "HR Platform",
+  "displayName": "HR AI Platform",
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
@@ -16,7 +16,7 @@
   "maxDeltaTimeSeconds": 43200,
   "roles": {
     "client": {
-      "platform": [
+      "hr-ai-frontend": [
         {
           "name": "guest",
           "description": "Guest user"
@@ -34,20 +34,22 @@
   },
   "clients": [
     {
-      "clientId": "platform",
-      "name": "HR Platform",
+      "clientId": "hr-ai-frontend",
+      "name": "HR AI Frontend",
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": true,
       "bearerOnly": false,
       "standardFlowEnabled": true,
       "implicitFlowEnabled": false,
-      "directAccessGrantsEnabled": false,
+      "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": false,
-      "fullScopeAllowed": false,
+      "fullScopeAllowed": true,
       "redirectUris": [
         "http://localhost:*",
-        "http://127.0.0.1:*"
+        "http://127.0.0.1:*",
+        "http://localhost:5173/*",
+        "http://127.0.0.1:5173/*"
       ],
       "webOrigins": [
         "*"
@@ -69,7 +71,18 @@
             "access.token.claim": "true",
             "claim.name": "roles",
             "jsonType.label": "String",
-            "usermodel.clientRoleMapping.clientId": "platform"
+            "usermodel.clientRoleMapping.clientId": "hr-ai-frontend"
+          }
+        },
+        {
+          "name": "full name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-full-name-mapper",
+          "consentRequired": false,
+          "config": {
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
           }
         }
       ]
@@ -80,6 +93,9 @@
       "username": "guest",
       "enabled": true,
       "emailVerified": true,
+      "email": "guest@hr-ai.local",
+      "firstName": "Guest",
+      "lastName": "User",
       "credentials": [
         {
           "type": "password",
@@ -88,7 +104,7 @@
         }
       ],
       "clientRoles": {
-        "platform": [
+        "hr-ai-frontend": [
           "guest"
         ]
       }
@@ -97,6 +113,9 @@
       "username": "admin",
       "enabled": true,
       "emailVerified": true,
+      "email": "admin@hr-ai.local",
+      "firstName": "Admin",
+      "lastName": "User",
       "credentials": [
         {
           "type": "password",
@@ -105,8 +124,28 @@
         }
       ],
       "clientRoles": {
-        "platform": [
+        "hr-ai-frontend": [
           "admin"
+        ]
+      }
+    },
+    {
+      "username": "depopova",
+      "enabled": true,
+      "emailVerified": true,
+      "email": "depopova@hr-ai.local",
+      "firstName": "Дарья",
+      "lastName": "Попова",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "depopova",
+          "temporary": false
+        }
+      ],
+      "clientRoles": {
+        "hr-ai-frontend": [
+          "user"
         ]
       }
     }
