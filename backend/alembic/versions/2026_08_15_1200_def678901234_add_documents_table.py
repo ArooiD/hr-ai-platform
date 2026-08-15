@@ -1,6 +1,6 @@
 """add_documents_table_with_types
 
-Revision ID: def678901234
+Revision ID: 2026_08_15_1200_def678901234
 Revises: 2026_06_18_1138_abc123def456
 Create Date: 2026-08-15 12:00:00.000000
 
@@ -8,12 +8,13 @@ Create Date: 2026-08-15 12:00:00.000000
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+from typing import Sequence, Union
 
 # revision identifiers, used by Alembic.
-revision = 'def678901234'
-down_revision = '2026_06_18_1138_abc123def456'
-branch_labels = None
-depends_on = None
+revision: str = '2026_08_15_1200_def678901234'
+down_revision: Union[str, None] = '2026_06_18_1138_abc123def456'
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
