@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ArrowRight, Briefcase, CalendarCheck2, BarChart3, FileText, UserRoundCheck, UsersRound, Users } from 'lucide-react';
+import { ArrowRight, Briefcase, CalendarCheck2, BarChart3, FileText, UserRoundCheck, UsersRound, Users, BookOpen } from 'lucide-react';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
 import MobileBottomNav from './components/layout/MobileBottomNav';
@@ -11,6 +11,7 @@ import CandidatesPage from './pages/Candidates';
 import AnalyticsPage from './pages/Analytics';
 import CandidateDetailPage from './pages/CandidateDetail';
 import SupportPage from './pages/Support';
+import KnowledgeBase from './pages/KnowledgeBase';
 import { authApi } from './api/client';
 import { initSSEClient } from './api/sseNotifications';
 import './styles/index.css';
@@ -169,6 +170,7 @@ export default function App() {
           <Route path="/recruitment" element={<RecruitmentFlow />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/support" element={<SupportPage />} />
+          <Route path="/knowledge-base" element={<KnowledgeBase />} />
           <Route path="/candidates/:id" element={<CandidateDetailPage />} />
           <Route path="*" element={<Navigate to="/vacancies" replace />} />
         </Routes>

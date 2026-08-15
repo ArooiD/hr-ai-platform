@@ -26,6 +26,20 @@ class CandidateStatus(str, enum.Enum):
     hired = "hired"
 
 
+class DocumentType(str, enum.Enum):
+    policy = "policy"
+    procedure = "procedure"
+    role_profile = "role_profile"
+    template = "template"
+    guide = "guide"
+
+
+class DocumentStatus(str, enum.Enum):
+    draft = "draft"
+    published = "published"
+    archived = "archived"
+
+
 class UserModel(Base):
     __tablename__ = "users"
 
@@ -90,3 +104,37 @@ class ApplicationModel(Base):
 
     candidate = relationship("CandidateModel", back_populates="applications")
     vacancy = relationship("VacancyModel", back_populates="applications")
+
+
+class DocumentModel(Base):
+    __tablename__ = "documents"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    title = Column(String(200), nullable=False, index=True)
+    description = Column(Text)
+    
+    # Типы документов
+    doc_type = Column(Enum(DocumentType), nullable=False, default=DocumentType.guide)
+    department = Column(String(100), index=True)  # Отдел-владелец (IT, HR, Finance)
+    role = Column(String(100), index=True)  # Должность (для role_profile)
+    
+    status = Column(Enum(DocumentStatus), default=DocumentStatus.draft)
+    tags = Column(Text, default="")  # Комма-разделенный список тегов
+    access_level = Column(String(50), default="public")  # public, department, private
+    
+    # Файл
+    file_path = Column(String(500))  # Путь в MinIO
+    file_name = Column(String(200))
+    file_size = Column(Integer)
+    mime_type = Column(String(100))
+    
+    # Для RAG: извлеченный текст
+    content_text = Column(Text)
+    
+    author_id = Column(Integer, ForeignKey("users.id"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    published_at = Column(DateTime(timezone=True))
+    is_deleted = Column(Boolean, default=False)
+
+    author = relationship("UserModel", backref="documents")
