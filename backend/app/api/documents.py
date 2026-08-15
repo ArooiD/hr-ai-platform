@@ -7,6 +7,8 @@ from datetime import datetime
 from app.database import get_db
 from app.models.db_models import DocumentModel
 from app.schemas.document import DocumentResponse, DocumentCreate, DocumentType, DocumentStatus
+from app.services.minio_service import minio_service
+from app.services.text_extraction_service import text_extraction_service
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
 
@@ -23,21 +25,35 @@ def create_document(
     file: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db)
 ):
-    """Создать документ"""
+    """Создать документ с загрузкой файла в MinIO"""
     try:
-        # Преобразуем doc_type в Enum
         try:
             doc_type_enum = DocumentType(doc_type)
         except ValueError:
             doc_type_enum = DocumentType.guide
         
-        # Загружаем файл (заглушка - пока просто сохраняем метаданные)
         file_path = None
         file_name = file.filename if file else None
         file_size = file.size if file else None
         mime_type = file.content_type if file else None
+        content_text = None
         
-        # Создаем документ
+        if file:
+            file_bytes = file.file.read()
+            file_size = len(file_bytes)
+            
+            file_path = minio_service.upload_file(
+                file_bytes, 
+                file_name or "unnamed",
+                mime_type or "application/octet-stream"
+            )
+            
+            if file_path:
+                print(f"✅ File uploaded to MinIO: {file_path}")
+                content_text = text_extraction_service.extract_text(file_bytes, file_name or "")
+                if content_text:
+                    print(f"✅ Text extracted: {len(content_text)} chars")
+        
         db_doc = DocumentModel(
             title=title,
             description=description,
@@ -50,6 +66,7 @@ def create_document(
             file_name=file_name,
             file_size=file_size,
             mime_type=mime_type,
+            content_text=content_text,
             status=DocumentStatus.draft
         )
         
@@ -61,6 +78,8 @@ def create_document(
         
     except Exception as e:
         db.rollback()
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
