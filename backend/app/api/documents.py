@@ -5,7 +5,7 @@ from typing import List, Optional
 from datetime import datetime
 
 from app.database import get_db
-from app.models.db_models import DocumentModel, DocumentType, DocumentStatus
+from app.models.db_models import DocumentModel
 from app.schemas.document import DocumentResponse, DocumentCreate
 
 router = APIRouter(prefix="/documents", tags=["Documents"])
