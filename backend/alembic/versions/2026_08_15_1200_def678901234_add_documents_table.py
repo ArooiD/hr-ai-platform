@@ -18,9 +18,22 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Create enums
-    op.execute("CREATE TYPE document_type AS ENUM ('policy', 'procedure', 'role_profile', 'template', 'guide')")
-    op.execute("CREATE TYPE document_status AS ENUM ('draft', 'published', 'archived')")
+    # Create enums if not exist
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE document_type AS ENUM ('policy', 'procedure', 'role_profile', 'template', 'guide');
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """)
+    
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE document_status AS ENUM ('draft', 'published', 'archived');
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """)
     
     # Create documents table
     op.create_table('documents',
