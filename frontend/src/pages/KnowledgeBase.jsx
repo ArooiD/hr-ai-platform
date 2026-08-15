@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { apiClient } from '../api/client';
 import { FileText, Search, Plus } from 'lucide-react';
 
-export function KnowledgeBase() {
+function KnowledgeBase() {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
