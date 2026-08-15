@@ -47,6 +47,7 @@ services:
     image: nginx:latest
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx:/etc/nginx/conf.d:ro
     depends_on:
@@ -62,12 +63,21 @@ services:
       POSTGRES_PASSWORD: hradmin123
     volumes:
       - ./data/postgres:/var/lib/postgresql/18/docker
+      - ./postgres:/docker-entrypoint-initdb.d:ro
     ports:
       - "5432:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U hradmin -d hr_platform" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   keycloak:
     image: keycloak/keycloak:latest
     command: start-dev --http-port=8080
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
@@ -78,9 +88,7 @@ services:
       KC_HTTP_ENABLED: "true"
       KC_HOSTNAME_STRICT: "false"
     ports:
-      - "8081:8080"
-    depends_on:
-      - postgres
+      - "127.0.0.1:8080:8080"
 
   minio:
     image: minio/minio:latest
