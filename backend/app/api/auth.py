@@ -94,7 +94,11 @@ def get_keycloak_config(request: Request):
     
     # Возвращаем конфигурацию внутреннего Keycloak
     # Важно: возвращаем URL без /auth, так как keycloak-js сам добавляет путь
-    keycloak_base_url = KEYCLOAK_URL.rstrip("/auth")
+    # Используем endswith вместо rstrip (rstrip удаляет отдельные символы, а не подстроку)
+    if KEYCLOAK_URL.endswith("/auth"):
+        keycloak_base_url = KEYCLOAK_URL[:-5]  # Удаляем последние 5 символов "/auth"
+    else:
+        keycloak_base_url = KEYCLOAK_URL
     
     return {
         "url": keycloak_base_url,
