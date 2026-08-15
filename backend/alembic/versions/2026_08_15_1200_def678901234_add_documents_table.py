@@ -18,20 +18,22 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Create enums if not exist
+    # Create enums using IF NOT EXISTS pattern (works in transactions)
     op.execute("""
-        DO $$ BEGIN
-            CREATE TYPE document_type AS ENUM ('policy', 'procedure', 'role_profile', 'template', 'guide');
-        EXCEPTION
-            WHEN duplicate_object THEN null;
+        DO $$ 
+        BEGIN 
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'document_type') THEN
+                CREATE TYPE document_type AS ENUM ('policy', 'procedure', 'role_profile', 'template', 'guide');
+            END IF;
         END $$;
     """)
     
     op.execute("""
-        DO $$ BEGIN
-            CREATE TYPE document_status AS ENUM ('draft', 'published', 'archived');
-        EXCEPTION
-            WHEN duplicate_object THEN null;
+        DO $$ 
+        BEGIN 
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'document_status') THEN
+                CREATE TYPE document_status AS ENUM ('draft', 'published', 'archived');
+            END IF;
         END $$;
     """)
     
