@@ -1,5 +1,5 @@
 {
-  "realm": "hr-ai",
+  "realm": "platform",
   "enabled": true,
   "displayName": "HR AI Platform",
   "registrationAllowed": false,
@@ -16,7 +16,7 @@
   "maxDeltaTimeSeconds": 43200,
   "roles": {
     "client": {
-      "hr-ai-frontend": [
+      "platform": [
         {
           "name": "guest",
           "description": "Guest user"
@@ -34,7 +34,7 @@
   },
   "clients": [
     {
-      "clientId": "hr-ai-frontend",
+      "clientId": "platform",
       "name": "HR AI Frontend",
       "enabled": true,
       "protocol": "openid-connect",
@@ -71,7 +71,7 @@
             "access.token.claim": "true",
             "claim.name": "roles",
             "jsonType.label": "String",
-            "usermodel.clientRoleMapping.clientId": "hr-ai-frontend"
+            "usermodel.clientRoleMapping.clientId": "platform"
           }
         },
         {
@@ -93,7 +93,7 @@
       "username": "guest",
       "enabled": true,
       "emailVerified": true,
-      "email": "guest@hr-ai.local",
+      "email": "guest@platform.local",
       "firstName": "Guest",
       "lastName": "User",
       "credentials": [
@@ -104,7 +104,7 @@
         }
       ],
       "clientRoles": {
-        "hr-ai-frontend": [
+        "platform": [
           "guest"
         ]
       }
@@ -113,7 +113,7 @@
       "username": "admin",
       "enabled": true,
       "emailVerified": true,
-      "email": "admin@hr-ai.local",
+      "email": "admin@platform.local",
       "firstName": "Admin",
       "lastName": "User",
       "credentials": [
@@ -124,7 +124,7 @@
         }
       ],
       "clientRoles": {
-        "hr-ai-frontend": [
+        "platform": [
           "admin"
         ]
       }
@@ -133,7 +133,7 @@
       "username": "depopova",
       "enabled": true,
       "emailVerified": true,
-      "email": "depopova@hr-ai.local",
+      "email": "depopova@platform.local",
       "firstName": "Дарья",
       "lastName": "Попова",
       "credentials": [
@@ -144,7 +144,7 @@
         }
       ],
       "clientRoles": {
-        "hr-ai-frontend": [
+        "platform": [
           "user"
         ]
       }
