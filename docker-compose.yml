@@ -74,7 +74,10 @@ services:
 
   keycloak:
     image: keycloak/keycloak:latest
-    command: start-dev --http-port=8080
+    command:
+      - start-dev
+      - --http-port=8080
+      - --import-realm
     depends_on:
       postgres:
         condition: service_healthy
@@ -87,6 +90,8 @@ services:
       KC_DB_PASSWORD: hradmin123
       KC_HTTP_ENABLED: "true"
       KC_HOSTNAME_STRICT: "false"
+    volumes:
+      - ./keycloak/realm:/opt/keycloak/data/import:ro
     ports:
       - "127.0.0.1:8080:8080"
 
