@@ -1,4 +1,4 @@
-"""Keycloak JWT token validation"""
+"""Keycloak configuration and authentication"""
 import os
 import jwt
 from jwt.exceptions import InvalidTokenError, ExpiredSignatureError
@@ -6,11 +6,15 @@ from typing import Optional, Dict, Any
 from fastapi import HTTPException, status
 import requests
 
-# Configuration from environment
-KEYCLOAK_URL = os.getenv("KEYCLOAK_URL", "http://localhost:8080")
+# Keycloak settings
+KEYCLOAK_URL = os.getenv("KEYCLOAK_URL", "http://localhost:8080/auth")
 KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM", "hr-ai")
+KEYCLOAK_CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID", "hr-ai-frontend")
+
+# Application settings
+APP_BASE_URL = os.getenv("APP_BASE_URL", "http://localhost:80")
 JWT_SECRET = os.getenv("JWT_SECRET", "hr-ai-dev-local-key")
-JWT_ISSUER = os.getenv("JWT_ISSUER", "hr-ai-platform")
+JWT_ISSUER = os.getenv("JWT_ISSUER", "hr-ai")
 
 
 def get_keycloak_public_key() -> Optional[str]:

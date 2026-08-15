@@ -46,11 +46,28 @@ export async function apiRequest(path, options = {}) {
 
 // API для аутентификации (Keycloak)
 export const authApi = {
-  // Вход через Keycloak
-  login: (options = {}) => {
-    // Keycloak обрабатывает вход через redirect
-    keycloak.login(options);
-    return Promise.resolve({});
+  // Получить URL для входа с redirect
+  getLoginUrl: async (redirectAfter = null) => {
+    const params = new URLSearchParams();
+    if (redirectAfter) {
+      params.append('redirect_after', redirectAfter);
+    }
+    
+    const response = await fetch(`/api/auth/login-url${params.toString() ? `?${params}` : ''}`);
+    if (!response.ok) {
+      throw new Error('Failed to get login URL');
+    }
+    return response.json();
+  },
+  
+  // Вход через Keycloak (получает URL и делает redirect)
+  login: async (options = {}) => {
+    const redirectAfter = options.redirectAfter || window.location.pathname;
+    const loginData = await authApi.getLoginUrl(redirectAfter);
+    
+    // Делаем redirect на Keycloak
+    window.location.href = loginData.login_url;
+    return loginData;
   },
   
   // Выход из системы

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ArrowRight, Briefcase, CalendarCheck2, BarChart3, FileText, UserRoundCheck, UsersRound, Users, BookOpen } from 'lucide-react';
 import Sidebar from './components/layout/Sidebar';
 import Topbar from './components/layout/Topbar';
@@ -20,9 +20,12 @@ import './styles/index.css';
 // Страница входа - Keycloak login
 function LoginPage() {
   const { login } = useKeycloak();
+  const location = useLocation();
 
   const handleLogin = () => {
-    login();
+    // Сохраняем текущий путь для redirect после входа
+    const redirectAfter = location.pathname === '/' ? '/vacancies' : location.pathname;
+    login({ redirectAfter });
   };
 
   return (
