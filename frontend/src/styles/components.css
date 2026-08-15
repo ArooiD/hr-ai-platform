@@ -77,6 +77,15 @@
 .status-badge.open { background: #d1fae5; color: #065f46; }
 .status-badge.closed { background: #f3f4f6; color: #6b7280; }
 
+/* Badge Variants */
+.badge { display: inline-flex; align-items: center; min-height: 22px; border-radius: 999px; padding: 0 10px; font-size: 12px; font-weight: 900; }
+.badge-purple { background: #f3e8ff; color: #7c3aed; }
+.badge-blue { background: #dbeafe; color: #2563eb; }
+.badge-gray { background: #f3f4f6; color: #6b7280; }
+.badge-indigo { background: #e0e7ff; color: #4f46e5; }
+.badge-green { background: #d1fae5; color: #059669; }
+.badge-yellow { background: #fef3c7; color: #d97706; }
+
 /* Skills */
 .skills { display: flex; flex-wrap: wrap; gap: 8px; }
 .skill-tag { display: inline-flex; align-items: center; min-height: 22px; border-radius: 999px; padding: 0 10px; background: #eff6ff; color: var(--blue); font-size: 12px; font-weight: 900; }
@@ -100,6 +109,26 @@
 .empty-state { display: grid; place-items: center; color: #94a3b8; text-align: center; }
 .empty-state svg { color: #d1d5db; }
 .empty-state p { margin: 0; font-size: 16px; }
+
+/* Data List & Cards */
+.data-list { display: grid; gap: 16px; }
+.data-card { border: 1px solid var(--line); border-radius: 14px; background: #fff; padding: 18px; transition: all 0.2s; }
+.data-card:hover { box-shadow: 0 8px 28px rgba(30, 41, 59, 0.08); transform: translateY(-2px); }
+.data-card-header { margin-bottom: 12px; }
+.data-card-title { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.data-card-title h3 { margin: 0; color: #111318; font-size: 16px; font-weight: 700; }
+.data-card-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.data-card-description { color: #4b5563; font-size: 14px; margin: 10px 0; }
+.data-card-footer { display: flex; align-items: center; gap: 16px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 13px; }
+
+/* Filters & Search */
+.filters-grid { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: end; }
+.search-input-wrapper { position: relative; display: flex; align-items: center; gap: 8px; flex: 1; }
+.search-input-wrapper svg { color: #94a3b8; }
+.search-input-wrapper input { width: 100%; border: 0; outline: none; color: #111827; background: transparent; }
+
+/* Text Utilities */
+.text-muted { color: #6b7280; }
 
 /* Candidate Specific */
 .candidate-card { display: flex; flex-direction: column; }

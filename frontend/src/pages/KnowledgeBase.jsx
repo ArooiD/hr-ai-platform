@@ -48,38 +48,32 @@ function KnowledgeBase() {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="page-container">
       {/* Заголовок */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="page-header">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">📚 База знаний</h1>
-          <p className="text-gray-600 mt-1">Локальные документы, профили должностей и инструкции</p>
+          <h1><FileText size={24} /> База знаний</h1>
+          <p>Локальные документы, профили должностей и инструкции</p>
         </div>
-        <button 
-          onClick={() => setShowUploadModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          <Plus size={20} />
-          <span>Добавить документ</span>
+        <button className="primary-button" onClick={() => setShowUploadModal(true)}>
+          <Plus size={18} /> Добавить документ
         </button>
       </div>
 
       {/* Фильтры */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="col-span-1 md:col-span-2 relative">
-            <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+      <div className="search-bar">
+        <div className="filters-grid">
+          <div className="search-input-wrapper">
+            <Search size={18} />
             <input
               type="text"
               placeholder="Поиск по документам..."
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
               value={filters.search}
               onChange={(e) => setFilters({...filters, search: e.target.value})}
             />
           </div>
           
           <select
-            className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
             value={filters.doc_type}
             onChange={(e) => setFilters({...filters, doc_type: e.target.value})}
           >
@@ -92,7 +86,6 @@ function KnowledgeBase() {
           </select>
           
           <select
-            className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
             value={filters.department}
             onChange={(e) => setFilters({...filters, department: e.target.value})}
           >
@@ -107,54 +100,51 @@ function KnowledgeBase() {
 
       {/* Список документов */}
       {loading ? (
-        <div className="text-center py-12 text-gray-500">Загрузка...</div>
+        <div className="loading-state">Загрузка...</div>
       ) : documents.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-          <FileText className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Документов нет</h3>
-          <p className="mt-1 text-sm text-gray-500">Загрузите первый документ или создайте профиль должности.</p>
+        <div className="empty-state">
+          <FileText size={48} />
+          <p>Документов нет. Загрузите первый документ или создайте профиль должности.</p>
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="data-list">
           {documents.map((doc) => (
-            <div key={doc.id} className="bg-white p-5 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-lg font-semibold text-gray-900">{doc.title}</h3>
-                    <span className={`px-2 py-0.5 text-xs rounded-full uppercase font-medium ${
-                      doc.doc_type === 'role_profile' ? 'bg-purple-100 text-purple-800' :
-                      doc.doc_type === 'policy' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
+            <div key={doc.id} className="data-card">
+              <div className="data-card-header">
+                <div className="data-card-title">
+                  <h3>{doc.title}</h3>
+                  <div className="data-card-badges">
+                    <span className={`badge badge-${
+                      doc.doc_type === 'role_profile' ? 'purple' :
+                      doc.doc_type === 'policy' ? 'blue' :
+                      'gray'
                     }`}>
                       {doc.doc_type}
                     </span>
                     {doc.department && (
-                      <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
+                      <span className="badge badge-gray">
                         {doc.department}
                       </span>
                     )}
                     {doc.role && (
-                      <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 text-xs rounded-full">
+                      <span className="badge badge-indigo">
                         {doc.role}
                       </span>
                     )}
                   </div>
-                  
-                  {doc.description && (
-                    <p className="text-gray-600 text-sm mb-2 line-clamp-2">{doc.description}</p>
-                  )}
-                  
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <span>📅 {new Date(doc.created_at).toLocaleDateString()}</span>
-                    <span>📄 {doc.file_name || 'Без файла'}</span>
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                      doc.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {doc.status}
-                    </span>
-                  </div>
                 </div>
+              </div>
+              
+              {doc.description && (
+                <p className="data-card-description">{doc.description}</p>
+              )}
+              
+              <div className="data-card-footer">
+                <span className="text-muted">📅 {new Date(doc.created_at).toLocaleDateString()}</span>
+                <span className="text-muted">📄 {doc.file_name || 'Без файла'}</span>
+                <span className={`badge badge-${doc.status === 'published' ? 'green' : 'yellow'}`}>
+                  {doc.status}
+                </span>
               </div>
             </div>
           ))}
