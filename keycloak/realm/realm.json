@@ -1,18 +1,16 @@
 {
-  "realm": "hr-platform",
+  "realm": "platform",
   "enabled": true,
   "displayName": "HR Platform",
-
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
   "resetPasswordAllowed": true,
   "rememberMe": true,
   "verifyEmail": false,
-
   "roles": {
     "client": {
-      "hr-platform": [
+      "platform": [
         {
           "name": "guest",
           "description": "Guest user"
@@ -28,32 +26,25 @@
       ]
     }
   },
-
   "clients": [
     {
-      "clientId": "hr-platform",
+      "clientId": "platform",
       "name": "HR Platform",
       "enabled": true,
-
       "protocol": "openid-connect",
       "publicClient": true,
-
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": true,
-
       "redirectUris": [
         "http://localhost:*",
         "http://127.0.0.1:*"
       ],
-
       "webOrigins": [
         "*"
       ],
-
       "attributes": {
         "post.logout.redirect.uris": "+"
       },
-
       "protocolMappers": [
         {
           "name": "client roles",
@@ -67,19 +58,17 @@
             "access.token.claim": "true",
             "claim.name": "roles",
             "jsonType.label": "String",
-            "usermodel.clientRoleMapping.clientId": "hr-platform"
+            "usermodel.clientRoleMapping.clientId": "platform"
           }
         }
       ]
     }
   ],
-
   "users": [
     {
       "username": "guest",
       "enabled": true,
       "emailVerified": true,
-
       "credentials": [
         {
           "type": "password",
@@ -87,19 +76,16 @@
           "temporary": false
         }
       ],
-
       "clientRoles": {
-        "hr-platform": [
+        "platform": [
           "guest"
         ]
       }
     },
-
     {
       "username": "admin",
       "enabled": true,
       "emailVerified": true,
-
       "credentials": [
         {
           "type": "password",
@@ -107,9 +93,8 @@
           "temporary": false
         }
       ],
-
       "clientRoles": {
-        "hr-platform": [
+        "platform": [
           "admin"
         ]
       }
