@@ -17,7 +17,7 @@ services:
       OLLAMA_BASE_URL: http://ollama:11434
       MINERU_URL: http://mineru:30000
       AUTH_MODE: keycloak
-      KEYCLOAK_URL: http://keycloak:8080/auth
+      KEYCLOAK_URL: http://localhost/auth
       KEYCLOAK_REALM: platform
       KEYCLOAK_CLIENT_ID: platform
       JWT_ISSUER: hr-ai
@@ -95,8 +95,8 @@ services:
     volumes:
       - ./keycloak/realm:/opt/keycloak/data/import:ro
       - ./keycloak/themes:/opt/keycloak/themes:ro
-    ports:
-      - "127.0.0.1:8080:8080"
+#    ports:
+#      - "127.0.0.1:8080:8080"
 
   minio:
     image: minio/minio:latest
