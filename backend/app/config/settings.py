@@ -21,6 +21,13 @@ class Settings:
     minio_bucket: str = field(
         default=os.getenv("MINIO_BUCKET", "hr-files")
     )
+    qdrant_url: str = field(
+        default=os.getenv("QDRANT_URL", "http://qdrant:6333")
+    )
+    # Размерность векторов для эмбеддингов (например, для sentence-transformers)
+    vector_size: int = field(
+        default=int(os.getenv("VECTOR_SIZE", "384"))
+    )
 
 
 settings = Settings()
