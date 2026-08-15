@@ -37,7 +37,7 @@ const getKeycloakConfig = async () => {
   if (keycloakConfig) {
     return keycloakConfig;
   }
-  
+
   if (!configLoadingPromise) {
     configLoadingPromise = fetchKeycloakConfig().then(config => {
       keycloakConfig = config;
@@ -45,7 +45,7 @@ const getKeycloakConfig = async () => {
       return config;
     });
   }
-  
+
   return configLoadingPromise;
 };
 
@@ -62,13 +62,12 @@ export function KeycloakProvider({ children }) {
   const [error, setError] = useState(null);
   const [keycloakInstance, setKeycloakInstance] = useState(null);
 
-  // Initialize Keycloak
+  // Initialize Keycloak. Authentication UI is fully delegated to Keycloak.
   useEffect(() => {
     const initKeycloak = async () => {
       try {
         const config = await getKeycloakConfig();
-        
-        // Создаем Keycloak instance с конфигурацией от backend
+
         const kc = new Keycloak({
           url: config.url,
           realm: config.realm,
@@ -77,6 +76,7 @@ export function KeycloakProvider({ children }) {
 
         const authenticated = await kc.init({
           flow: 'standard',
+          onLoad: 'login-required',
           checkLoginIframe: false,
           silentCheckSsoRedirect: false,
         });
@@ -86,14 +86,11 @@ export function KeycloakProvider({ children }) {
         setInitializing(false);
 
         if (authenticated) {
-          // Устанавливаем токен для API client
           setAuthToken(kc.token);
-          
-          // Get user info
+
           const userInfo = await kc.loadUserInfo();
           setUserInfo(userInfo);
-          
-          // Start token refresh
+
           startTokenRefresh(kc);
         }
       } catch (err) {
@@ -112,19 +109,17 @@ export function KeycloakProvider({ children }) {
     setInterval(() => {
       kc.updateToken(70).then((refreshed) => {
         if (refreshed) {
-          // Обновляем токен в API client
           setAuthToken(kc.token);
           console.log('Token refreshed successfully');
         }
       }).catch((err) => {
         console.error('Failed to refresh token:', err);
-        // If refresh fails, user needs to re-login
         logout();
       });
     }, 600000); // 10 minutes
   };
 
-  // Login
+  // Login remains available for explicit re-authentication scenarios.
   const login = useCallback((options = {}) => {
     if (keycloakInstance) {
       keycloakInstance.login(options);
@@ -163,7 +158,6 @@ export function KeycloakProvider({ children }) {
     try {
       const refreshed = await keycloakInstance.updateToken(minValidity);
       if (refreshed) {
-        // Обновляем токен в API client
         setAuthToken(keycloakInstance.token);
         console.log('Token refreshed successfully');
       }
@@ -199,6 +193,16 @@ export function KeycloakProvider({ children }) {
     );
   }
 
+  if (error) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-content">
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <KeycloakContext.Provider value={value}>
       {children}
@@ -217,5 +221,4 @@ export function useKeycloak() {
   return context;
 }
 
-// Экспортируем функцию для получения конфигурации (если нужно где-то еще)
 export { getKeycloakConfig };
