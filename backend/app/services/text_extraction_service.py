@@ -1,6 +1,7 @@
 """Service for extracting text from documents"""
 from typing import Optional
-from pathlib import BytesIO
+from io import BytesIO
+from pathlib import Path
 
 try:
     import pdfplumber
@@ -21,7 +22,7 @@ class TextExtractionService:
     @staticmethod
     def extract_text(file_bytes: bytes, filename: str) -> Optional[str]:
         """Extract text from document file (PDF, DOCX, TXT)"""
-        ext = Path(filename).suffix.lower() if (Path := __import__('pathlib').Path) else filename.split('.')[-1].lower()
+        ext = Path(filename).suffix.lower()
         
         try:
             if ext == '.pdf':
