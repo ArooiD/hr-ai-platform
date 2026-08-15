@@ -279,7 +279,11 @@ function UploadModal({ onClose, onSubmit }) {
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
+                      e.preventDefault();
                       setFormData(prev => ({ ...prev, file: null }));
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                      }
                     }}
                     style={{
                       marginTop: '16px', padding: '8px 16px',
