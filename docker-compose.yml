@@ -17,7 +17,7 @@ services:
       OLLAMA_BASE_URL: http://ollama:11434
       MINERU_URL: http://mineru:30000
       AUTH_MODE: keycloak
-      KEYCLOAK_URL: http://localhost/auth
+      KEYCLOAK_URL: http://keycloak:8080/auth
       KEYCLOAK_REALM: platform
       KEYCLOAK_CLIENT_ID: platform
       JWT_ISSUER: hr-ai
@@ -38,8 +38,8 @@ services:
     environment:
       VITE_API_URL: ""
       VITE_KEYCLOAK_URL: http://localhost:8080/auth
-      VITE_KEYCLOAK_REALM: hr-ai
-      VITE_KEYCLOAK_CLIENT_ID: hr-ai-frontend
+      VITE_KEYCLOAK_REALM: platform
+      VITE_KEYCLOAK_CLIENT_ID: platform
     depends_on:
       - backend
 
