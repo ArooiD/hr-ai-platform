@@ -89,6 +89,38 @@ export const dashboardApi = {
   getDashboard: () => apiRequest('/api/dashboard'),
 };
 
+// API для работы с документами (база знаний)
+export const documentsApi = {
+  getDocuments: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const path = `/api/documents${queryString ? `?${queryString}` : ''}`;
+    return apiRequest(path);
+  },
+  
+  uploadDocument: (formData) => {
+    // Для загрузки файлов не используем JSON Content-Type
+    return fetch(`${import.meta.env.VITE_API_URL || ''}/api/documents`, {
+      method: 'POST',
+      body: formData,
+    }).then(async (response) => {
+      if (!response.ok) {
+        let message = `Request failed: ${response.status}`;
+        try {
+          const body = await response.json();
+          message = body.detail || message;
+        } catch {
+          // Keep default message when the response is not JSON.
+        }
+        throw new Error(message);
+      }
+      return response.json();
+    });
+  },
+  
+  getDocument: (id) => apiRequest(`/api/documents/${id}`),
+  deleteDocument: (id) => apiRequest(`/api/documents/${id}`, { method: 'DELETE' }),
+};
+
 // API для уведомлений
 export const notificationsApi = {
   getNotifications: (limit = 20, unreadOnly = false) => 
