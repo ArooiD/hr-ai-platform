@@ -4,6 +4,7 @@
  */
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import Keycloak from 'keycloak-js';
+import { setAuthToken } from '../api/client';
 
 /**
  * Получить конфигурацию Keycloak от backend
@@ -85,6 +86,9 @@ export function KeycloakProvider({ children }) {
         setInitializing(false);
 
         if (authenticated) {
+          // Устанавливаем токен для API client
+          setAuthToken(kc.token);
+          
           // Get user info
           const userInfo = await kc.loadUserInfo();
           setUserInfo(userInfo);
@@ -106,7 +110,13 @@ export function KeycloakProvider({ children }) {
   const startTokenRefresh = (kc) => {
     // Refresh token every 10 minutes
     setInterval(() => {
-      kc.updateToken(70).catch((err) => {
+      kc.updateToken(70).then((refreshed) => {
+        if (refreshed) {
+          // Обновляем токен в API client
+          setAuthToken(kc.token);
+          console.log('Token refreshed successfully');
+        }
+      }).catch((err) => {
         console.error('Failed to refresh token:', err);
         // If refresh fails, user needs to re-login
         logout();
@@ -153,6 +163,8 @@ export function KeycloakProvider({ children }) {
     try {
       const refreshed = await keycloakInstance.updateToken(minValidity);
       if (refreshed) {
+        // Обновляем токен в API client
+        setAuthToken(keycloakInstance.token);
         console.log('Token refreshed successfully');
       }
       return refreshed;

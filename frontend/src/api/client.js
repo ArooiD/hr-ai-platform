@@ -1,15 +1,29 @@
 /**
  * API Client with Keycloak Authentication
  */
-import { keycloak } from '../contexts/KeycloakContext';
 
 const API_URL = import.meta.env.VITE_API_URL || '';
+
+// Глобальный объект для хранения токена
+let currentToken = null;
+
+/**
+ * Установить текущий JWT токен (вызывается из KeycloakContext)
+ */
+export const setAuthToken = (token) => {
+  currentToken = token;
+};
+
+/**
+ * Получить текущий JWT токен
+ */
+export const getAuthToken = () => currentToken;
 
 /**
  * Get authorization header with Keycloak token
  */
 const getAuthHeaders = () => {
-  const token = keycloak?.token;
+  const token = getAuthToken();
   if (token) {
     return {
       'Authorization': `Bearer ${token}`,
@@ -45,6 +59,7 @@ export async function apiRequest(path, options = {}) {
 }
 
 // API для аутентификации (Keycloak)
+// Эти функции должны вызываться из компонентов, где есть useKeycloak hook
 export const authApi = {
   // Получить URL для входа с redirect
   getLoginUrl: async (redirectAfter = null) => {
@@ -61,6 +76,7 @@ export const authApi = {
   },
   
   // Вход через Keycloak (получает URL и делает redirect)
+  // Должен вызываться из компонента с useKeycloak
   login: async (options = {}) => {
     const redirectAfter = options.redirectAfter || window.location.pathname;
     const loginData = await authApi.getLoginUrl(redirectAfter);
@@ -70,18 +86,17 @@ export const authApi = {
     return loginData;
   },
   
-  // Выход из системы
+  // Выход из системы - должен вызываться из компонента с useKeycloak
   logout: (options = {}) => {
-    keycloak.logout(options);
+    // Этот метод должен быть переопределен в компоненте
+    console.warn('authApi.logout() called without Keycloak context. Use useKeycloak().logout()');
     return Promise.resolve({});
   },
   
-  // Получить текущий пользователь
+  // Получить текущего пользователя - должен вызываться из компонента с useKeycloak
   getCurrentUser: () => {
-    if (!keycloak.authenticated) {
-      return Promise.reject(new Error('Not authenticated'));
-    }
-    return keycloak.loadUserInfo();
+    console.warn('authApi.getCurrentUser() called without Keycloak context. Use useKeycloak().getToken()');
+    return Promise.reject(new Error('Keycloak not available in this context'));
   },
 };
 
