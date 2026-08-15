@@ -17,7 +17,7 @@ services:
       OLLAMA_BASE_URL: http://ollama:11434
       MINERU_URL: http://mineru:30000
       AUTH_MODE: keycloak
-      KEYCLOAK_URL: http://localhost/auth/auth
+      KEYCLOAK_URL: http://localhost/auth
       KEYCLOAK_REALM: platform
       KEYCLOAK_CLIENT_ID: platform
       JWT_ISSUER: hr-ai
