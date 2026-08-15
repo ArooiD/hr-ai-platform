@@ -1,0 +1,183 @@
+html,
+body {
+  min-height: 100%;
+}
+
+body.login-pf {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% 8%, rgba(61, 139, 255, 0.16), transparent 34%),
+    radial-gradient(circle at 82% 16%, rgba(162, 103, 255, 0.10), transparent 30%),
+    #f8fbff;
+  color: #171b2c;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body.login-pf::before {
+  content: "HR Platform";
+  position: fixed;
+  top: 8vh;
+  left: 7vw;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  padding-left: 76px;
+  font-size: 20px;
+  font-weight: 800;
+  color: #171b2c;
+  letter-spacing: -0.02em;
+  background:
+    linear-gradient(#1473ff, #1473ff) 0 0 / 56px 56px no-repeat;
+  border-radius: 16px;
+}
+
+body.login-pf::after {
+  content: "Подбор персонала · встречи · аналитика\A\A 24 новых кандидата       5 встреч\A 82% соответствие вакансии";
+  white-space: pre;
+  position: fixed;
+  left: 9vw;
+  bottom: 17vh;
+  width: min(470px, 45vw);
+  min-height: 170px;
+  box-sizing: border-box;
+  padding: 30px 34px;
+  border: 1px solid #dfe8f5;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 24px 60px rgba(35, 70, 120, 0.10);
+  color: #546176;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.8;
+}
+
+.login-pf-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  box-sizing: border-box;
+  padding: 7vh 7vw;
+  background: transparent;
+}
+
+.login-pf-page .login-pf-page-header {
+  display: none;
+}
+
+.login-pf-page .card-pf {
+  width: min(500px, 38vw);
+  margin: 0;
+  padding: 42px 42px 36px;
+  border: 1px solid #dfe8f5;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 24px 70px rgba(41, 74, 125, 0.12);
+}
+
+#kc-page-title {
+  margin: 0 0 10px;
+  color: #171b2c;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.035em;
+}
+
+#kc-page-title::after {
+  content: "Аутентификация через Keycloak";
+  display: block;
+  margin-top: 6px;
+  color: #98a0ad;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: normal;
+}
+
+#kc-content-wrapper {
+  margin-top: 30px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.control-label,
+.pf-c-form__label-text {
+  color: #4e596b;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.form-control,
+.pf-c-form-control {
+  min-height: 48px;
+  border: 1px solid #d8e2ef;
+  border-radius: 12px;
+  background: #fbfdff;
+  box-shadow: none;
+  font-size: 15px;
+}
+
+.form-control:focus,
+.pf-c-form-control:focus {
+  border-color: #1473ff;
+  box-shadow: 0 0 0 3px rgba(20, 115, 255, 0.12);
+}
+
+#kc-login,
+.btn-primary,
+.pf-c-button.pf-m-primary {
+  width: 100%;
+  min-height: 48px;
+  border: 0;
+  border-radius: 12px;
+  background: #1473ff;
+  box-shadow: 0 12px 24px rgba(20, 115, 255, 0.20);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+#kc-login:hover,
+.btn-primary:hover,
+.pf-c-button.pf-m-primary:hover {
+  background: #0d63e6;
+}
+
+#kc-form-options,
+#kc-registration,
+#kc-social-providers,
+#kc-info-wrapper {
+  color: #7b8493;
+  font-size: 14px;
+}
+
+a {
+  color: #1473ff;
+  font-weight: 600;
+}
+
+.alert {
+  border: 0;
+  border-radius: 12px;
+}
+
+@media (max-width: 980px) {
+  body.login-pf::before,
+  body.login-pf::after {
+    display: none;
+  }
+
+  .login-pf-page {
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .login-pf-page .card-pf {
+    width: min(520px, 100%);
+    padding: 34px 28px;
+  }
+}
