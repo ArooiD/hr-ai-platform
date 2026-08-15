@@ -148,7 +148,7 @@ function AppLayout({ children }) {
 }
 
 // Root компонент приложения с React Router
-export default function App() {
+function App() {
   const { authenticated, initializing, getToken } = useKeycloak();
 
   // Инициализация SSE client после входа
