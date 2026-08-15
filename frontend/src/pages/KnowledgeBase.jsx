@@ -1,6 +1,6 @@
 // frontend/src/pages/KnowledgeBase.jsx
 import { useState, useEffect } from 'react';
-import { apiClient } from '../api/client';
+import { hrApi } from '../api/client';
 import { FileText, Search, Plus } from 'lucide-react';
 
 function KnowledgeBase() {
@@ -22,7 +22,7 @@ function KnowledgeBase() {
       if (filters.department) params.append('department', filters.department);
       if (filters.search) params.append('search', filters.search);
       
-      const response = await apiClient.get(`/api/documents?${params}`);
+      const response = await hrApi.get(`/api/documents?${params}`);
       setDocuments(response.data);
     } catch (error) {
       console.error("Error fetching documents:", error);
@@ -37,7 +37,7 @@ function KnowledgeBase() {
 
   const handleUpload = async (formData) => {
     try {
-      await apiClient.post('/api/documents', formData, {
+      await hrApi.post('/api/documents', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setShowUploadModal(false);
