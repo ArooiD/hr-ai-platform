@@ -18,34 +18,16 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Create enums using IF NOT EXISTS pattern (works in transactions)
-    op.execute("""
-        DO $$ 
-        BEGIN 
-            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'document_type') THEN
-                CREATE TYPE document_type AS ENUM ('policy', 'procedure', 'role_profile', 'template', 'guide');
-            END IF;
-        END $$;
-    """)
-    
-    op.execute("""
-        DO $$ 
-        BEGIN 
-            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'document_status') THEN
-                CREATE TYPE document_status AS ENUM ('draft', 'published', 'archived');
-            END IF;
-        END $$;
-    """)
-    
-    # Create documents table
+    # Create documents table with VARCHAR instead of ENUM
     op.create_table('documents',
         sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
         sa.Column('title', sa.String(length=200), nullable=False),
         sa.Column('description', sa.Text(), nullable=True),
-        sa.Column('doc_type', sa.Enum('policy', 'procedure', 'role_profile', 'template', 'guide', name='document_type'), nullable=False),
+        # Using VARCHAR instead of ENUM for simplicity and flexibility
+        sa.Column('doc_type', sa.String(length=50), nullable=False, server_default='guide'),
         sa.Column('department', sa.String(length=100), nullable=True),
         sa.Column('role', sa.String(length=100), nullable=True),
-        sa.Column('status', sa.Enum('draft', 'published', 'archived', name='document_status'), nullable=True),
+        sa.Column('status', sa.String(length=50), nullable=False, server_default='draft'),
         sa.Column('tags', sa.Text(), nullable=True),
         sa.Column('access_level', sa.String(length=50), nullable=True),
         sa.Column('file_path', sa.String(length=500), nullable=True),
