@@ -170,26 +170,26 @@ function App() {
     );
   }
 
-  if (!authenticated) {
-    return <LoginPage />;
-  }
-
   return (
     <BrowserRouter>
-      <AppLayout>
-        <Routes>
-          <Route path="/" element={<VacanciesPage />} />
-          <Route path="/vacancies" element={<VacanciesPage />} />
-          <Route path="/vacancies/:id" element={<VacancyDetailPage />} />
-          <Route path="/candidates" element={<CandidatesPage />} />
-          <Route path="/recruitment" element={<RecruitmentFlow />} />
-          <Route path="/analytics" element={<AnalyticsPage />} />
-          <Route path="/support" element={<SupportPage />} />
-          <Route path="/knowledge-base" element={<KnowledgeBase />} />
-          <Route path="/candidates/:id" element={<CandidateDetailPage />} />
-          <Route path="*" element={<Navigate to="/vacancies" replace />} />
-        </Routes>
-      </AppLayout>
+      { !authenticated ? (
+        <LoginPage />
+      ) : (
+        <AppLayout>
+          <Routes>
+            <Route path="/" element={<VacanciesPage />} />
+            <Route path="/vacancies" element={<VacanciesPage />} />
+            <Route path="/vacancies/:id" element={<VacancyDetailPage />} />
+            <Route path="/candidates" element={<CandidatesPage />} />
+            <Route path="/recruitment" element={<RecruitmentFlow />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/support" element={<SupportPage />} />
+            <Route path="/knowledge-base" element={<KnowledgeBase />} />
+            <Route path="/candidates/:id" element={<CandidateDetailPage />} />
+            <Route path="*" element={<Navigate to="/vacancies" replace />} />
+          </Routes>
+        </AppLayout>
+      )}
     </BrowserRouter>
   );
 }
