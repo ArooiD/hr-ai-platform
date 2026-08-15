@@ -11,7 +11,6 @@ from app.repositories.candidate_repository import (
     delete_candidate,
 )
 from app.services.candidate.validation import CandidateValidator
-from app.services.candidate.mapper import CandidateMapper
 from app.services.notification.service import notification_service
 from app.schemas import NotificationType
 
@@ -55,9 +54,13 @@ class CandidateService:
         if get_candidate_by_email(db, payload.email):
             raise HTTPException(status_code=400, detail="Кандидат с таким email уже существует")
         
-        # Маппинг и создание
-        candidate_data = CandidateMapper.to_model(payload)
-        candidate = create_candidate(db, candidate_data)
+        # Подготовка данных для репозитория
+        email = payload.email
+        skills = payload.skills or []
+        skills_str = ",".join(skills) if skills else ""
+        
+        # Создание через репозиторий
+        candidate = create_candidate(db, payload, email, skills_str)
         
         return Candidate.model_validate(candidate)
     
