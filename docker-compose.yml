@@ -26,6 +26,7 @@ services:
       DEMO_USER_FULL_NAME: Дарья Попова
       DEMO_USER_ROLE: HR business partner
       DEMO_USER_DEPARTMENT: HR
+      FRONTEND_URL: http://localhost:5173
     depends_on:
       - postgres
       - minio

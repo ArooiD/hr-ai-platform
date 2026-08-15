@@ -7,6 +7,7 @@ from app.api.candidates import router as candidates_router
 from app.api.applications import router as applications_router
 from app.api.notifications import router as notifications_router
 from app.api.auth import router as auth_router
+from app.api.oidc import router as oidc_router
 from app.api.dashboard import router as dashboard_router
 from app.api.rag import router as rag_router
 from app.api.documents import router as documents_router
@@ -16,6 +17,7 @@ api_router = APIRouter(prefix="/api")
 
 # Подключаем все роутеры
 api_router.include_router(auth_router)
+api_router.include_router(oidc_router)  # OIDC callback
 api_router.include_router(vacancies_router)
 api_router.include_router(candidates_router)
 api_router.include_router(applications_router)
