@@ -8,6 +8,12 @@
   "resetPasswordAllowed": true,
   "rememberMe": true,
   "verifyEmail": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "failureFactor": 5,
+  "waitIncrementSeconds": 60,
+  "maxFailureWaitSeconds": 900,
+  "maxDeltaTimeSeconds": 43200,
   "roles": {
     "client": {
       "platform": [
@@ -33,8 +39,12 @@
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": true,
+      "bearerOnly": false,
       "standardFlowEnabled": true,
-      "directAccessGrantsEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "fullScopeAllowed": false,
       "redirectUris": [
         "http://localhost:*",
         "http://127.0.0.1:*"
@@ -43,7 +53,8 @@
         "*"
       ],
       "attributes": {
-        "post.logout.redirect.uris": "+"
+        "post.logout.redirect.uris": "+",
+        "pkce.code.challenge.method": "S256"
       },
       "protocolMappers": [
         {

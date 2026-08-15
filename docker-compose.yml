@@ -92,6 +92,7 @@ services:
       KC_HOSTNAME_STRICT: "false"
     volumes:
       - ./keycloak/realm:/opt/keycloak/data/import:ro
+      - ./keycloak/themes:/opt/keycloak/themes:ro
     ports:
       - "127.0.0.1:8080:8080"
 
