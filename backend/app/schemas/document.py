@@ -42,7 +42,7 @@ class DocumentResponse(DocumentBase):
     file_size: Optional[int] = None
     mime_type: Optional[str] = None
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
     published_at: Optional[datetime] = None
     is_deleted: bool = False
 
